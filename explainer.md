@@ -233,19 +233,89 @@ function computePressureCallback(update) {
 
 ### Prevent instead of mitigating bad user experiences
 
-A key requirement for our proposal is preventing, rather than mitigating, bad
+A key goal for our proposal is preventing, rather than mitigating, bad
 user experience. On mobile devices such as laptops, smartphones and tablets,
 pushing the user’s device into high CPU or GPU utilization causes the device
 to become uncomfortably hot, causes the device’s fans to get disturbingly
 loud, and drains the battery at an unacceptable rate.
 
-The key requirement above disqualifies solutions such as
+The key goal above disqualifies solutions such as
 [requestAnimationFrame()](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame),
 which lead towards a feedback system where **bad user experience is
 mitigated, but not completely avoided**. Feedback systems have been
 successful on desktop computers, where the user is insulated from the
 device's temperature changes, the fan noise variation is not as significant,
 and there is no battery.
+
+
+### Minimizing information exposure
+
+This proposal exposes information about the user's device, which
+[increases the risk of harming the user's privacy](https://w3ctag.github.io/design-principles/#device-ids).
+To minimize this risk, this proposal aims to only expose the absolute minimal
+amount of information needed to make the decisions we set out to support.
+
+The subsections below describe the processing model. At a high level, the
+information exposed is reduced by the following steps.
+
+1. **Normalization** - Per-core information reported by the operating system is
+   normalized to a number between 0.0 and 1.0. This removes variability across
+   CPU models and operating systems.
+
+2. **Aggregation** - Normalized per-core information is aggregated into one
+   overall number.
+
+3. **Quantization** - Each application (origin) must declare a few buckets
+   (ranges of values between 0.0 and 1.0) that it is interested in. The
+   application only gets to learn which bucket contains each aggregated number.
+
+4. **Rate-limiting** - The user agent notifies the application of changes in
+   the information it can learn (buckets that each aggregated number). Change
+   notifications are rate-limited.
+
+#### Normalizing CPU utilization
+
+The user agent will normalize CPU core utilization information reported by the
+operating system to a number between 0.0 and 1.0.
+
+0.0 maps to 0% utilization, meaning the CPU core was always idle during the
+observed time window. 1.0 maps to 100% utilization, meaning the CPU core
+was never idle during the observed time window.
+
+#### Aggregating CPU utilization
+
+CPU utilization is averaged over all enabled CPU cores.
+
+Under normal circumstances, all of a system's cores are enabled. However,
+mitigating some recent micro-architectural attacks on some devices may require
+completely disabling some CPU cores. For example, some Intel systems require
+disabling hyperthreading.
+
+We recommend that user agents aggregate CPU utilization over a time window of 1
+second. Smaller windows increase the risk of facilitating a side-channel attack.
+Larger windows reduce the application's ability to make timely decisions that
+avoid bad user experiences.
+
+#### Normalizing CPU clock speed
+
+This API normalizes each CPU core's clock speed to a number between 0.0 and 1.0.
+The proposal intends to enable the decisions we set out to support, without
+exposing the clock speeds.
+
+We propose the following principles for normalizing a CPU core's clock speed.
+
+1. The minimum clock speed is always reported as 0.0.
+2. The base clock speed is always reported as 0.5.
+3. The maximum clock speed is always reported as 1.0.
+4. Speeds outside these values are clamped (to 0.0 or 1.0).
+5. Speeds between these values are linearly interpolated.
+
+### Aggregating CPU clock speed
+
+TODO: Proposal for aggregating clock speeds across systems with heterogeneous
+CPU cores, such as [big.LITTLE](https://en.wikipedia.org/wiki/ARM_big.LITTLE).
+
+#### Quantization
 
 
 ## Considered alternatives
