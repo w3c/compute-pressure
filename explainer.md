@@ -471,6 +471,7 @@ Many thanks for valuable feedback and advice from:
 * Kamila Hasanbega
 * Jan Gora
 * Joshua Bell
+* Matt Menke
 * Nicolás Peña Moreno
 * Opal Voravootivat
 * Paul Jensen
