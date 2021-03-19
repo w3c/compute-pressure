@@ -47,6 +47,9 @@ that is likely to change every second.
 
 ### 2.6. What information from the underlying platform, e.g. configuration data, is exposed by this specification to an origin?
 
+Aside from the data detailed in question 1, which is data about an instanteneous
+state of the device, no additional data is exposed.
+
 ### 2.7. Does this specification allow an origin access to sensors on a user’s device
 
 This specification does not allow direct access to sensors. However, the CPU
@@ -75,6 +78,8 @@ No.
 
 ### 2.12. What temporary identifiers might this specification create or expose to the web?
 
+The data obtained in step 1 could pose a cross-origin identification issue,
+however, we think our mitigations would prevent this risk.
 
 ### 2.13. How does this specification distinguish between behavior in first-party and third-party contexts?
 
