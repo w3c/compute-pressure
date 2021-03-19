@@ -17,19 +17,28 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-  - [Introduction](#introduction)
-  - [Goals / Motivating Use Cases](#goals--motivating-use-cases)
-  - [Non-goals](#non-goals)
-- [Overview](#overview)
-  - [[API 1]](#api-1)
-  - [Key scenarios](#key-scenarios)
-    - [Adjusting the number of video feeds based on CPU usage](#adjusting-the-number-of-video-feeds-based-on-cpu-usage)
-  - [Detailed design discussion](#detailed-design-discussion)
-    - [Prevent instead of mitigating bad user experiences](#prevent-instead-of-mitigating-bad-user-experiences)
-  - [Considered alternatives](#considered-alternatives)
-    - [Named buckets for CPU utilization](#named-buckets-for-cpu-utilization)
-  - [Stakeholder Feedback / Opposition](#stakeholder-feedback--opposition)
-  - [References & acknowledgements](#references--acknowledgements)
+- [Introduction](#introduction)
+- [Goals / Motivating Use Cases](#goals--motivating-use-cases)
+- [Non-goals](#non-goals)
+- [Concept - CPU utilization](#concept---cpu-utilization)
+- [Concept - CPU Clock Speed](#concept---cpu-clock-speed)
+- [Compute Pressure Observer](#compute-pressure-observer)
+- [Key scenarios](#key-scenarios)
+  - [Adjusting the number of video feeds based on CPU usage](#adjusting-the-number-of-video-feeds-based-on-cpu-usage)
+- [Detailed design discussion](#detailed-design-discussion)
+  - [Prevent instead of mitigating bad user experiences](#prevent-instead-of-mitigating-bad-user-experiences)
+  - [Minimizing information exposure](#minimizing-information-exposure)
+    - [Normalizing CPU utilization](#normalizing-cpu-utilization)
+    - [Aggregating CPU utilization](#aggregating-cpu-utilization)
+    - [Normalizing CPU clock speed](#normalizing-cpu-clock-speed)
+    - [Aggregating CPU clock speed](#aggregating-cpu-clock-speed)
+    - [Quantizing values](#quantizing-values)
+    - [Rate-limiting change events](#rate-limiting-change-events)
+- [Considered alternatives](#considered-alternatives)
+  - [Fixed quantization scheme](#fixed-quantization-scheme)
+  - [Named buckets for CPU utilization](#named-buckets-for-cpu-utilization)
+- [Stakeholder Feedback / Opposition](#stakeholder-feedback--opposition)
+- [References & acknowledgements](#references--acknowledgements)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -310,15 +319,52 @@ We propose the following principles for normalizing a CPU core's clock speed.
 4. Speeds outside these values are clamped (to 0.0 or 1.0).
 5. Speeds between these values are linearly interpolated.
 
-### Aggregating CPU clock speed
+#### Aggregating CPU clock speed
 
 TODO: Proposal for aggregating clock speeds across systems with heterogeneous
 CPU cores, such as [big.LITTLE](https://en.wikipedia.org/wiki/ARM_big.LITTLE).
 
-#### Quantization
+#### Quantizing values
+
+Quantizing the aggregated CPU utilization and clock speed reduces the amount of
+information exposed by the API.
+
+Having applications designate the quantization buckets minimizes the number
+of buckets that user agents need to allow in order to enable the decisions used
+in a multitude of applications.
+
+Applications determine the quantization scheme by passing in a list of
+thresholds. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
+4-bucket scheme, where the buckets cover the ranges 0-0.5, 0.5-0.75, 0.75-0.9,
+and 0.9-1.0.
+
+#### Rate-limiting change events
 
 
 ## Considered alternatives
+
+### Fixed quantization scheme
+
+Instead of having applications specify the thresholds they are interested in, we
+considered proposing a fixed quantization scheme. For example, we could round
+reported values to the closest 0.10 (10% of the range), which defines a
+10-bucket scheme.
+
+This alternative would result in a simpler mental model that may reduce the
+burden of using and implementing the API. However, a fixed quantization scheme
+would require more buckets to power the same decisions, resulting in higher
+risks to the user's privacy. Therefore, the
+[priority of constituents](https://www.w3.org/TR/html-design-principles/#priority-of-constituencies)
+requires that we discard this alternative, as it would favor authors and
+implementers over users.
+
+As a concrete example, let's assume two popular video conferencing
+applications that use different CPU clock speed thresholds (50% and 75%) to
+reduce the number of video feeds they display. A fixed bucketing scheme
+requires at least 3 buckets (0 - 50%, 50% - 75%, 75% - 100%) to optimally
+support both applications. By comparison, the current proposal supports both
+applications with two buckets.
+
 
 ### Named buckets for CPU utilization
 
