@@ -343,6 +343,10 @@ For example, suppose an application used the threshold list above, and the user
 agent measured a CPU utilization of 0.87. This would fall under the 0.75-0.9
 bucket, and would be reported as 0.825 (the average of 0.75 and 0.9).
 
+We will recommend that user agents allow at most 5 buckets (4 thresholds) for
+CPU utilization, and 2 buckets (1 threshold) for CPU speed.
+
+
 #### Rate-limiting change notifications
 
 We propose exposing the quantized CPU utilization and clock speed via
@@ -363,6 +367,11 @@ identifying a device across multiple origins. The rate-limiting also benefits
 the user's security, by making it difficult to use this API for timing attacks.
 Last, rate-limiting change callbacks places an upper bound on the performance
 overhead of this API.
+
+### Third-party contexts
+
+This API will only be available in first-party contexts. This is necessary for
+preserving the privacy benefits of the API's quantizing scheme.
 
 
 ## Considered alternatives
@@ -425,6 +434,22 @@ Theoretically, Chrome
 [can detect thermal throttling](https://source.chromium.org/chromium/chromium/src/+/master:base/power_monitor/)
 on Android, Chrome OS, and macOS. However, developer experience suggests that
 the macOS API is not reliable.
+
+### Combine CPU utilization and clock speed
+
+We considered reporting one number that accounts for both CPU utilization and
+CPU clock speed.
+
+A somewhat common practice is to multiply utilization by the ratio of the
+current and maximum CPU clock speed. For example, a CPU core that is 50% idle
+and runs at 50% of its maximum CPU speed (1.6 Ghz out of 3.2 Ghz) would be
+considered to be 25% utilized. This metric is
+[not always intuitive](https://docs.microsoft.com/sv-SE/troubleshoot/windows-client/performance/cpu-usage-exceeds-100).
+
+We discarded this option because we got developer feedback that mitigating bad
+user experiences requires being able to react differently to high CPU
+utilization and high CPU clock speeds. The latter needs to be addressed more
+urgently than the former.
 
 
 ### Named buckets for CPU utilization
