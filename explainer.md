@@ -117,29 +117,116 @@ make the unsupported decisions above.
 *   CPU vendor and model
 
 
-# Overview
+## Concept - CPU utilization
 
-We propose enabling web applications to modulate their resource consumption
-in order to avoid bad user experience, by exposing the following information.
+The **CPU utilization** of the user's device is the average of the
+utilization of all the device's CPU cores.
 
-* **CPU utilization** - As the CPU utilization gets close to capacity, the
-  application can reduce the amount of computation it does per unit of time.
-* **CPU clock speed** - When the CPU clock speed approaches thermal throttling,
-  the application can reduce the amount of computation it does. Ideally, this
-  avoids a cycle where increased clock speed causes high CPU core temperatures,
-  then the CPU clock is reduced allowing the CPU core to cool down, then the
-  situation repeats itself.
+A CPU core's utilization is the fraction of time that the core has been
+executing code belonging to a thread, as opposed to being in an idle state.
 
-## [API 1]
+A CPU utilization close to 1.0 is very likely to lead to a bad user
+experience. The device is likely overheating, and CPU cooling fans are making
+loud noises. Applications can help avoid bad user experiences by reducing
+their compute demands when the CPU utilization is high.
 
-[For each related element of the proposed solution - be it an additional JS
-method, a new object, a new element, a new concept etc., create a section
-which briefly describes it.]
+
+## Concept - CPU Clock Speed
+
+Modern CPU cores support a set of clock speeds. The device's firmware or
+operating system can set the core clock speed, in order to trade off the
+available CPU computational resources with power consumption.
+
+From a user experience standpoint, the following are the most interesting
+clock speeds.
+
+* The minimum clock speed results in the lowest power consumption.
+* The **base clock speed** results in the power consumption that the CPU is
+  rated for. Marketing materials emphasize this speed.
+* The maximum clock speed (marketed as "Turbo boost" on Intel CPUs) causes
+  unsustainable amounts of heating. It can only be used for short periods of
+  time, to satisfy bursts in demand for CPU compute.
+
+When a device's CPU utilization gets high, the device increases clock speeds
+across its CPU cores, in an attempt to meet the CPU compute demand. As the
+speeds exceed the base clock speed, the elevated power consumption increases the
+CPU's temperature. At some point, the device enters a **thermal throttling**
+regime, where the CPU clock speed is reduced, in order to bring the temperature
+down.
+
+By the time thermal throttling kicks in, the user is having a bad experience.
+Applications can help avoid thermal throttling by reducing their demands for CPU
+compute right as the CPU clock speeds approaches / exceeds the base speed.
+
+
+## Compute Pressure Observer
+
+We propose a design similar to
+[Intersection Observer](https://w3c.github.io/IntersectionObserver/) to let
+applications be notified when the system's CPU utilization and clock speed
+change.
+
+```js
+const observer = new ComputePressureObserver(
+    computePressureCallback,
+    {
+      // Thresholds divide the interval [0.0 .. 1.0] into ranges.
+      cpuUtilizationThresholds: [0.75, 0.9, 0.5],
+      // The minimum clock speed is 0, and the maximum speed is 1. 0.5 maps to
+      // the base clock speed.
+      cpuSpeedThresholds: [0.5],
+    });
+
+observer.start();
+
+function computePressureCallback(update) {
+  // The CPU base clock speed is represented as 0.5.
+  if (update.cpuSpeed >= 0.5 || update.cpuUtilization >= 0.9) {
+    // Dramatically cut down compute requirements to avoid overheating.
+    return;
+  }
+}
+```
+
 
 ## Key scenarios
 
 
 ### Adjusting the number of video feeds based on CPU usage
+
+```js
+const observer = new ComputePressureObserver(
+    computePressureCallback,
+    {
+      // Thresholds divide the interval [0.0 .. 1.0] into ranges.
+      cpuUtilizationThresholds: [0.75, 0.9, 0.5],
+      // The minimum clock speed is 0, and the maximum speed is 1. 0.5 maps to
+      // the base clock speed.
+      cpuSpeedThresholds: [0.5],
+    });
+
+observer.start();
+
+function computePressureCallback(update) {
+  // The CPU base clock speed is represented as 0.5.
+  if (update.cpuSpeed >= 0.5) {
+    // Dramatically cut down compute requirements to avoid overheating.
+    limitVideoStreams(2);
+    return;
+  }
+
+  if (update.cpuUtilization >= 0.9) {
+    limitVideoStreams(2);
+  } else if (update.cpuUtilization >= 0.75) {
+    limitVideoStreams(4);
+  } else if (update.cpuUtilization >= 0.5) {
+    limitVideoStreams(8);
+  } else {
+    // The system is in great shape. Show all meeting participants.
+    showAllVideoStreams();
+  }
+}
+```
 
 
 ## Detailed design discussion
@@ -191,3 +278,6 @@ Exposing CPU utilization information has been explored in the following places.
 * [IOPMCopyCPUPowerStatus](https://developer.apple.com/documentation/iokit/1557079-iopmcopycpupowerstatus?language=objc) in IOKit/[IOPMLib.h](https://opensource.apple.com/source/IOKitUser/IOKitUser-647.6/pwr_mgt.subproj/IOPMLib.h)
 * [user-land source](https://opensource.apple.com/source/IOKitUser/IOKitUser-388/pwr_mgt.subproj/IOPMPowerNotifications.c.auto.html)
 * [Windows 10 Task Manager screenshot](https://answers.microsoft.com/en-us/windows/forum/windows_10-other_settings-winpc/windows-10-only-use-half-of-max-cpu-speed/d97b219f-10ee-4a42-a0fc-d517c1b60be8)
+
+This explainer is based on
+[the W3C TAG's template](https://w3ctag.github.io/explainers).
