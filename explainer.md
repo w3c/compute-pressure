@@ -32,10 +32,8 @@
     - [Aggregating CPU utilization](#aggregating-cpu-utilization)
     - [Normalizing CPU clock speed](#normalizing-cpu-clock-speed)
     - [Aggregating CPU clock speed](#aggregating-cpu-clock-speed)
-    - [Quantizing values](#quantizing-values)
-    - [Rate-limiting change events](#rate-limiting-change-events)
+    - [Quantization](#quantization)
 - [Considered alternatives](#considered-alternatives)
-  - [Fixed quantization scheme](#fixed-quantization-scheme)
   - [Named buckets for CPU utilization](#named-buckets-for-cpu-utilization)
 - [Stakeholder Feedback / Opposition](#stakeholder-feedback--opposition)
 - [References & acknowledgements](#references--acknowledgements)
@@ -321,6 +319,9 @@ We propose the following principles for normalizing a CPU core's clock speed.
 
 #### Aggregating CPU clock speed
 
+TODO: Aggregating is an average of the current speed across all cores. No
+aggregation over a time window.
+
 TODO: Proposal for aggregating clock speeds across systems with heterogeneous
 CPU cores, such as [big.LITTLE](https://en.wikipedia.org/wiki/ARM_big.LITTLE).
 
@@ -336,9 +337,32 @@ in a multitude of applications.
 Applications determine the quantization scheme by passing in a list of
 thresholds. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
 4-bucket scheme, where the buckets cover the ranges 0-0.5, 0.5-0.75, 0.75-0.9,
-and 0.9-1.0.
+and 0.9-1.0. We propose representing a bucket using the middleof its range.
 
-#### Rate-limiting change events
+For example, suppose an application used the threshold list above, and the user
+agent measured a CPU utilization of 0.87. This would fall under the 0.75-0.9
+bucket, and would be reported as 0.825 (the average of 0.75 and 0.9).
+
+#### Rate-limiting change notifications
+
+We propose exposing the quantized CPU utilization and clock speed via
+rate-limited change notifications. This aims to remove the ability to observe
+the precise time when a value transitions between two buckets.
+
+More precisely, once the compute pressure observer is installed, it will be
+called once with initial quantized values, and then be called when the quantized
+values change. The subsequent calls will be rate-limited. When the callback is
+called, the most recent quantized value is reported.
+
+The specification will recommend a rate limit of at most one call per second
+for the active window, and one call per 10 seconds for all other windows. We
+will also recommend that the call timings are jittered across origins.
+
+These measures benefit the user's privacy, by reducing the risk of
+identifying a device across multiple origins. The rate-limiting also benefits
+the user's security, by making it difficult to use this API for timing attacks.
+Last, rate-limiting change callbacks places an upper bound on the performance
+overhead of this API.
 
 
 ## Considered alternatives
@@ -365,6 +389,43 @@ requires at least 3 buckets (0 - 50%, 50% - 75%, 75% - 100%) to optimally
 support both applications. By comparison, the current proposal supports both
 applications with two buckets.
 
+### Fine-grained quantization gated on permissions
+
+We considered adding an option to switch to a more fine-grained quantization
+schemes, such as 0.01 precision (100 equally-sized buckets) or 0.001 precision
+(1,000 equally-sized buckets). We considered gating the quantization switch on a
+user permission.
+
+We separately considered automatically switching to a finer-grained quantization
+scheme for applications that can access a device camera that is turned on. The
+privacy argument would have been that the user shared a very high amount of
+entropy with the application, so the privacy risks are much smaller in this
+case.
+
+This option would be very helpful for use cases such as benchmarking and A/B
+testing. As a concrete example, we have been made aware that A/B tests for
+optimizations in a popular video conferencing application sometimes rely on
+0.001 precision in CPU utilization values.
+
+We discarded this option in the interest of keeping the proposal more focused.
+The fine-grained quantization schemes discussed here can be added to the
+currently proposed API shape in a backwards-compatible manner.
+
+### Expose a thermal throttling indicator
+
+On some operating systems and devices, applications can detect when thermal
+throttling occurs. Thermal throttling is a strong indicator of a bad user
+experience (high temperature, CPU cooling fans maxed out).
+
+This option was discarded because of concerns that the need to mitigate
+[some recent attacks](https://platypusattack.com/) may lead to significant
+changes in the APIs that this proposal was envisioning using.
+
+Theoretically, Chrome
+[can detect thermal throttling](https://source.chromium.org/chromium/chromium/src/+/master:base/power_monitor/)
+on Android, Chrome OS, and macOS. However, developer experience suggests that
+the macOS API is not reliable.
+
 
 ### Named buckets for CPU utilization
 
@@ -379,8 +440,16 @@ applications with two buckets.
 
 Many thanks for valuable feedback and advice from:
 
+* Chen Xing
+* Evan Shrubsole
+* Jesse Barnes
+* Kamila Hasanbega
+* Jan Gora
 * Joshua Bell
 * Nicolás Peña Moreno
+* Opal Voravootivat
+* Paul Jensen
+* Peter Djeu
 * Reilly Grant
 * Ulan Degenbaev
 * Victor Miura
@@ -394,6 +463,7 @@ Exposing CPU utilization information has been explored in the following places.
 * [IOPMCopyCPUPowerStatus](https://developer.apple.com/documentation/iokit/1557079-iopmcopycpupowerstatus?language=objc) in IOKit/[IOPMLib.h](https://opensource.apple.com/source/IOKitUser/IOKitUser-647.6/pwr_mgt.subproj/IOPMLib.h)
 * [user-land source](https://opensource.apple.com/source/IOKitUser/IOKitUser-388/pwr_mgt.subproj/IOPMPowerNotifications.c.auto.html)
 * [Windows 10 Task Manager screenshot](https://answers.microsoft.com/en-us/windows/forum/windows_10-other_settings-winpc/windows-10-only-use-half-of-max-cpu-speed/d97b219f-10ee-4a42-a0fc-d517c1b60be8)
+* [CPU usage exceeds 100% in Task Manager and Performance Monitor if Intel Turbo Boost is active](https://docs.microsoft.com/sv-SE/troubleshoot/windows-client/performance/cpu-usage-exceeds-100)
 
 This explainer is based on
 [the W3C TAG's template](https://w3ctag.github.io/explainers).
