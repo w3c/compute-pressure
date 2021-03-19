@@ -181,7 +181,7 @@ observer.start();
 
 function computePressureCallback(update) {
   // The CPU base clock speed is represented as 0.5.
-  if (update.cpuSpeed >= 0.5 || update.cpuUtilization >= 0.9) {
+  if (update.cpuSpeed >= 0.5 && update.cpuUtilization >= 0.9) {
     // Dramatically cut down compute requirements to avoid overheating.
     return;
   }
