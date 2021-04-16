@@ -182,6 +182,11 @@ const observer = new ComputePressureObserver(
       // The minimum clock speed is 0, and the maximum speed is 1. 0.5 maps to
       // the base clock speed.
       cpuSpeedThresholds: [0.5],
+      // Setting testMode to `true` will result in `computePressureCallback` to
+      // be invoked regularly even if no thresholds have been crossed. The
+      // computational data returned will not be informative, but this is useful
+      // for testing if the requested options have been accepted.
+      testMode: false,
     });
 
 observer.start();
@@ -191,6 +196,14 @@ function computePressureCallback(update) {
   if (update.cpuSpeed >= 0.5 && update.cpuUtilization >= 0.9) {
     // Dramatically cut down compute requirements to avoid overheating.
     return;
+  }
+  
+  // Options applied are returned with every update.
+  if (update.options.testMode) {
+    // The options applied may be different than those requested.
+    // e.g. the user agent may have reduced the number of thresholds observed.
+    console.log(`Utilization Thresholds: ${JSON.stringify(update.options.cpuUtilizationThresholds)}`);
+    console.log(`Speed Thresholds: ${JSON.stringify(update.options.cpuSpeedThresholds)}`);
   }
 }
 ```
@@ -210,6 +223,11 @@ const observer = new ComputePressureObserver(
       // The minimum clock speed is 0, and the maximum speed is 1. 0.5 maps to
       // the base clock speed.
       cpuSpeedThresholds: [0.5],
+      // Setting testMode to `true` will result in `computePressureCallback` to
+      // be invoked regularly even if no thresholds have been crossed. The
+      // computational data returned will not be informative, but this is useful
+      // for testing if the requested options have been accepted.
+      testMode: false,
     });
 
 observer.start();
@@ -231,6 +249,14 @@ function computePressureCallback(update) {
   } else {
     // The system is in great shape. Show all meeting participants.
     showAllVideoStreams();
+  }
+
+  // Options applied are returned with every update.
+  if (update.options.testMode) {
+    // The options applied may be different than those requested.
+    // e.g. the user agent may have reduced the number of thresholds observed.
+    console.log(`Utilization Thresholds: ${JSON.stringify(update.options.cpuUtilizationThresholds)}`);
+    console.log(`Speed Thresholds: ${JSON.stringify(update.options.cpuSpeedThresholds)}`);
   }
 }
 ```
