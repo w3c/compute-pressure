@@ -202,8 +202,10 @@ function computePressureCallback(update) {
   if (update.options.testMode) {
     // The options applied may be different than those requested.
     // e.g. the user agent may have reduced the number of thresholds observed.
-    console.log(`Utilization Thresholds: ${JSON.stringify(update.options.cpuUtilizationThresholds)}`);
-    console.log(`Speed Thresholds: ${JSON.stringify(update.options.cpuSpeedThresholds)}`);
+    console.log(
+    `Utilization Thresholds: ${JSON.stringify(update.options.cpuUtilizationThresholds)}`);
+    console.log(
+    `Speed Thresholds: ${JSON.stringify(update.options.cpuSpeedThresholds)}`);
   }
 }
 ```
@@ -255,8 +257,10 @@ function computePressureCallback(update) {
   if (update.options.testMode) {
     // The options applied may be different than those requested.
     // e.g. the user agent may have reduced the number of thresholds observed.
-    console.log(`Utilization Thresholds: ${JSON.stringify(update.options.cpuUtilizationThresholds)}`);
-    console.log(`Speed Thresholds: ${JSON.stringify(update.options.cpuSpeedThresholds)}`);
+    console.log(
+    `Utilization Thresholds: ${JSON.stringify(update.options.cpuUtilizationThresholds)}`);
+    console.log(
+    `Speed Thresholds: ${JSON.stringify(update.options.cpuSpeedThresholds)}`);
   }
 }
 ```
