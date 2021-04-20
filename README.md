@@ -302,11 +302,15 @@ information exposed is reduced by the following steps.
 2. **Aggregation** - Normalized per-core information is aggregated into one
    overall number.
 
-3. **Quantization** - Each application (origin) must declare a few buckets
+3. **Bucketing** - Each application (origin) must declare a few buckets
    (ranges of values between 0.0 and 1.0) that it is interested in. The
    application only gets to learn which bucket contains each aggregated number.
 
-4. **Rate-limiting** - The user agent notifies the application of changes in
+4. **Quantization** - The values returned provide enough information for the
+   application to determine how resource usage changed relative to the defined
+   buckets.
+
+5. **Rate-limiting** - The user agent notifies the application of changes in
    the information it can learn (buckets that each aggregated number). Change
    notifications are rate-limited.
 
@@ -355,6 +359,19 @@ aggregation over a time window.
 TODO: Proposal for aggregating clock speeds across systems with heterogeneous
 CPU cores, such as [big.LITTLE](https://en.wikipedia.org/wiki/ARM_big.LITTLE).
 
+#### Bucketing
+
+Providing a list of thresholds effectively separates the resource usage into
+buckets. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
+4-bucket scheme, where the buckets cover the ranges 0-0.5, 0.5-0.75, 0.75-0.9,
+and 0.9-1.0.
+
+Applications request a number of thresholds in the list provided, but the User
+Agent may choose to observe a subset of those requested.
+
+We will recommend that user agents allow at most 5 buckets (4 thresholds) for
+CPU utilization, and 2 buckets (1 threshold) for CPU speed.
+
 #### Quantizing values
 
 Quantizing the aggregated CPU utilization and clock speed reduces the amount of
@@ -366,16 +383,12 @@ in a multitude of applications.
 
 Applications determine the quantization scheme by passing in a list of
 thresholds. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
-4-bucket scheme, where the buckets cover the ranges 0-0.5, 0.5-0.75, 0.75-0.9,
-and 0.9-1.0. We propose representing a bucket using the middleof its range.
+4-bucket scheme. We propose representing the state of resource usage using the
+middle of the range between thresholds.
 
 For example, suppose an application used the threshold list above, and the user
 agent measured a CPU utilization of 0.87. This would fall under the 0.75-0.9
 bucket, and would be reported as 0.825 (the average of 0.75 and 0.9).
-
-We will recommend that user agents allow at most 5 buckets (4 thresholds) for
-CPU utilization, and 2 buckets (1 threshold) for CPU speed.
-
 
 #### Rate-limiting change notifications
 
