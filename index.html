@@ -9,6 +9,7 @@
     shortName: "compute-pressure",
     group: "wicg",
     specStatus: "CG-DRAFT",
+    xref: "web-platform",
     editors: [
       {
         name: "Olivier Yiptong",
@@ -118,7 +119,68 @@
       speeds approaches / exceeds the base speed.
     </p>
   </section>
+  <section>
+    <h3>
+      Internal slots
+    </h3>
+    <p>
+      A construction {{ComputePressureObserver}} object, has the following internal slots.
+    </p>
+    <table class="simple">
+      <thead>
+        <tr>
+          <th>
+            Internal slot
+          </th>
+          <th>
+            Initial value
+          </th>
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <dfn>[[\Callback]]</dfn>
+          </td>
+          <td>
+            {{undefined}}
+          </td>
+          <td>
+            An optional function of type {{ComputePressureUpdateCallback}}.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <dfn>[[\CPUUtilizationThresholds]]</dfn>
+          </td>
+          <td>
+            An empty [=list=].
+          </td>
+          <td>
+            A [=list=] of {{double}}s between 0 and 1, representing
+            the user requested <a>CPU utilization</a> thresholds.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <dfn>[[\CPUSpeedThresholds]]</dfn>
+          </td>
+          <td>
+            An empty [=list=].
+          </td>
+          <td>
+            A [=list=] of {{double}}s between 0 and 1, representing
+            the user requested <a>CPU clock speed</a> thresholds.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </section>
+
 <section> <h2>Compute Pressure Observer</h2>
 The Compute Pressure Observer API enables developers to understand the utilization characteristics of a CPU.
 
@@ -173,6 +235,38 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       The {{ComputePressureObserver/constructor()}} method, when invoked, MUST run the
       following step, given the arguments |callback:ComputePressureUpdateCallback| and
       |options:ComputePressureObserverOptions|:
+      <ol class="algorithm">
+        <li>
+          Let |this:ComputePressureObserver| be a new the {{ComputePressureObserver}} object.
+        </li>
+        <li>
+          Set |this|.{{[[Callback]]}} to |callback|.
+        </li>
+        <li>
+          If |options|.|cpuUtilizationThresholds:list| exists, set |this|.{{[[CPUUtilizationThresholds]]}}
+          be a [=list=] equal to that.
+        </li>
+        <li>
+          If any value in |this|.{{[[CPUUtilizationThresholds]]}} is less than 0.0 or greater than 1.0,
+          throw a {{RangeError}} exception.
+        </li>
+        <li>
+          Sort |this|.{{[[CPUUtilizationThresholds]]}} in ascending order.
+        </li>
+        <li>
+          If |options|.|cpuSpeedThresholds:list| exists, set |this|.{{[[CPUSpeedThresholds]]}}
+          be a [=list=] equal to that.
+        </li>
+        <li>
+          If any value in |this|.{{[[CPUSpeedThresholds]]}} is less than 0.0 or greater than 1.0,
+          throw a {{RangeError}} exception.
+        </li>
+        <li>
+          Sort |this|.{{[[CPUSpeedThresholds]]}} in ascending order.
+        </li>
+        <li>
+          Return |this|.
+        </li>
     </p>
   </section>
   <section>
