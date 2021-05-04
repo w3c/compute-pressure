@@ -1,0 +1,414 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<title>Compute Pressure API</title>
+<script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove" defer></script>
+<script class="remove">
+  // All config options at https://respec.org/docs/
+  const respecConfig = {
+    shortName: "compute-pressure",
+    group: "wicg",
+    specStatus: "CG-DRAFT",
+    xref: "web-platform",
+    editors: [
+      {
+        name: "Olivier Yiptong",
+        company: "Google Inc.",
+        companyURL: "https://google.com",
+      },
+      {
+        name: "Victor Costan",
+        company: "Google Inc.",
+        companyURL: "https://google.com",
+      },
+      {
+        name: "Kenneth Rohde Christiansen",
+        company: "Intel Corporation",
+        companyURL: "https://intel.com",
+        w3cid: 57705,
+      }
+    ],
+    testSuiteURI: "https://github.com/web-platform-tests/wpt/labels/compute-pressure",
+  };
+</script>
+<section id="abstract">
+  <p>
+    The <cite>Compute Pressure API</cite> provides a way for websites to react to changes
+    in the CPU consumption of the target device, such that websites can trade off CPU
+    resources for an improved user experience.
+  </p>
+</section>
+<section id="sotd"></section>
+<section class="informative">
+  <h2>Introduction</h2>
+  <p>
+    Modern applications often need to balance the trade offs and advantages of fully utilizing
+    the system CPU resources, in order to provide a modern and improved user experience. 
+  </p>
+  <p>
+    As an example, many applications can render video effects with varying degrees of sophistication.
+    These applications aim to provide the best user experience, while avoiding driving the user's
+    device in a high CPU utilization regime.
+  </p>
+  <p>
+    High CPU utilization is undesirable because it strongly degrades the user experience. Many
+    smartphones, tablets and laptops can become uncomfortably hot to the touch. The fans in laptops
+    and desktops can become so loud that they disrupt conversations or the users’ ability to focus.
+    In many cases, a device under high CPU utilization appears to be unresponsive, as the operating
+    system may fail to schedule the threads advancing the task that the user is waiting for. See also
+    <a href="https://github.com/oyiptong/compute-pressure/#goals--motivating-use-cases">Compute Pressure:
+    Use Cases</a>.
+  </p>
+</section>
+<section>
+  <h2>Concepts</h2>
+  <p>
+    This specification defines the following concepts:
+  </p>
+  <section>
+    <h3><dfn>CPU utilization</dfn></h3>
+    <p>
+      The CPU utilization of the user's device is the average of the utilization of all the device's
+      CPU cores.
+    </p>
+    <p>
+      A CPU core's utilization is the fraction of time that the core has been executing code belonging
+      to a thread, as opposed to being in an idle state.
+    </p>
+    <p>
+      A CPU utilization close to 1.0 is very likely to lead to a bad user experience. The device is
+      likely at its thermal limits, and noise from CPU cooling fans is very noticeable. Applications
+      can help avoid bad user experiences by reducing their compute demands when the CPU utilization
+      is high.
+    </p>
+  </section>
+  <section>
+    <h3><dfn>CPU clock speed</dfn></h3>
+    <p>
+      Modern CPU cores support a set of clock speeds. The device's firmware or operating system can
+      set the core clock speed, in order to trade off the available CPU computational resources with
+      power consumption.
+    </p>
+    <p>
+      From a user experience standpoint, the following are the most interesting clock speed levels:
+      <ul>
+        <li>
+          The minimum clock speed results in the lowest power consumption.
+        </li>
+        <li>
+          The base clock speed results in the power consumption that the CPU is rated for.
+          Marketing materials emphasize this speed.
+        </li>
+        <li>
+          The maximum clock speed (also known as "Turbo boost" on certain CPUs) causes unsustainable
+          amounts of heat when continuously running. It can be used for short periods of
+          time, to satisfy bursts in demand for CPU compute.
+        </li>
+      </ul>
+    </p>
+    <p>
+      When a device's CPU utilization gets high, the device increases clock speeds across its CPU cores,
+      in an attempt to meet the CPU compute demand. As the speeds exceed the base clock speed, the
+      elevated power consumption increases the CPU's temperature. At some point, the device enters a
+      thermal throttling regime, where the CPU clock speed is reduced, in order to bring the temperature
+      down.
+    </p>
+    <p>
+      By the time thermal throttling kicks in, the user is having a bad experience. Applications can
+      help avoid thermal throttling by reducing their demands for CPU compute right as the CPU clock
+      speeds approaches / exceeds the base speed.
+    </p>
+  </section>
+  <section>
+    <h3>
+      Internal slots
+    </h3>
+    <p>
+      A construction {{ComputePressureObserver}} object, has the following internal slots.
+    </p>
+    <table class="simple">
+      <thead>
+        <tr>
+          <th>
+            Internal slot
+          </th>
+          <th>
+            Initial value
+          </th>
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <dfn>[[\Callback]]</dfn>
+          </td>
+          <td>
+            {{undefined}}
+          </td>
+          <td>
+            An optional function of type {{ComputePressureUpdateCallback}}.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <dfn>[[\CPUUtilizationThresholds]]</dfn>
+          </td>
+          <td>
+            An empty [=list=].
+          </td>
+          <td>
+            A [=list=] of {{double}}s between 0 and 1, representing
+            the user requested <a>CPU utilization</a> thresholds.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <dfn>[[\CPUSpeedThresholds]]</dfn>
+          </td>
+          <td>
+            An empty [=list=].
+          </td>
+          <td>
+            A [=list=] of {{double}}s between 0 and 1, representing
+            the user requested <a>CPU clock speed</a> thresholds.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</section>
+
+<section> <h2>Compute Pressure Observer</h2>
+The Compute Pressure Observer API enables developers to understand the utilization characteristics of a CPU.
+
+<section data-dfn-for="ComputePressureObserverCallback">
+  <h3>The <a>ComputePressureUpdateCallback</a> callback</h3>
+  <pre class="idl">
+    callback ComputePressureUpdateCallback = undefined (
+      ComputePressureObserverUpdate update,
+      ComputePressureObserver observer
+    );
+  </pre>
+  This callback will be invoked when <a>CPU clock speed</a> and/or <a>CPU utilization</a> crosses the user
+  set thresholds.
+</section>
+
+<section  data-dfn-for="ComputePressureObserver"> <h2>The <a>ComputePressureObserver</a> object</h2>
+  <p>
+    The {{ComputePressureObserver}} can be used to observe changes in the <a>CPU clock speed</a> and
+      <a>CPU utilization</a>, following user set thresholds.
+  </p>
+  <p>
+    Providing a list of thresholds effectively separates the resource usage into buckets. For example,
+    the thresholds list `[0.5, 0.75, 0.9]` defines a 4-bucket scheme, where the buckets cover the ranges
+    `[0-0.5[`, `[0.5-0.75[`, `[0.75-0.9[`, and `[0.9-1.0]`.
+  </p>
+  <aside class="note">
+    <p>
+      The user of the API can request an arbitary number of thresholds, but the User Agent may choose to
+      observe only a subset of those requested.
+    </p>
+    <p>
+      It is recommended that user agents allow at most 5 buckets (4 thresholds) for CPU utilization, and
+      2 buckets (1 threshold) for CPU speed.
+    </p>
+  </aside>
+  <pre class="idl">
+    [Exposed=Window]
+    interface ComputePressureObserver {
+      constructor(
+        ComputePressureUpdateCallback callback,
+        optional ComputePressureObserverOptions options = {}
+      );
+      undefined observe();
+      undefined unobserve();
+    };
+  </pre>
+
+  <p>The <dfn>ComputePressureObserver</dfn> interface represents a {{ComputePressureObserver}}.</p>
+  <section>
+    <h3>The <dfn>constructor()</dfn> method</h3>
+    <p> 
+      The {{ComputePressureObserver/constructor()}} method, when invoked, MUST run the
+      following step, given the arguments |callback:ComputePressureUpdateCallback| and
+      |options:ComputePressureObserverOptions|:
+      <ol class="algorithm">
+        <li>
+          Let |this:ComputePressureObserver| be a new the {{ComputePressureObserver}} object.
+        </li>
+        <li>
+          Set |this|.{{[[Callback]]}} to |callback|.
+        </li>
+        <li>
+          If |options|.|cpuUtilizationThresholds:list| exists, set |this|.{{[[CPUUtilizationThresholds]]}}
+          be a [=list=] equal to that.
+        </li>
+        <li>
+          If any value in |this|.{{[[CPUUtilizationThresholds]]}} is less than 0.0 or greater than 1.0,
+          throw a {{RangeError}} exception.
+        </li>
+        <li>
+          Sort |this|.{{[[CPUUtilizationThresholds]]}} in ascending order.
+        </li>
+        <li>
+          If |options|.|cpuSpeedThresholds:list| exists, set |this|.{{[[CPUSpeedThresholds]]}}
+          be a [=list=] equal to that.
+        </li>
+        <li>
+          If any value in |this|.{{[[CPUSpeedThresholds]]}} is less than 0.0 or greater than 1.0,
+          throw a {{RangeError}} exception.
+        </li>
+        <li>
+          Sort |this|.{{[[CPUSpeedThresholds]]}} in ascending order.
+        </li>
+        <li>
+          Return |this|.
+        </li>
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>observe()</dfn> method</h3>
+    <p>
+      The {{ComputePressureObserver/observe()}} method, when invoked, MUST run the
+      following step:
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>unobserve()</dfn> method</h3>
+    <p>
+      The {{ComputePressureObserver/unobserve()}} method, when invoked, MUST run the
+      following step:
+    </p>
+  </section>
+</section>
+
+<section data-dfn-for="ComputePressureObserverUpdate">
+  <h3>The <dfn>ComputePressureObserverUpdate</dfn> dictionary</h3>
+  <pre class="idl">
+    dictionary ComputePressureObserverUpdate {
+      double cpuSpeed;
+      double cpuUtilization;
+      ComputePressureObserverOptions options;
+    };
+  </pre>
+  <section>
+    <h3>The <dfn>cpuSpeed</dfn> attribute</h3>
+    <p>
+      The {{ComputePressureObserverUpdate/cpuSpeed}} attribute represents the current <a>CPU clock speed</a>
+      as a {{double}} value between `0` and `1`.
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>cpuUtilization</dfn> attribute</h3>
+    <p>
+      The {{ComputePressureObserverUpdate/cpuUtilization}} attribute represents the current <a>CPU utilization</a>
+      as a {{double}} value between `0` and `1`.
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>options</dfn> attribute</h3>
+    <p>
+      The {{ComputePressureObserverUpdate/options}} attribute represents the {{ComputePressureObserverOptions}}
+      dictionary that {{ComputePressureObserver}} was constructed with.
+    </p>
+  </section>
+</section>
+
+<section data-dfn-for="ComputePressureObserverOptions">
+  <h3>The <dfn>ComputePressureObserverOptions</dfn> dictionary</h3>
+  <pre class="idl">
+    dictionary ComputePressureObserverOptions {
+      sequence&lt;double&gt; cpuUtilizationThresholds = [];
+      sequence&lt;double&gt; cpuSpeedThresholds = [];
+    };
+  </pre>
+  <section>
+    <h3>The <dfn>cpuUtilizationThresholds</dfn> member</h3>
+    <p>
+      The {{ComputePressureObserverOptions/cpuUtilizationThresholds}} member represents the current <a>CPU utilization</a>
+      thresholds, as a sequence of {{double}}s values between `0` and `1`.
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>cpuSpeedThresholds</dfn> member</h3>
+    <p>
+      The {{ComputePressureObserverOptions/cpuSpeedThresholds}} member represents the current <a>CPU clock speed</a>
+      thresholds, as a sequence of {{double}}s values between `0` and `1`.
+    </p>
+  </section>
+</section>
+
+<section>
+  <h2>
+    Security and privacy considerations
+  </h2>
+  <p>
+    
+  </p>
+</section>
+<section id="examples" class="informative">
+  <h2>
+    Examples
+  </h2>
+  <pre class="example js" title="Adjusting the number of video feeds based on CPU usage">
+    const observer = new ComputePressureObserver(
+      computePressureCallback,
+      {
+        cpuUtilizationThresholds: [0.75, 0.9, 0.5],
+        cpuSpeedThresholds: [0.5],
+      }
+    );
+  
+    observer.observe();
+  
+    function computePressureCallback(update) {
+      // The CPU base clock speed is represented as 0.5.
+      if (update.cpuSpeed >= 0.5) {
+        // Dramatically cut down compute requirements to avoid overheating.
+        limitVideoStreams(2);
+        return;
+      }
+    
+      if (update.cpuUtilization >= 0.9) {
+        limitVideoStreams(2);
+      } else if (update.cpuUtilization >= 0.75) {
+        limitVideoStreams(4);
+      } else if (update.cpuUtilization >= 0.5) {
+        limitVideoStreams(8);
+      } else {
+        // The system is in great shape. Show all meeting participants.
+        showAllVideoStreams();
+      }
+    }
+  </pre>
+</section>
+<section id="conformance">
+  <p>
+    This is required for specifications that contain normative material.
+  </p>
+</section>
+
+<section class="appendix informative" id="acknowledgments"> <h2>Acknowledgments</h2>
+  <p>
+    Many thanks for valuable feedback and advice from
+    Chen Xing,
+    Evan Shrubsole,
+    Jesse Barnes,
+    Kamila Hasanbega,
+    Jan Gora,
+    Joshua Bell,
+    Matt Menke,
+    Nicolás Peña Moreno,
+    Opal Voravootivat,
+    Paul Jensen,
+    Peter Djeu,
+    Reilly Grant,
+    Ulan Degenbaev,
+    Victor Miura,
+    and
+    Zhenyao Mo
+  </p>
+</section>
