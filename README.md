@@ -3,8 +3,9 @@
 
 ## Authors:
 
-* Olivier Yiptong
-* Victor Costan
+* Olivier Yiptong (Google)
+* Victor Costan (Google)
+* Kenneth Rohde Christiansen (Intel)
 
 
 ## Participate
