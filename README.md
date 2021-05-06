@@ -183,14 +183,9 @@ const observer = new ComputePressureObserver(
       // The minimum clock speed is 0, and the maximum speed is 1. 0.5 maps to
       // the base clock speed.
       cpuSpeedThresholds: [0.5],
-      // Setting testMode to `true` will result in `computePressureCallback` to
-      // be invoked regularly even if no thresholds have been crossed. The
-      // computational data returned will not be informative, but this is useful
-      // for testing if the requested options have been accepted.
-      testMode: false,
     });
 
-observer.start();
+observer.observe();
 
 function computePressureCallback(update) {
   // The CPU base clock speed is represented as 0.5.
@@ -198,16 +193,16 @@ function computePressureCallback(update) {
     // Dramatically cut down compute requirements to avoid overheating.
     return;
   }
-  
+
   // Options applied are returned with every update.
-  if (update.options.testMode) {
-    // The options applied may be different than those requested.
-    // e.g. the user agent may have reduced the number of thresholds observed.
-    console.log(
-    `Utilization Thresholds: ${JSON.stringify(update.options.cpuUtilizationThresholds)}`);
-    console.log(
-    `Speed Thresholds: ${JSON.stringify(update.options.cpuSpeedThresholds)}`);
-  }
+  // The options applied may be different than those requested.
+  // e.g. the user agent may have reduced the number of thresholds observed.
+  console.log(
+     "Effective CPU utilization thresholds: " +
+     JSON.stringify(update.options.cpuUtilizationThresholds));
+  console.log(
+     "Effective CPU speed thresholds: " +
+     JSON.stringify(update.options.cpuSpeedThresholds));
 }
 ```
 
@@ -226,14 +221,9 @@ const observer = new ComputePressureObserver(
       // The minimum clock speed is 0, and the maximum speed is 1. 0.5 maps to
       // the base clock speed.
       cpuSpeedThresholds: [0.5],
-      // Setting testMode to `true` will result in `computePressureCallback` to
-      // be invoked regularly even if no thresholds have been crossed. The
-      // computational data returned will not be informative, but this is useful
-      // for testing if the requested options have been accepted.
-      testMode: false,
     });
 
-observer.start();
+observer.observe();
 
 function computePressureCallback(update) {
   // The CPU base clock speed is represented as 0.5.
@@ -255,14 +245,14 @@ function computePressureCallback(update) {
   }
 
   // Options applied are returned with every update.
-  if (update.options.testMode) {
-    // The options applied may be different than those requested.
-    // e.g. the user agent may have reduced the number of thresholds observed.
-    console.log(
-    `Utilization Thresholds: ${JSON.stringify(update.options.cpuUtilizationThresholds)}`);
-    console.log(
-    `Speed Thresholds: ${JSON.stringify(update.options.cpuSpeedThresholds)}`);
-  }
+  // The options applied may be different than those requested.
+  // e.g. the user agent may have reduced the number of thresholds observed.
+  console.log(
+     "Effective CPU utilization thresholds: " +
+     JSON.stringify(update.options.cpuUtilizationThresholds));
+  console.log(
+     "Effective CPU speed thresholds: " +
+     JSON.stringify(update.options.cpuSpeedThresholds));
 }
 ```
 
@@ -303,15 +293,13 @@ information exposed is reduced by the following steps.
 2. **Aggregation** - Normalized per-core information is aggregated into one
    overall number.
 
-3. **Bucketing** - Each application (origin) must declare a few buckets
-   (ranges of values between 0.0 and 1.0) that it is interested in. The
-   application only gets to learn which bucket contains each aggregated number.
+3. **Quantization** (a.k.a. bucketing) - Each application (origin) must declare
+   a small number of value ranges (buckets) where it wants to behave
+   differently. The application doesn't receive the exact aggregation results,
+   and instead only gets to learn the range (bucket) that each aggregated number
+   falls within to.
 
-4. **Quantization** - The values returned provide enough information for the
-   application to determine how resource usage changed relative to the defined
-   buckets.
-
-5. **Rate-limiting** - The user agent notifies the application of changes in
+4. **Rate-limiting** - The user agent notifies the application of changes in
    the information it can learn (buckets that each aggregated number). Change
    notifications are rate-limited.
 
@@ -360,36 +348,28 @@ aggregation over a time window.
 TODO: Proposal for aggregating clock speeds across systems with heterogeneous
 CPU cores, such as [big.LITTLE](https://en.wikipedia.org/wiki/ARM_big.LITTLE).
 
-#### Bucketing
-
-Providing a list of thresholds effectively separates the resource usage into
-buckets. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
-4-bucket scheme, where the buckets cover the ranges 0-0.5, 0.5-0.75, 0.75-0.9,
-and 0.9-1.0.
-
-Applications request a number of thresholds in the list provided, but the User
-Agent may choose to observe a subset of those requested.
-
-We will recommend that user agents allow at most 5 buckets (4 thresholds) for
-CPU utilization, and 2 buckets (1 threshold) for CPU speed.
-
-#### Quantizing values
+#### Quantizing values (a.k.a. Bucketing)
 
 Quantizing the aggregated CPU utilization and clock speed reduces the amount of
 information exposed by the API.
 
-Having applications designate the quantization buckets minimizes the number
-of buckets that user agents need to allow in order to enable the decisions used
-in a multitude of applications.
+Having applications designate the quantization ranges (buckets) reduces the
+quantization resolution that user agents must support in order to enable the
+decisions used in a multitude of applications.
 
-Applications determine the quantization scheme by passing in a list of
-thresholds. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
-4-bucket scheme. We propose representing the state of resource usage using the
-middle of the range between thresholds.
+Applications communicate their desired quantization scheme by passing in a list
+of thresholds. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
+4-bucket scheme, where the buckets cover the value ranges 0-0.5, 0.5-0.75,
+0.75-0.9, and 0.9-1.0. We propose representing a bucket using the middle value
+in its range.
 
 For example, suppose an application used the threshold list above, and the user
 agent measured a CPU utilization of 0.87. This would fall under the 0.75-0.9
 bucket, and would be reported as 0.825 (the average of 0.75 and 0.9).
+
+We will recommend that user agents allow at most 5 buckets (4 thresholds) for
+CPU utilization, and 2 buckets (1 threshold) for CPU speed.
+
 
 #### Rate-limiting change notifications
 
@@ -414,8 +394,12 @@ overhead of this API.
 
 ### Third-party contexts
 
-This API will only be available in first-party contexts. This is necessary for
-preserving the privacy benefits of the API's quantizing scheme.
+This API will only be available in frames served from the same origin as the
+top-level frame. This requirement is necessary for preserving the privacy
+benefits of the API's quantizing scheme.
+
+The same-origin requirement above implies that the API is only available in
+first-party contexts.
 
 
 ## Considered alternatives
@@ -494,6 +478,48 @@ We discarded this option because we got developer feedback that mitigating bad
 user experiences requires being able to react differently to high CPU
 utilization and high CPU clock speeds. The latter needs to be addressed more
 urgently than the former.
+
+### Report quantization ranges instead of values
+
+We considered removing the quantization step that reduces a range to its middle
+value. So, given a CPU utilization value of 0.87 and a quantization scheme of
+[0.2, 0.5, 0.8], instead of reporting a quantized value of 0.9 (the middle of
+the range 0.8-1.0), the API would report an object `{low: 0.8, high: 1.0}`.
+
+The main benefit of this approach is that the user agent has a clear way to
+communicate adjustments to the quantization scheme. Expanding on the example
+above, suppose a user agent considers that the CPU utilization quantization
+scheme [0.2, 0.5, 0.8] reveals too much information, and cuts it down to [0.5].
+The 0.87 CPU utilization value would be reported as `{low: 0.5, high: 1.0}`.
+This is clearer than the value 0.75, which would be reported by the current
+design.
+
+The main drawback of this approach is added complexity in the application code
+that processes updates, as suggested below.
+
+
+```js
+function computePressureCallback(update) {
+  // Cut down compute requirements only when we're pretty sure that the device
+  // is overloaded.
+  if (update.cpuSpeed.low >= 0.5 && update.cpuUtilization.low >= 0.8) {
+    // Dramatically cut down compute requirements to avoid overheating.
+    return;
+  }
+
+  // Eliminate unnecessary visual effects when there's a good chance that the
+  // device is overloaded.
+  if ((update.cpuSpeed.low >= 0.25 && update.cpuUtilization.high >= 0.5) ||
+      (update.cpuUtilization.low >= 0.5 && update.cpuUtilization.high >= 0.8)) {
+    // Remove transitions and non-essential animations.
+    return;
+  }
+}
+```
+
+We did not pursue this option based on the mental models of the developers we
+partnered with while designing this API. We welcome feedback around how the API
+reports quantized values.
 
 
 ### Named buckets for CPU utilization
