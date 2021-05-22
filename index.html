@@ -345,9 +345,177 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h2>
     Security and privacy considerations
   </h2>
-  <p>
-    
-  </p>
+  <section>
+    <h3>Minimizing information exposure</h3>
+    <p>
+      Exposing hardware related events related to CPU utilization 
+      <a href="https://w3ctag.github.io/design-principles/#device-ids">
+      increases the risk of harming the user's privacy</a>.
+    </p>
+    <p>
+      To minimize this risk, only the absolute minimal
+      amount of information needed to to support the use-cases is exposed.
+    </p>
+    <p>
+      The subsections below describe the processing model. At a high level, the
+      information exposed is reduced by the following steps:
+      <ol>
+        <li>
+          <b>Normalization</b> - Per-core information reported by the operating system is
+          normalized to a number between 0.0 and 1.0. This removes variability across
+          CPU models and operating systems.
+        </li>
+        <li>
+          <b>Aggregation</b> - Normalized per-core information is aggregated into one
+          overall number.
+        </li>
+        <li>
+          <b>Quantization</b> (a.k.a. bucketing) - Each application (origin) must declare
+          a small number of value ranges (buckets) where it wants to behave
+          differently. The application doesn't receive the exact aggregation results,
+          and instead only gets to learn the range (bucket) that each aggregated number
+          falls within to.
+        </li>
+        <li>
+          <b>Rate-limiting</b> - The user agent notifies the application of changes in
+          the information it can learn (buckets that each aggregated number). Change
+          notifications are rate-limited.
+        </li>
+      </ol>
+      <section>
+        <h4>Normalizing CPU utilization</h4>
+        <p>
+          The user agent will normalize CPU core utilization information reported by the
+          operating system to a number between 0.0 and 1.0.
+        </p>
+        <p>
+          0.0 maps to 0% utilization, meaning the CPU core was always idle during the
+          observed time window. 1.0 maps to 100% utilization, meaning the CPU core
+          was never idle during the observed time window.
+        </p>
+      </section>
+      <section>
+        <h4>Aggregating CPU utilization</h4>
+        <p>
+          CPU utilization is averaged over all enabled CPU cores.
+        </p>
+        <p>
+          Under normal circumstances, all of a system's cores are enabled. However,
+          mitigating some recent micro-architectural attacks on some devices may require
+          completely disabling some CPU cores. For example, some Intel systems require
+          disabling hyperthreading.
+        </p>
+        <p>
+          We recommend that user agents aggregate CPU utilization over a time window of 1
+          second. Smaller windows increase the risk of facilitating a side-channel attack.
+          Larger windows reduce the application's ability to make timely decisions that
+          avoid bad user experiences.
+        </p>
+      </section>
+      <section>
+        <h4>Normalizing CPU clock speed</h4>
+        <p>
+          This API normalizes each CPU core's clock speed to a number between `0.0` and `1.0`.
+          The proposal intends to enable the decisions we set out to support, without
+          exposing the clock speeds.
+        </p>
+        <p>
+           We recommend the following principles for normalizing a CPU core's clock speed.
+           <ul>
+             <li>
+              The minimum clock speed is always reported as `0.0`.
+             </li>
+             <li>
+              The base clock speed is always reported as `0.5`.
+             </li>
+             <li>
+              The maximum clock speed is always reported as `1.0`.
+             </li>
+             <li>
+              Speeds outside these values are clamped (to `0.0` or `1.0`).
+             </li>
+             <li>
+              Speeds between these values are linearly interpolated.
+             </li>
+           </ul>
+        </p>
+      </section>
+      <section>
+        <h4>Aggregating CPU clock speed</h4>
+        <p class="issue">
+          TODO: Aggregating is an average of the current speed across all cores. No
+          aggregation over a time window. Proposal for aggregating clock speeds across
+          systems with heterogeneous CPU cores
+        </p>
+      </section>
+      <section>
+        <h4>Quantizing values (a.k.a. Bucketing)</h4>
+        <p>
+          Quantizing the aggregated CPU utilization and clock speed reduces the amount of
+          information exposed by the API.
+        </p>
+        <p>
+          Having applications designate the quantization ranges (buckets) reduces the
+          quantization resolution that user agents must support in order to enable the
+          decisions used in a multitude of applications.
+        </p>
+        <p>
+          Applications communicate their desired quantization scheme by passing in a list
+          of thresholds. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
+          4-bucket scheme, where the buckets cover the value ranges `0`-`0.5`, `0.5`-`0.75`,
+          `0.75`-`0.9`, and `0.9`-`1.0`. We propose representing a bucket using the middle
+          value in its range.
+        </p>
+        <p class="example">
+          Suppose an application used the threshold list above, and the user
+          agent measured a CPU utilization of `0.87`. This would fall under the `0.75`-`0.9`
+          bucket, and would be reported as `0.825` (the average of `0.75` and `0.9`).
+        </p>
+        <p>
+          We recommend that user agents allow at most 5 buckets (4 thresholds) for
+          CPU utilization, and 2 buckets (1 threshold) for CPU speed.
+        </p>
+      </section>
+      <section>
+        <h4>Rate-limiting change notifications</h4>
+        <p>
+          We propose exposing the quantized CPU utilization and clock speed via
+          rate-limited change notifications. This aims to remove the ability to observe
+          the precise time when a value transitions between two buckets.
+        </p>
+        <p>
+          More precisely, once the compute pressure observer is installed, it will be
+          called once with initial quantized values, and then be called when the quantized
+          values change. The subsequent calls will be rate-limited. When the callback is
+          called, the most recent quantized value is reported.
+        </p>
+        <p>
+          The specification will recommend a rate limit of at most one call per second
+          for the active window, and one call per 10 seconds for all other windows. We
+          will also recommend that the call timings are jittered across origins.
+        </p>
+        <p>
+          These measures benefit the user's privacy, by reducing the risk of
+          identifying a device across multiple origins. The rate-limiting also benefits
+          the user's security, by making it difficult to use this API for timing attacks.
+          Last, rate-limiting change callbacks places an upper bound on the performance
+          overhead of this API.
+        </p>
+      </section>
+      <section>
+        <h4>Third-party contexts</h4>
+        <p>
+          This API will only be available in frames served from the same origin as the
+          top-level frame. This requirement is necessary for preserving the privacy
+          benefits of the API's quantizing scheme.
+        </p>
+        <p>
+          The same-origin requirement above implies that the API is only available in
+          first-party contexts.
+        </p>
+      </section>
+    </p>
+  </section>
 </section>
 <section id="examples" class="informative">
   <h2>
