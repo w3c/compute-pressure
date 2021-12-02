@@ -121,7 +121,7 @@
       speeds approaches / exceeds the base speed.
     </p>
   </section>
-  <section>
+  <section  data-dfn-for="ComputePressureObserver">
     <h3>
       Internal slots
     </h3>
@@ -242,29 +242,29 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Let |this:ComputePressureObserver| be a new the {{ComputePressureObserver}} object.
         </li>
         <li>
-          Set |this|.{{[[Callback]]}} to |callback|.
+          Set |this|.{{ComputePressureObserver/[[Callback]]}} to |callback|.
         </li>
         <li>
-          If |options|.|cpuUtilizationThresholds:list| exists, set |this|.{{[[CPUUtilizationThresholds]]}}
+          If |options|.|cpuUtilizationThresholds:list| exists, set |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}}
           be a [=list=] equal to that.
         </li>
         <li>
-          If any value in |this|.{{[[CPUUtilizationThresholds]]}} is less than 0.0 or greater than 1.0,
+          If any value in |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}} is less than 0.0 or greater than 1.0,
           throw a {{RangeError}} exception.
         </li>
         <li>
-          Sort |this|.{{[[CPUUtilizationThresholds]]}} in ascending order.
+          Sort |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}} in ascending order.
         </li>
         <li>
-          If |options|.|cpuSpeedThresholds:list| exists, set |this|.{{[[CPUSpeedThresholds]]}}
+          If |options|.|cpuSpeedThresholds:list| exists, set |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}}
           be a [=list=] equal to that.
         </li>
         <li>
-          If any value in |this|.{{[[CPUSpeedThresholds]]}} is less than 0.0 or greater than 1.0,
+          If any value in |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} is less than 0.0 or greater than 1.0,
           throw a {{RangeError}} exception.
         </li>
         <li>
-          Sort |this|.{{[[CPUSpeedThresholds]]}} in ascending order.
+          Sort |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} in ascending order.
         </li>
         <li>
           Return |this|.
