@@ -45,18 +45,28 @@
   <h2>Introduction</h2>
   <p>
     Modern applications often need to balance the trade offs and advantages of fully utilizing
-    the system CPU resources, in order to provide a modern and improved user experience. 
+    the system's processing resources, in order to provide a modern and delightful user experience.
   </p>
   <p>
     As an example, many applications can render video effects with varying degrees of sophistication.
     These applications aim to provide the best user experience, while avoiding driving the user's
-    device in a high CPU utilization regime.
+    device into a high [=load=] regime.
   </p>
   <p>
-    High CPU utilization is undesirable because it strongly degrades the user experience. Many
-    smartphones, tablets and laptops can become uncomfortably hot to the touch. The fans in laptops
-    and desktops can become so loud that they disrupt conversations or the users’ ability to focus.
-    In many cases, a device under high CPU utilization appears to be unresponsive, as the operating
+    [=Utilization=] of [=processing units=] close to and often reaching 100% can lead to a bad
+    user experience, as different tasks are fighting for the processing time.
+    This can lead to slowless, which is especially noticeable with input delay.
+
+    Further, a prolonged utilization close 100% can cause the [=processing units=] to heat up due to prolonged
+    [=boosting=], which can lead to [=throttling=], resulting in an even worse user experience.
+  </p>
+  <p>
+    As a result of themal limits, many smartphones, tablets and laptops can become uncomfortably hot
+    to the touch. The fans in laptops and desktops can become so loud that they disrupt conversations
+    or the users’ ability to focus.
+  </p>
+  <p>
+    In many cases, a device under high [=load=] appears to be unresponsive, as the operating
     system may fail to schedule the threads advancing the task that the user is waiting for. See also
     <a href="https://github.com/oyiptong/compute-pressure/#goals--motivating-use-cases">Compute Pressure:
     Use Cases</a>.
@@ -68,57 +78,68 @@
     This specification defines the following concepts:
   </p>
   <section>
-    <h3><dfn>CPU utilization</dfn></h3>
+    <h3><dfn>Processing Units</dfn></h3>
     <p>
-      The CPU utilization of the user's device is the average of the utilization of all the device's
-      CPU cores.
-    </p>
-    <p>
-      A CPU core's utilization is the fraction of time that the core has been executing code belonging
-      to a thread, as opposed to being in an idle state.
-    </p>
-    <p>
-      A CPU utilization close to 1.0 is very likely to lead to a bad user experience. The device is
-      likely at its thermal limits, and noise from CPU cooling fans is very noticeable. Applications
-      can help avoid bad user experiences by reducing their compute demands when the CPU utilization
-      is high.
+      Computing devices consist of a multitude of different processing units such as the Central
+      Processing Unit (<dfn>CPU</dfn>), Graphics Processing Unit (<dfn>GPU</dfn>) and many specialized
+      processing units are becoming popular such as ones designed to accelerate specific tasks like
+      machine learning or computer vision. This specification uses the term <dfn>XPU</dfn> to refer to
+      <em>any</em> of these processing units.
     </p>
   </section>
   <section>
-    <h3><dfn>CPU clock speed</dfn></h3>
+    <h3><dfn>Utilization</dfn></h3>
     <p>
-      Modern CPU cores support a set of clock speeds. The device's firmware or operating system can
-      set the core clock speed, in order to trade off the available CPU computational resources with
-      power consumption.
+      [=Processing Unit=] utilization refers to a device’s usage of the [=XPU=] processing
+      resources, or the amount of work handled by an [=XPU=]. Not every task requires heavy [=XPU=]
+      time as the task might depend on other resources, such as reading data from memory.
     </p>
     <p>
-      From a user experience standpoint, the following are the most interesting clock speed levels:
-      <ul>
-        <li>
-          The minimum clock speed results in the lowest power consumption.
-        </li>
-        <li>
-          The base clock speed results in the power consumption that the CPU is rated for.
-          Marketing materials emphasize this speed.
-        </li>
-        <li>
-          The maximum clock speed (also known as "Turbo boost" on certain CPUs) causes unsustainable
-          amounts of heat when continuously running. It can be used for short periods of
-          time, to satisfy bursts in demand for CPU compute.
-        </li>
-      </ul>
+      [=XPU=] often contain multiple execution units/cores, so utilization refers to the
+      <em>average percentage of the total working time of all execution units.</em>
     </p>
     <p>
-      When a device's CPU utilization gets high, the device increases clock speeds across its CPU cores,
-      in an attempt to meet the CPU compute demand. As the speeds exceed the base clock speed, the
-      elevated power consumption increases the CPU's temperature. At some point, the device enters a
-      thermal throttling regime, where the CPU clock speed is reduced, in order to bring the temperature
-      down.
+      As an example, for a [=CPU=], the utilization is the fraction of time that each core has been
+      executing code belonging to a thread, as opposed to being in an idle state.
     </p>
     <p>
-      By the time thermal throttling kicks in, the user is having a bad experience. Applications can
-      help avoid thermal throttling by reducing their demands for CPU compute right as the CPU clock
-      speeds approaches / exceeds the base speed.
+      [=Processing Units=] are designed to run safely at 100% utilization. However, it means they have reached
+      their limit and cannot take on additional work and maybe not even handle the current work at
+      hand, resulting in perceptible slowness.
+    </p>
+  </section>
+  <section>
+    <h3><dfn>Load</dfn></h3>
+    <p>
+      For [=CPUs=], it is common to consider load in addition to [=utilization=]. Load is the number
+      of processes (queue length) being executed or waiting to be by the CPU. When a system is
+      heavily loaded, its [=CPU=] [=utilization=] is likely close to 100%, though a system with
+      2 processes in the queue and one with 10 are not comparable. For this reason it is common
+      to look at load average (average system load over a period of time) as a set of three
+      numbers, which represent the load during the last one-, five-, and fifteen-minute periods.
+    </p>
+  </section>
+  <section>
+    <h3><dfn>Frequency</dfn></h3>
+    <p>
+      [=Processing units=] run at a certain frequency, also known as clock speed, expressed in
+      cycles per second (e.g. gigahertz). The base frequency is a measure that the CPU manufacturer
+      guarantees the [=processing unit=] can run at with reasonable cooling.
+    </p>
+    <p>
+      To avoid [=processing units=] running at 100% utilization for long, some [=XPUs=] can use <dfn>dynamic
+      frequency scaling</dfn> to temporarily <dfn data-lt="boost|boosting">boost</dfn> the
+      frequency of a certain execution unit and then assign the largest task to it, alleviating
+      the poor user experience in many situations.
+    </p>
+    <p>
+      [=Dynamic Frequency Scaling=] can also be used to
+      <dfn data-lt="throttle|throttling">throttle</dfn> the execution,
+      by slowing down the frequency to use less energy and conserve battery, especially in laptops.
+    </p>
+    <p>
+      Throttling can also happen as a result of an [=processing unit=] reaching its thermal limits. This
+      thermal throttling helps cool the [=XPU=] down when it gets too hot by lowering the frequency.
     </p>
   </section>
   <section  data-dfn-for="ComputePressureObserver">
@@ -163,7 +184,7 @@
           </td>
           <td>
             A [=list=] of {{double}}s between 0 and 1, representing
-            the user requested <a>CPU utilization</a> thresholds.
+            the user requested {{CPU}} {{utilization}} thresholds.
           </td>
         </tr>
         <tr>
@@ -175,7 +196,7 @@
           </td>
           <td>
             A [=list=] of {{double}}s between 0 and 1, representing
-            the user requested <a>CPU clock speed</a> thresholds.
+            the user requested [=CPU=] [=frequency=] thresholds.
           </td>
         </tr>
       </tbody>
@@ -194,14 +215,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       ComputePressureObserver observer
     );
   </pre>
-  This callback will be invoked when <a>CPU clock speed</a> and/or <a>CPU utilization</a> crosses the user
+  This callback will be invoked when [=CPU=] [=frequency=] and/or [=utilization=] crosses the user
   set thresholds.
 </section>
 
 <section  data-dfn-for="ComputePressureObserver"> <h2>The <a>ComputePressureObserver</a> object</h2>
   <p>
-    The {{ComputePressureObserver}} can be used to observe changes in the <a>CPU clock speed</a> and
-      <a>CPU utilization</a>, following user set thresholds.
+    The {{ComputePressureObserver}} can be used to observe changes in the [=CPU=] [=frequency=] and
+      <a>utilization</a>, following user set thresholds.
   </p>
   <p>
     Providing a list of thresholds effectively separates the resource usage into buckets. For example,
@@ -233,7 +254,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <p>The <dfn>ComputePressureObserver</dfn> interface represents a {{ComputePressureObserver}}.</p>
   <section>
     <h3>The <dfn>constructor()</dfn> method</h3>
-    <p> 
+    <p>
       The {{ComputePressureObserver/constructor()}} method, when invoked, MUST run the
       following step, given the arguments |callback:ComputePressureUpdateCallback| and
       |options:ComputePressureObserverOptions|:
@@ -299,14 +320,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The <dfn>cpuSpeed</dfn> attribute</h3>
     <p>
-      The {{ComputePressureObserverUpdate/cpuSpeed}} attribute represents the current <a>CPU clock speed</a>
+      The {{ComputePressureObserverUpdate/cpuSpeed}} attribute represents the current [=CPU=] [=frequency=]
       as a {{double}} value between `0` and `1`.
     </p>
   </section>
   <section>
     <h3>The <dfn>cpuUtilization</dfn> attribute</h3>
     <p>
-      The {{ComputePressureObserverUpdate/cpuUtilization}} attribute represents the current <a>CPU utilization</a>
+      The {{ComputePressureObserverUpdate/cpuUtilization}} attribute represents the current CPU <a> utilization</a>
       as a {{double}} value between `0` and `1`.
     </p>
   </section>
@@ -330,14 +351,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The <dfn>cpuUtilizationThresholds</dfn> member</h3>
     <p>
-      The {{ComputePressureObserverOptions/cpuUtilizationThresholds}} member represents the current <a>CPU utilization</a>
+      The {{ComputePressureObserverOptions/cpuUtilizationThresholds}} member represents the current {{CPU}} {{utilization}}
       thresholds, as a sequence of {{double}}s values between `0` and `1`.
     </p>
   </section>
   <section>
     <h3>The <dfn>cpuSpeedThresholds</dfn> member</h3>
     <p>
-      The {{ComputePressureObserverOptions/cpuSpeedThresholds}} member represents the current <a>CPU clock speed</a>
+      The {{ComputePressureObserverOptions/cpuSpeedThresholds}} member represents the current [=CPU=] [=frequency=]
       thresholds, as a sequence of {{double}}s values between `0` and `1`.
     </p>
   </section>
@@ -350,7 +371,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>Minimizing information exposure</h3>
     <p>
-      Exposing hardware related events related to CPU utilization 
+      Exposing hardware related events related to {{CPU}} {{utilization}}
       <a href="https://w3ctag.github.io/design-principles/#device-ids">
       increases the risk of harming the user's privacy</a>.
     </p>
@@ -415,23 +436,23 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </p>
       </section>
       <section>
-        <h4>Normalizing CPU clock speed</h4>
+        <h4>Normalizing CPU frequency</h4>
         <p>
-          This API normalizes each CPU core's clock speed to a number between `0.0` and `1.0`.
+          This API normalizes each CPU core's frequency to a number between `0.0` and `1.0`.
           The proposal intends to enable the decisions we set out to support, without
-          exposing the clock speeds.
+          exposing the [=CPU=] frequency steps.
         </p>
         <p>
-           We recommend the following principles for normalizing a CPU core's clock speed.
+           We recommend the following principles for normalizing a CPU core's [=frequencies=]
            <ul>
              <li>
-              The minimum clock speed is always reported as `0.0`.
+              The minimum frequency is always reported as `0.0`.
              </li>
              <li>
-              The base clock speed is always reported as `0.5`.
+              The base frequency is always reported as `0.5`.
              </li>
              <li>
-              The maximum clock speed is always reported as `1.0`.
+              The maximum frequency is always reported as `1.0`.
              </li>
              <li>
               Speeds outside these values are clamped (to `0.0` or `1.0`).
@@ -443,17 +464,17 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </p>
       </section>
       <section>
-        <h4>Aggregating CPU clock speed</h4>
+        <h4>Aggregating CPU frequency</h4>
         <p class="issue">
           TODO: Aggregating is an average of the current speed across all cores. No
-          aggregation over a time window. Proposal for aggregating clock speeds across
+          aggregation over a time window. Proposal for aggregating frequencies across
           systems with heterogeneous CPU cores
         </p>
       </section>
       <section>
         <h4>Quantizing values (a.k.a. Bucketing)</h4>
         <p>
-          Quantizing the aggregated CPU utilization and clock speed reduces the amount of
+          Quantizing the aggregated CPU utilization and frequency reduces the amount of
           information exposed by the API.
         </p>
         <p>
@@ -481,7 +502,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       <section>
         <h4>Rate-limiting change notifications</h4>
         <p>
-          We propose exposing the quantized CPU utilization and clock speed via
+          We propose exposing the quantized CPU utilization and frequency via
           rate-limited change notifications. This aims to remove the ability to observe
           the precise time when a value transitions between two buckets.
         </p>
@@ -531,17 +552,17 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         cpuSpeedThresholds: [0.5],
       }
     );
-  
+
     observer.observe();
-  
+
     function computePressureCallback(update) {
-      // The CPU base clock speed is represented as 0.5.
+      // The CPU base frequency is represented as 0.5.
       if (update.cpuSpeed >= 0.5) {
         // Dramatically cut down compute requirements to avoid overheating.
         limitVideoStreams(2);
         return;
       }
-    
+
       if (update.cpuUtilization >= 0.9) {
         limitVideoStreams(2);
       } else if (update.cpuUtilization >= 0.75) {
