@@ -122,15 +122,21 @@
   <section>
     <h3><dfn>Frequency</dfn></h3>
     <p>
-      [=Processing units=] run at a certain frequency, also known as clock speed, expressed in
+      [=Processing units=] run at a certain frequency, also known as clock rate, expressed in
       cycles per second (e.g. gigahertz). The base frequency is a measure that the CPU manufacturer
       guarantees the [=processing unit=] can run at with reasonable cooling.
     </p>
     <p>
-      To avoid [=processing units=] running at 100% utilization for long, some [=XPUs=] can use <dfn>dynamic
+      To avoid [=processing units=] running at 100% utilization for long, some [=processing units=] can use <dfn>dynamic
       frequency scaling</dfn> to temporarily <dfn data-lt="boost|boosting">boost</dfn> the
       frequency of a certain execution unit and then assign the largest task to it, alleviating
       the poor user experience in many situations.
+    </p>
+    <p>
+      The [=processing unit=] will try to increase the operating frequency in regular increments (steps)
+      as required to meet demand. The increased frequency is limited by the [=processing unit=]'s power,
+      current, and thermal limits, the number of execution units currently in use, and the maximum
+      frequency of the active ones.
     </p>
     <p>
       [=Dynamic Frequency Scaling=] can also be used to
@@ -139,7 +145,7 @@
     </p>
     <p>
       Throttling can also happen as a result of an [=processing unit=] reaching its thermal limits. This
-      thermal throttling helps cool the [=XPU=] down when it gets too hot by lowering the frequency.
+      thermal throttling helps cool the [=processing unit=] down when it gets too hot by lowering the frequency.
     </p>
   </section>
   <section  data-dfn-for="ComputePressureObserver">
