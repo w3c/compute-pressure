@@ -148,12 +148,63 @@
       thermal throttling helps cool the [=processing unit=] down when it gets too hot by lowering the frequency.
     </p>
   </section>
+</section>
+
+<section> <h2>Compute Pressure Observer</h2>
+The Compute Pressure Observer API enables developers to understand the utilization characteristics of a CPU.
+
+<section data-dfn-for="ComputePressureObserverCallback">
+  <h3>The <a>ComputePressureUpdateCallback</a> callback</h3>
+  <pre class="idl">
+    callback ComputePressureUpdateCallback = undefined (
+      ComputePressureObserverUpdate update,
+      ComputePressureObserver observer
+    );
+  </pre>
+  This callback will be invoked when [=CPU=] [=frequency=] and/or [=utilization=] crosses the user
+  set thresholds.
+</section>
+
+<section  data-dfn-for="ComputePressureObserver"> <h2>The <a>ComputePressureObserver</a> object</h2>
+  <p>
+    The {{ComputePressureObserver}} can be used to observe changes in the [=CPU=] [=frequency=] and
+      <a>utilization</a>, following user set thresholds.
+  </p>
+  <p>
+    Providing a list of thresholds effectively separates the resource usage into buckets. For example,
+    the thresholds list `[0.5, 0.75, 0.9]` defines a 4-bucket scheme, where the buckets cover the ranges
+    `[0-0.5[`, `[0.5-0.75[`, `[0.75-0.9[`, and `[0.9-1.0]`.
+  </p>
+  <aside class="note">
+    <p>
+      The user of the API can request an arbitary number of thresholds, but the User Agent may choose to
+      observe only a subset of those requested.
+    </p>
+    <p>
+      It is recommended that user agents allow at most 5 buckets (4 thresholds) for CPU utilization, and
+      2 buckets (1 threshold) for CPU speed.
+    </p>
+  </aside>
+  <pre class="idl">
+    [Exposed=Window]
+    interface ComputePressureObserver {
+      constructor(
+        ComputePressureUpdateCallback callback,
+        optional ComputePressureObserverOptions options = {}
+      );
+      undefined observe();
+      undefined unobserve();
+    };
+  </pre>
+
+  <p>The <dfn>ComputePressureObserver</dfn> interface represents a {{ComputePressureObserver}}.</p>
+
   <section  data-dfn-for="ComputePressureObserver">
     <h3>
       Internal slots
     </h3>
     <p>
-      A construction {{ComputePressureObserver}} object, has the following internal slots.
+      A constructed  {{ComputePressureObserver}} object has the following internal slots.
     </p>
     <table class="simple">
       <thead>
@@ -208,56 +259,6 @@
       </tbody>
     </table>
   </section>
-</section>
-
-<section> <h2>Compute Pressure Observer</h2>
-The Compute Pressure Observer API enables developers to understand the utilization characteristics of a CPU.
-
-<section data-dfn-for="ComputePressureObserverCallback">
-  <h3>The <a>ComputePressureUpdateCallback</a> callback</h3>
-  <pre class="idl">
-    callback ComputePressureUpdateCallback = undefined (
-      ComputePressureObserverUpdate update,
-      ComputePressureObserver observer
-    );
-  </pre>
-  This callback will be invoked when [=CPU=] [=frequency=] and/or [=utilization=] crosses the user
-  set thresholds.
-</section>
-
-<section  data-dfn-for="ComputePressureObserver"> <h2>The <a>ComputePressureObserver</a> object</h2>
-  <p>
-    The {{ComputePressureObserver}} can be used to observe changes in the [=CPU=] [=frequency=] and
-      <a>utilization</a>, following user set thresholds.
-  </p>
-  <p>
-    Providing a list of thresholds effectively separates the resource usage into buckets. For example,
-    the thresholds list `[0.5, 0.75, 0.9]` defines a 4-bucket scheme, where the buckets cover the ranges
-    `[0-0.5[`, `[0.5-0.75[`, `[0.75-0.9[`, and `[0.9-1.0]`.
-  </p>
-  <aside class="note">
-    <p>
-      The user of the API can request an arbitary number of thresholds, but the User Agent may choose to
-      observe only a subset of those requested.
-    </p>
-    <p>
-      It is recommended that user agents allow at most 5 buckets (4 thresholds) for CPU utilization, and
-      2 buckets (1 threshold) for CPU speed.
-    </p>
-  </aside>
-  <pre class="idl">
-    [Exposed=Window]
-    interface ComputePressureObserver {
-      constructor(
-        ComputePressureUpdateCallback callback,
-        optional ComputePressureObserverOptions options = {}
-      );
-      undefined observe();
-      undefined unobserve();
-    };
-  </pre>
-
-  <p>The <dfn>ComputePressureObserver</dfn> interface represents a {{ComputePressureObserver}}.</p>
   <section>
     <h3>The <dfn>constructor()</dfn> method</h3>
     <p>
@@ -368,6 +369,20 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       thresholds, as a sequence of {{double}}s values between `0` and `1`.
     </p>
   </section>
+</section>
+<section>
+  <h3>Reacting to telemetry changes</h3>
+  <p>
+    How a system queries or observes telemetry data is not defined by this specification and may vary, but when
+    new telemetry data is available, run these steps:
+  </p>
+  <ol class="algorithm">
+    <li>
+      Let |document:Document| be the [=environment settings object/responsible document=] of the [=current settings object=].
+    </li>
+    <li>
+      If |document| is not [=Document/fully active=], about these steps.
+    </li>
 </section>
 
 <section>
