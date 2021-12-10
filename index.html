@@ -150,6 +150,33 @@
   </section>
 </section>
 
+<section> <h2>Platform primitives</h2>
+  <p>
+    The term <dfn>platform collector</dfn> refers to platform interface, with which the [=user agent=] interacts to
+    obtain the telemetry readings required by this specification.
+  </p>
+  <p>
+    A [=platform collector=] can be defined by the underlying platform (e.g. in a native telemetry
+    framework) or by the [=user agent=], if it has a direct access to hardware counters.
+  </p>
+  <p>
+    From the implementation perspective [=platform collector=] can be treated as a software proxy for the
+    corresponding hardware counters. It is possible to have multiple [=platform collector=] simultaneously
+    interacting with the same underlying hardware if the underlying platform suppports it.
+  </p>
+  <p>
+    In simple cases, a [=platform collector=] represents individual hardware counters, but if the provided
+    counter readings are a product of data fusion performed in software, the [=platform collector=]
+    represents the results of the data fusion process. This may happen in user space or in kernel space.
+  </p>
+  <p>
+    As collecting telemetry data often means polling hardware counters, it is not a free operation and thus,
+    it should not happen if there are no one observing the data. The term <dfn>active observers</dfn> refer
+    to a [=user agent=] wide counter, representing how many instances of {{ComputePressureObserver}} that
+    are active across the [=user agent=]. The [=active observers=] value is initially `0`.
+  </p>
+</section>
+
 <section> <h2>Compute Pressure Observer</h2>
 The Compute Pressure Observer API enables developers to understand the utilization characteristics of a CPU.
 
