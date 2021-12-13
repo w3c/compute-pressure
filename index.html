@@ -453,19 +453,22 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       <p>
         The [=boosting=] max frequency can depend on the type of core in heterogeneous systems, but even
         the same cores can have different max frequency. In modern Intel CPUs, one or two P-cores (performance
-        cores) are considered favored cores with even higher max frequency.
+        cores) are considered <em>favored cores</em> with even higher max frequency.
       </p>
       <p>
-        Beyond this, Intel CPUs might support <em>Thermal Velocity Boost</em>, which allows the an even higher
-        frequency going beyond the max frequency if the CPU’s within temperature limits and turbo power budget is
-        available. Overclocked CPUs can similarly go beyond the max frequency.
+        Beyond this, Intel CPUs might support <em>Thermal Velocity Boost</em> (TVB), which allows an even higher
+        frequency, going beyond the max frequency if the CPU’s within temperature limits and turbo power budget is
+        available.
+      </p>
+      <p>
+        Overclocked CPUs can similarly go beyond the [=boosting=] max frequency.
       </p>
       <p>
         Frequencies beyond [=boosting=] max frequency are ignored by this specification and frequencies are
         clamped to the [=boosting=] max frequency.
       </p>
       <p>
-        More information <a
+        More information about Intel based boosting technologies <a
         href="https://www.intel.com/content/www/us/en/gaming/resources/how-intel-technologies-boost-cpu-performance.html">
         here</a>.
       </p>
@@ -488,12 +491,20 @@ The Compute Pressure Observer API enables developers to understand the utilizati
             Let |min|, |base| and |turbo| be the CPU core's minimum, base and turbo [=boosting=] max frequencies.
           </li>
           <li>
-            If |frequency| is between (and including) |min| and |base|,
-            set |frequency| to (|frequency| - |min|) / (|base| - |min|) * 2.
+            If |frequency| is between |min| and |base| (including),
+            <ul>
+              <li>
+                Set |frequency| to (|frequency| - |min|) / (|base| - |min|) * 2.
+              </li>
+            </ul>
           </li>
           <li>
-            If |frequency| is between |base| and |turbo|,
-            set |frequency| to (|frequency| - |base|) / (|turbo|  - |base|) * 2.
+            If |frequency| is between |base| (not including) and |turbo|,
+            <ul>
+              <li>
+                Set |frequency| to (|frequency| - |base|) / (|turbo|  - |base|) * 2.
+              </li>
+            </ul>
           </li>
           <li>
             Set |frequency| to <a href="https://tc39.es/ecma262/#eqn-max">max</a>(`0.0`, |frequency|).
@@ -502,11 +513,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
             Set |frequency| to <a href="https://tc39.es/ecma262/#eqn-min">min</a>(`1.0`, |frequency|).
           </li>
           <li>
-            Set |aggregated frequency| to |aggregates frequency| + |frequency|.
+            Set |aggregated frequency| to |aggregated frequency| + |frequency|.
           </li>
         </ol>
       <li>
-        Set |aggregated frequency| to |aggregates frequency| / |core count|.
+        Set |aggregated frequency| to |aggregated frequency| / |core count|.
       </li>
       <li>
         Return |aggregated frequency|.
@@ -521,6 +532,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       </li>
       <li>
         Let |entry:ComputePressureEntry| be a new {{ComputePressureEntry}} instance.
+      </li>
+      <li>
+        Let |entry|.|cpuSpeed:double| be the result of invoking [[[#handle-cpu-frequency]]] with
+        |readings|.
       </li>
       <li>
         Return |entry|.
