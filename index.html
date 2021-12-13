@@ -177,7 +177,7 @@
   </p>
   <p>
     A [=platform collector=] samples data at a specific frequency. A [=user agent=] may modify this frequency
-    (if possible) for privacy reasons, or ignore and fuse certain readings. 
+    (if possible) for privacy reasons, or ignore and fuse certain readings.
   </p>
   <p>
     When a sample is obtained from the [=platform collector=], the [=user agent=] MUST run the [[[#notify-observers]]]
@@ -192,7 +192,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h3>The <a>ComputePressureUpdateCallback</a> callback</h3>
   <pre class="idl">
     callback ComputePressureUpdateCallback = undefined (
-      ComputePressureObserverUpdate update,
+      ComputePressureEntry update,
       ComputePressureObserver observer
     );
   </pre>
@@ -265,6 +265,17 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           </td>
           <td>
             An optional function of type {{ComputePressureUpdateCallback}}.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <dfn>[[\Activated]]</dfn>
+          </td>
+          <td>
+            `false`
+          </td>
+          <td>
+            A {{boolean}} whether the observer is actively observing or not.
           </td>
         </tr>
         <tr>
@@ -346,6 +357,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         <li>
           Increment the [=active observers=] counter.
         </li>
+        <li>
+          Set |this|.{{ComputePressureObserver/[[Activated]]}} to `true`.
+        </li>
       </ol>
     </p>
   </section>
@@ -361,15 +375,18 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         <li>
           If [=active observers=] is equal to `0`, deactivate the underlying [=platform collector=].
         </li>
+        <li>
+          Set |this|.{{ComputePressureObserver/[[Activated]]}} to `false`.
+        </li>
       </ol>
     </p>
   </section>
 </section>
 
-<section data-dfn-for="ComputePressureObserverUpdate">
-  <h3>The <dfn>ComputePressureObserverUpdate</dfn> dictionary</h3>
+<section data-dfn-for="ComputePressureEntry">
+  <h3>The <dfn>ComputePressureEntry</dfn> dictionary</h3>
   <pre class="idl">
-    dictionary ComputePressureObserverUpdate {
+    dictionary ComputePressureEntry {
       double cpuSpeed;
       double cpuUtilization;
       ComputePressureObserverOptions options;
@@ -378,21 +395,21 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The <dfn>cpuSpeed</dfn> attribute</h3>
     <p>
-      The {{ComputePressureObserverUpdate/cpuSpeed}} attribute represents the current [=CPU=] [=frequency=]
+      The {{ComputePressureEntry/cpuSpeed}} attribute represents the current [=CPU=] [=frequency=]
       as a {{double}} value between `0` and `1`.
     </p>
   </section>
   <section>
     <h3>The <dfn>cpuUtilization</dfn> attribute</h3>
     <p>
-      The {{ComputePressureObserverUpdate/cpuUtilization}} attribute represents the current CPU <a> utilization</a>
+      The {{ComputePressureEntry/cpuUtilization}} attribute represents the current CPU <a> utilization</a>
       as a {{double}} value between `0` and `1`.
     </p>
   </section>
   <section>
     <h3>The <dfn>options</dfn> attribute</h3>
     <p>
-      The {{ComputePressureObserverUpdate/options}} attribute represents the {{ComputePressureObserverOptions}}
+      The {{ComputePressureEntry/options}} attribute represents the {{ComputePressureObserverOptions}}
       dictionary that {{ComputePressureObserver}} was constructed with.
     </p>
   </section>
@@ -426,6 +443,20 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <p>
     This section outlines the steps the user agent must take when implementing the Compute Pressure Observer API.
   </p>
+  <section id="create-entry">
+    <h3>Create and populate a ComputePressureEntry</h3>
+    <ol class="algorithm">
+      <li>
+        Let |readings| be the latest reading of the [=platform collector=].
+      </li>
+      <li>
+        Let |entry:ComputePressureEntry| be a new {{ComputePressureEntry}} instance.
+      </li>
+      <li>
+        Return |entry|.
+      </li>
+    </ol>
+  </section>
   <section id="notify-observers">
     <h3>Notify Compute Pressure Observers</h3>
     <ol class="algorithm">
@@ -434,6 +465,23 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       </li>
       <li>
         If |document| is not [=Document/fully active=], about these steps.
+      </li>
+      <li>
+        [=list/For each=] {{ComputePressureObserver}} instance |observer:ComputePressureObserver|,
+        <ol>
+          <li>
+            If |observer|.{{ComputePressureObserver/[[Activated]]}} is `false`, then [=iteration/continue=].
+          </li>
+          <li>
+            Let |entry| be the result of running [[[#create-entry]]].
+          </li>
+          <li>
+            Let |entries| be the [=list=] « |entry| ».
+          </li>
+          <li>
+            Invoke |observer|.{{ComputePressureObserver/[[Callback]]}} with |entries| and |observer|.
+          </li>
+        </ol>
       </li>
     </ol>
   </section>
@@ -660,6 +708,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
 <section class="appendix informative" id="acknowledgments"> <h2>Acknowledgments</h2>
   <p>
     Many thanks for valuable feedback and advice from
+    Arnaud Mandy,
     Chen Xing,
     Evan Shrubsole,
     Jesse Barnes,
