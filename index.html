@@ -491,15 +491,15 @@ The Compute Pressure Observer API enables developers to understand the utilizati
             Let |min|, |base| and |turbo| be the CPU core's minimum, base and turbo [=boosting=] max frequencies.
           </li>
           <li>
-            If |frequency| is between |min| and |base| (including),
+            If |frequency| ≤ |base|,
             <ul>
               <li>
-                Set |frequency| to (|frequency| - |min|) / (|base| - |min|) * 2.
+                Set |frequency| to 0.5 + (|frequency| - |min|) / (|base| - |min|) * 2.
               </li>
             </ul>
           </li>
           <li>
-            If |frequency| is between |base| (not including) and |turbo|,
+            If |frequency| > |base|,
             <ul>
               <li>
                 Set |frequency| to (|frequency| - |base|) / (|turbo|  - |base|) * 2.
@@ -507,10 +507,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
             </ul>
           </li>
           <li>
-            Set |frequency| to <a href="https://tc39.es/ecma262/#eqn-max">max</a>(`0.0`, |frequency|).
+            Set |frequency| to <a href="https://tc39.es/ecma262/#eqn-max">max</a>(0, |frequency|).
           </li>
           <li>
-            Set |frequency| to <a href="https://tc39.es/ecma262/#eqn-min">min</a>(`1.0`, |frequency|).
+            Set |frequency| to <a href="https://tc39.es/ecma262/#eqn-min">min</a>(1, |frequency|).
           </li>
           <li>
             Set |aggregated frequency| to |aggregated frequency| + |frequency|.
