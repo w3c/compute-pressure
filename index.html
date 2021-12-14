@@ -491,18 +491,18 @@ The Compute Pressure Observer API enables developers to understand the utilizati
             Let |min|, |base| and |turbo| be the CPU core's minimum, base and turbo [=boosting=] max frequencies.
           </li>
           <li>
-            If |frequency| ≤ |base|,
+            If |frequency| < |base|,
             <ul>
               <li>
-                Set |frequency| to 0.5 + (|frequency| - |min|) / (|base| - |min|) * 2.
+                Set |frequency| to (|frequency| - |min|) / ((|base| - |min|) * 2).
               </li>
             </ul>
           </li>
           <li>
-            If |frequency| > |base|,
+            If |frequency| &#8805 |base|,
             <ul>
               <li>
-                Set |frequency| to (|frequency| - |base|) / (|turbo|  - |base|) * 2.
+                Set |frequency| to (|frequency| - |base|) / ((|turbo|  - |base|) * 2) + 0.5.
               </li>
             </ul>
           </li>
