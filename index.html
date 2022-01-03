@@ -29,6 +29,12 @@
         companyURL: "https://intel.com",
         w3cid: 57705,
       }
+      {
+        name: "Arnaud Mandy",
+        company: "Intel Corporation",
+        companyURL: "https://intel.com",
+        w3cid: 126342,
+      }
     ],
     testSuiteURI: "https://github.com/web-platform-tests/wpt/labels/compute-pressure",
   };
@@ -443,6 +449,43 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <p>
     This section outlines the steps the user agent must take when implementing the Compute Pressure Observer API.
   </p>
+  <section id="handle-cpu-utilization">
+    <h3>Normalize and aggregate CPU utilization</h3>
+    <aside class="note">
+      <p>
+      CPU utilization can have different meaning. In the context of Compute Pressure API, CPU utilization is the time when
+      the CPU core is not in idle state. Any other state is considered to be an utilization state. Utilization states can be
+      when the CPU core is busy or is stalled or waiting for memory I/O for example.
+      </p>
+      <p>
+      Depending on the platform, CPU utilization can be directly read at time t, or can be derived from a calculation of different
+      utilization state during a pre-defined time interval.
+      </p>
+    </aside>
+    <ol class="algorithm">
+      <li>
+        Let |core count| equal to the numbers of CPU cores as part of |platform reading|.
+      </li>
+      <li>
+        Let |aggregated utilization| be `0.0`.
+      </li>
+        [=list/For each=] CPU core,
+        <ol>
+          <li>
+            Calculate or read CPU |utilization|.
+          </li>
+          <li>
+            Normalize |utilization| so that its value is in between 0.0 and 1.0.
+          </li>
+          <li>
+            Set |aggregated utilization| to |aggregated utilization| + |utilization|.
+          </li>
+        </ol>
+      <li>
+        Set |aggregated utilization| to |aggregated utilization| / |core count|.
+      </li>
+    </ol>
+  </section>
   <section id="handle-cpu-frequency">
     <h3>Normalize and aggregate CPU frequency</h3>
     <aside class="note">
