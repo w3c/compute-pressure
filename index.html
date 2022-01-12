@@ -154,6 +154,26 @@
       thermal throttling helps cool the [=processing unit=] down when it gets too hot by lowering the frequency.
     </p>
   </section>
+  <section>
+    <h3><dfn>Sampling Frequency</dfn> and <dfn>Reporting Frequency</dfn></h3>
+    <p>
+      The [=sampling frequency=] for a [=platform collector=] is defined as a frequency at which the user agent
+      obtains telemetry readings from the underlying platform.
+    </p>
+    <p>
+    The [=reporting frequency=] for a concrete {{ComputePressureObserver}} object is defined as a frequency
+    at which {{ComputePressureUpdateCallback}} of this object will be invoked.
+    </p>
+    <p>
+    A {{ComputePressureObserver}} object cannot access new readings at a higher rate than the user agent
+      obtains them from the underlying platform, therefore the [=reporting frequency=] can never exceed the [=sampling frequency=].
+    </p>
+    <p>
+      The [=reporting frequency=] can vary based on the difference in values between readings at [=sampling frequency=].
+      If between two consecutive samplings the values of telemetry readings are falling into the same bucket, the values are considered
+      to be unchanged and {{ComputePressureUpdateCallback}} of the object will not be invoke.
+    </p>
+  </section>
 </section>
 
 <section> <h2>Platform primitives</h2>
