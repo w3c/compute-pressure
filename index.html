@@ -124,7 +124,7 @@
     <h3><dfn>Processing Units</dfn></h3>
     <p>
       Computing devices consist of a multitude of different processing units such as the Central
-      Processing Unit (<dfn>CPU</dfn>), Graphics Processing Unit (<dfn>GPU</dfn>) and many specialized
+      Processing Unit (<dfn>CPU</dfn>), Graphics Processing Unit (GPU) and many specialized
       processing units are becoming popular such as ones designed to accelerate specific tasks like
       machine learning or computer vision. This specification uses the term <dfn>XPU</dfn> to refer to
       <em>any</em> of these processing units.
@@ -284,14 +284,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     </p>
   </aside>
   <pre class="idl">
+    enum ComputePressureTarget { "cpu" };
+
     [Exposed=Window]
     interface ComputePressureObserver {
-      constructor(
-        ComputePressureUpdateCallback callback,
-        optional ComputePressureObserverOptions options = {}
-      );
-      undefined observe();
-      undefined unobserve();
+      constructor(ComputePressureUpdateCallback callback);
+      undefined observe(ComputePressureTarget target, optional ComputePressureObserverOptions options = {});
+      undefined unobserve(ComputePressureTarget target);
+      undefined disconnect();
     };
   </pre>
 
@@ -372,14 +372,29 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>constructor()</dfn> method</h3>
     <p>
       The {{ComputePressureObserver/constructor()}} method, when invoked, MUST run the
-      following step, given the arguments |callback:ComputePressureUpdateCallback| and
-      |options:ComputePressureObserverOptions|:
+      following step, given the arguments |callback:ComputePressureUpdateCallback|:
       <ol class="algorithm">
         <li>
           Let |this:ComputePressureObserver| be a new the {{ComputePressureObserver}} object.
         </li>
         <li>
           Set |this|.{{ComputePressureObserver/[[Callback]]}} to |callback|.
+        </li>
+        <li>
+          Return |this|.
+        </li>
+      </ol>
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>observe()</dfn> method</h3>
+    <p>
+      The {{ComputePressureObserver/observe()}} method, when invoked, MUST run the
+      following step, given the arguments |target:ComputePressureTarget| and
+      |options:ComputePressureObserverOptions|:
+      <ol class="algorithm">
+        <li>
+          If |target| is not equal to "`cpu`", abort these steps.
         </li>
         <li>
           If |options|.|cpuUtilizationThresholds:list| exists, set |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}}
@@ -404,17 +419,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Sort |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} in ascending order.
         </li>
         <li>
-          Return |this|.
-        </li>
-    </p>
-  </section>
-  <section>
-    <h3>The <dfn>observe()</dfn> method</h3>
-    <p>
-      The {{ComputePressureObserver/observe()}} method, when invoked, MUST run the
-      following step:
-      <ol class="algorithm">
-        <li>
           If [=active observers=] is equal to `0`, activate the underlying [=platform collector=].
         </li>
         <li>
@@ -430,8 +434,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>unobserve()</dfn> method</h3>
     <p>
       The {{ComputePressureObserver/unobserve()}} method, when invoked, MUST run the
-      following step:
+      following step, given the arguments |target:ComputePressureTarget|:
       <ol class="algorithm">
+        <li>
+          If |target| is not equal to "`cpu`", abort these steps.
+        </li>
         <li>
           Decrement the [=active observers=] counter.
         </li>
@@ -440,6 +447,37 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </li>
         <li>
           Set |this|.{{ComputePressureObserver/[[Activated]]}} to `false`.
+        </li>
+        <li>
+          Set |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}} to an empty [=list=].
+        </li>
+        <li>
+          Set |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} to an empty [=list=].
+        </li>
+      </ol>
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>disconnect()</dfn> method</h3>
+    <p>
+      The {{ComputePressureObserver/disconnect()}} method, when invoked, MUST run the
+      following step:
+      <ol class="algorithm">
+        <li>
+          If |this|.{{ComputePressureObserver/[[Activated]]}} is `true`,
+          decrement the [=active observers=] counter.
+        </li>
+        <li>
+          If [=active observers=] is equal to `0`, deactivate the underlying [=platform collector=].
+        </li>
+        <li>
+          Set |this|.{{ComputePressureObserver/[[Activated]]}} to `false`.
+        </li>
+        <li>
+          Set |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}} to an empty [=list=].
+        </li>
+        <li>
+          Set |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} to an empty [=list=].
         </li>
       </ol>
     </p>
