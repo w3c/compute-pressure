@@ -891,15 +891,12 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     Examples
   </h2>
   <pre class="example js" title="Adjusting the number of video feeds based on CPU usage">
-    const observer = new ComputePressureObserver(
-      computePressureCallback,
-      {
-        cpuUtilizationThresholds: [0.75, 0.9, 0.5],
-        cpuSpeedThresholds: [0.5],
-      }
-    );
+    const observer = new ComputePressureObserver(computePressureCallback);
 
-    observer.observe();
+    observer.observe("cpu", {
+      cpuUtilizationThresholds: [0.75, 0.9, 0.5],
+      cpuSpeedThresholds: [0.5],
+    });
 
     function computePressureCallback(update) {
       // The CPU base frequency is represented as 0.5.
