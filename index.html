@@ -292,6 +292,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       undefined observe(ComputePressureTarget target, optional ComputePressureObserverOptions options = {});
       undefined unobserve(ComputePressureTarget target);
       undefined disconnect();
+      sequence&lt;ComputePressureEntry&gt; takeRecords();
     };
   </pre>
 
@@ -301,6 +302,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>
       Internal slots
     </h3>
+    <p data-dfn-for="Document">
+      Each [=document=] has an <dfn>[[\ComputePressureObserverTaskQueued]]</dfn> flag which is initialized to `false`.
+    </p>
     <p>
       A constructed  {{ComputePressureObserver}} object has the following internal slots.
     </p>
@@ -339,6 +343,17 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           </td>
           <td>
             A {{boolean}} whether the observer is actively observing or not.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <dfn>[[\QueuedEntries]]</dfn>
+          </td>
+          <td>
+            An empty [=queue=].
+          </td>
+          <td>
+            A [=queue=] of zero or more {{ComputePressureEntry}} objects.
           </td>
         </tr>
         <tr>
@@ -478,6 +493,28 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </li>
         <li>
           Set |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} to an empty [=list=].
+        </li>
+        <li>
+          [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+        </li>
+      </ol>
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>takeRecords()</dfn> method</h3>
+    <p>
+      The {{ComputePressureObserver/takeRecords()}} method, when invoked, MUST run the
+      following step:
+      <ol class="algorithm">
+
+        <li>
+          Let |entries| be a [=list/clone=] of |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+        </li>
+        <li>
+          [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+        </li>
+        <li>
+          Return |entries|.
         </li>
       </ol>
     </p>
@@ -680,6 +717,44 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       </li>
     </ol>
   </section>
+  <section>
+    <h3>Queue a ComputePressureEntry</h3>
+    <p>
+      To queue a {{ComputePressureEntry}} for a {{ComputePressureObserver}}
+      |observer:ComputePressureObserver|, given a [=document=] |document:Document|, run these steps:
+    </p>
+    <ol class="algorithm">
+      <li>
+        Let |entry| be the result of running [[[#create-entry]]].
+      </li>
+      <li>
+        [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+      </li>
+      <li>
+        [=Queue a compute pressure observer task=] for |document|.
+      </li>
+    </ol>
+  </section>
+  <section>
+    <h3>Queue a ComputePressureObserver Task</h3>
+    <p>
+      The <dfn>ComputePressureObserver task source</dfn> is a [=task source=] used for scheduling tasks to [[[#notify-observers]]].
+    </p>
+    <p>
+      To <dfn>queue a compute pressure observer task</dfn> for a [=document=] |document:Document|, run these steps:
+    </p>
+    <ol class="algorithm">
+      <li>
+        If |document|.{{Document/[[ComputePressureObserverTaskQueued]]}} is set to `true`, return.
+      </li>
+      <li>
+        Set |document|.{{Document/[[ComputePressureObserverTaskQueued]]}} to `true`.
+      </li>
+      <li>
+        [=Queue=] a task on the [=ComputePressureObserver task source=] associated with the |document|'s [=event loop=] to [[[#notify-observers]]].
+      </li>
+    </ol>
+  </section>
   <section id="notify-observers">
     <h3>Notify Compute Pressure Observers</h3>
     <ol class="algorithm">
@@ -696,10 +771,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
             If |observer|.{{ComputePressureObserver/[[Activated]]}} is `false`, then [=iteration/continue=].
           </li>
           <li>
-            Let |entry| be the result of running [[[#create-entry]]].
+            If |observer|.{{ComputePressureObserver/[[QueuedEntries]]}} [=list/is empty=], then [=iteration/continue=].
           </li>
           <li>
-            Let |entries| be the [=list=] « |entry| ».
+            Let |entries| be a [=list/clone=] of |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+          </li>
+          <li>
+            [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
           </li>
           <li>
             Invoke |observer|.{{ComputePressureObserver/[[Callback]]}} with |entries| and |observer|.
