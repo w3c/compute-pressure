@@ -4,9 +4,13 @@ High-level states
 What is compute pressure?
 ---
 
-In the perfect world, a computing device would be able to handle all the work thrown at it. But that is of course not the case in the real world and most devices can only handle a set of instructions at a given time (clock speed).
+In a perfect world, a computing device is able to perform all the tasks assigned to it with guaranteed and consistent quality of service. In practice, the system is constantly balancing the needs of multiple tasks that compete for shared system resources. The underlying system software tries to minimize both the overall wait time and response time (time to interactive) and maximize throughput and fairness across multiple tasks running concurrently.
 
-You might think that the utilization of the processor might represent how much additional work can be accomplished, but it is much more complex than that, and the complexity is only increasing over time.
+This scheduling action is handled by an operating system module called scheduler whose work may also be assisted by hardware in modern systems. Notably, all this is transparent to web applications, and as a consequence, the user is only made aware the system is too busy when there's already a perceived degradation in quality of service. For example, a video conferencing application starts dropping video frames, or worse, the audio cuts out.
+
+Compute Pressure specification defines a set of compute pressure states delivered to a web application to signal when adaptation of the workload is appropriate to ensure consistent quality of service. The signal is proactively delivered when the compute pressure trend is rising to allow timely adaptation. And conversely, when the pressure eases, a signal is provided to allow the web application to adapt accordingly.
+
+Human-readable compute pressure states with semantics attached to them improve ergonomics for web developers and provide future-proofing against diversity of hardware. Furthermore, the high-level states abstract away complexities of system bottlenecks that cannot be adequately explained with low-level metrics such as processor clock speed and utilization.
 
 For instance, a processor might have additional cores that work can be distributed to in certain cases, and it might be able to adjust clock speed. The faster clock speed a processor runs at, the more power it consumes which can affect battery and the temperature of the processor. A processor that runs hot becomes unstable and may crash or even burn.
 
