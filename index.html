@@ -293,6 +293,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       undefined unobserve(ComputePressureTarget target);
       undefined disconnect();
       sequence&lt;ComputePressureEntry&gt; takeRecords();
+      [SameObject] static readonly attribute FrozenArray&lt;DOMString&gt; supportedTargetTypes;
     };
   </pre>
 
@@ -518,6 +519,26 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </li>
       </ol>
     </p>
+  </section>
+  <section>
+    <h3>The <dfn>supportedTargetTypes</dfn> attribute</h3>
+    <p>
+      The {{ComputePressureObserver/supportedTargetTypes}} attribute is informing on the supported target by the [=platform collector=].
+      When {{ComputePressureObserver/supportedTargetTypes}}'s attribute getter is called, MUST run the following steps:
+      <ol class="algorithm">
+        <li>
+          Let |targets| be a [=list=] of |target:ComputePressureTarget|.
+        </li>
+        <li>
+          Return |observer|'s frozen array of supported target types.
+        </li>
+      </ol>
+    </p>
+    <aside class="note">
+      <p>
+        This attribute allows web developers to easily know which target types are supported by the user agent.
+      </p>
+    </aside>
   </section>
 </section>
 
