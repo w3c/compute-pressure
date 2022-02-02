@@ -18,12 +18,12 @@ For this reason processors adjust clock speed all the time, given the amount of 
 
 Throttling
 ---
-A processor might be throttled, run slower than usual, resulting in a poorer user experience. This can happen for a number of reasons, like because
+A processor might be throttled, run slower than usual, resulting in a poorer user experience. This can happen for a number of reasons, for example:
 
-The temperature of the processor is hotter than that can be sustained
-Other bottlenecks in the system, like work blocking on memory access
-System is AC (battery) powered so longer battery life is preferred instead of high clock speed
-To keep system more quiet (less fans) as a user preference
+- The temperature of the processor is hotter than that can be sustained
+- Other bottlenecks in the system, like work blocking on memory access
+- System is DC (battery) powered so longer battery life is preferred instead of high clock speed
+- To keep system more quiet (less fans) as a user preference
 
 Measuring compute pressure is quite complicated
 ---
