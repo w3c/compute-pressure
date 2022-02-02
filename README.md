@@ -1,5 +1,7 @@
 # Compute Pressure
 
+:new::sparkles: **This explainer is being updated. Please see [High-level states](high-level-states.md) for the latest proposal.**
+---
 
 ## Authors:
 
