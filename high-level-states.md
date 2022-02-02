@@ -60,43 +60,43 @@ Clock frequency is likewise a misleading measurement as the frequency is impacte
  
 How to properly calculate pressure
 ---
-Properly calculating computing pressure is architecture dependent and requires a mixture of signals like
+Properly calculating compute pressure is architecture dependent and as such an implementation must consider multiple input signals that may vary by architecure, form factor, or other system characteristics. Possible signals could be, for example:
 
-* AC or DC power
+* AC or DC power state
 * Thermals
 * Some weighted values of “utilization” including information about memory I/O
 
-A better metric than utilization could be CPI (clock ticks per instruction, retained) as it gives the amount of clock ticks it is taking in average to accomplish an instruction. In case the processor is waiting on memory I/O, the CPI is rising sharply. A CPI of around and below 1 is always doing well, but this can be architecture dependent as some complex instructions always take up multiple instructions.
- 
+A better metric than utilization could be CPI (clock ticks per instruction, retained) that reports the amount of clock ticks it takes on average to execute an instruction. If the processor is waiting on memory I/O, CPI is rising sharply. If CPI is around or below 1, the system is usually doing well. This is also architecture dependent as some complex instructions take up multiple instructions. A competent implementation will take this into consideration.
+
 What buckets are useful for users
 ---
-In order for users to react to changes in compute pressure, it is important to be notified while you can still adjust your workloads, and not when the system is already being throttled.
+In order to enable web applications to react to changes in compute pressure with minimal degration in quality or service, or user experience, it is important to be notified while you can still adjust your workloads, and not when the system is already being throttled.
  
 We suggest the following buckets:
 
-**Nominal**: Work is minimal and system is running on lower clock speed to preserve power
+⚪ **Nominal**: Work is minimal and the system is running on lower clock speed to preserve power.
 
-**Fair**: System is doing fine, everything is smooth and it can take on additional work without issues
+🟢 **Fair**: The system is doing fine, everything is smooth and it can take on additional work without issues.
 
-**Serious**: There is some serious pressure on the system, but it is sustainable and the system is doing well, but it is getting close to its limits:
+🟡 **Serious**: There is some serious pressure on the system, but it is sustainable and the system is doing well, but it is getting close to its limits:
   * Clock speed (depending on AC or DC power) is consistently high
   * Thermals are high but system can handle it
 
-At this point, if you add more work system may move into critical
+At this point, if you add more work the system may move into critical.
 
-**Critical**: System is now reaching its limits. It hasn’t reached them though as critical doesn’t mean that the system is being actively throttled, but that the state is not sustainable for the long run and might result in throttling, say after a few minutes.
- 
+🔴 **Critical**: The system is now about to reach its limits, but it hasn’t reached _the_ limit yet. Critical doesn’t mean that the system is being actively throttled, but this state is not sustainable for the long run and might result in throttling if the workload remains the same. This signal is the last call for the web application to lighten its workload.
+
 Advantages
 ---
-There are a lot of advantages to using the above buckets/states. For once, it is easy for developers to understand. What developers care about is delivering the best user experience to their users. That means taking the system to its limits as long as it provides a better experience, but avoiding tasking the system so much that it might start throttling work.
+There are a lot of advantages to using the above buckets/states. For once, it is easier for web developers to understand. What web developers care about is delivering the best user experience to their users given the available resources that vary depending on the system. This may mean taking the system to its limits as long as it provides a better experience, but avoiding taxing the system so much that it starts throttling work.
 
-As an example, a video conferencing app might work like the following
+As an example, a video conferencing app might have the following dialogue with the API:
 
 > **Developer**: *How is pressure?*
 
 > **System**:  *It's fair*
 
-> **Developer**: *OK, use a better, more compute intensive audio codec*
+> **Developer**: *OK, I'll use a better, more compute intensive audio codec*
 
 > **System**: *Pressure is still fair*
 
@@ -106,19 +106,18 @@ As an example, a video conferencing app might work like the following
 
 > **Developer**: *Great, we are doing good and the user experience is optimal!*
 
-> **System**: *The user turned on background blurring, pressure is now critical. If you stay in this state for extended time, the system might start throttling*
+> **System**: *The user turned on background blur, pressure is now critical. If you stay in this state for extended time, the system might start throttling*
 
-> **Developer**: *OK, let’s only show video stream for 4 people (not 8) and tell the users to turn off background blurring for a better experience*
+> **Developer**: *OK, let’s only show video stream for 4 people (instead of 8) and tell the users to turn off background blur for a better experience*
 
-> **System**: *User still wants background blurring on, but pressure is now back to serious, so we are doing good*
+> **System**: *User still wants to keep background blur on, but pressure is now back to serious, so we are doing good*
 
 Other advantage
 ---
  
-Another advantage is that this approach allows for considering multiple signals and innovation in software and hardware. For instance a CPU can consider memory pressure, thermal conditions etc and map this to these states. As silicon makers strive in making the fastest silicon that offers the best user experience, it is very important that a system wouldn’t be considered in critical state when it is in fact not.
+Another advantage is that this high-level abstraction allows for considering multiple signals and adapts to constant innovation in software and hardware below the API layer. For instance, a CPU can consider memory pressure, thermal conditions and map them to these states. As the industry strives to make the fastest silicon that offers the best user experience, it is important that the API abstraction that developers will depend on is future-proof and stands the test of time.
 
-If we exposed raw values like clock speed, a developer might hardcode that everything about 90% of base clock is considered critical, which could be the case on some systems, but when in fact on a well cooled system with an advanced CPU, you might go way beyond base clock (frequency boosting) without it negatively affecting the system. It is also very hard to know what silicon advantages will exist in the future, but if software is coding in such a way that it ignores these advantages, then software performance might be stuck in the past.
- 
+If we'd expose low-level raw values such as clock speed, a developer might hardcode in the application logic that everything above 90% the base clock is considered critical, which could be the case on some systems today, but wouldn't generalize well. For example, on a desktop form factor or on a properly cooled laptop with an advanced CPU, you might go way beyond the base clock with frequency boosting without negative impacting user experience, while a passively-cooled mobile device would likely behave differently. 
  
  
 
