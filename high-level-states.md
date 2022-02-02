@@ -94,23 +94,23 @@ As an example, a video conferencing app might have the following dialogue with t
 
 > **Developer**: *How is pressure?*
 
-> **System**:  *It's fair*
+> **System**: 🟢 *It's fair*
 
 > **Developer**: *OK, I'll use a better, more compute intensive audio codec*
 
-> **System**: *Pressure is still fair*
+> **System**: 🟢 *Pressure is still fair*
 
 > **Developer**: *Show video stream for 8 instead of 4 people*
 
-> **System**: *OK, pressure is now serious*
+> **System**: 🟡 *OK, pressure is now serious*
 
 > **Developer**: *Great, we are doing good and the user experience is optimal!*
 
-> **System**: *The user turned on background blur, pressure is now critical. If you stay in this state for extended time, the system might start throttling*
+> **System**: 🔴 *The user turned on background blur, pressure is now critical. If you stay in this state for extended time, the system might start throttling*
 
 > **Developer**: *OK, let’s only show video stream for 4 people (instead of 8) and tell the users to turn off background blur for a better experience*
 
-> **System**: *User still wants to keep background blur on, but pressure is now back to serious, so we are doing good*
+> **System**: 🟡 *User still wants to keep background blur on, but pressure is now back to serious, so we are doing good*
 
 Other advantage
 ---
