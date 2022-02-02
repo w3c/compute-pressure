@@ -49,14 +49,14 @@ What it might really mean is:
 
 ```
 
-Stalled means that the processor is not making forward progress with instructions, and usually happens because it is waiting on memory I/O. Chances are, you're mostly stalled.
-This is even more complicated as a processor might have multiple cores, but the cores you are using are busy but your work cannot simply be distributed to other cores.
+Stalled means that the processor is not making forward progress with instructions, and this usually happens because it is waiting on memory I/O. Chances are, you're mostly stalled.
+This is even more complicated when the processor has multiple cores and the cores you are using are busy but your work cannot simply be distributed to other cores.
 
 If you look at the overall system processor utilization it might be quite low, but your core can be running slower than usual as it is waiting on memory I/O, or it might even be actually busy but be throttled due to thermals.
 
-In some modern systems we even have different kinds of cores, like performance and efficient cores, or even multiple levels of such. You can imagine a system with just an ultra efficient core running when workload is nominal (background check of notifications etc) but other cores taking over when actually in use. That can mean that such a system will never reach 100% overall utilizations as the ultra efficient core will never run when other cores are in use.
+Furthermore, some modern systems have different kinds of cores, such as performance cores and efficiency cores, or even multiple levels of such. You can imagine a system with just an efficiency core running when workload is nominal (background check of notifications etc.) and performance cores taking over to prioritize UX when an application is in active use. In this scenario, system will never reach 100% overall utilizations as the efficiency core will never run when other cores are in use.
  
-Clock frequency is likewise a bad measurement as the frequency can differ per core, whether the system is on battery power or due to complex boost modes.
+Clock frequency is likewise a misleading measurement as the frequency is impacted by factors such as which core is active, whether the system is on battery power or plugged in, boost mode being active or not, or other factors.
  
 How to properly calculate pressure
 ---
