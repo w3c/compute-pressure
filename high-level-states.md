@@ -68,11 +68,11 @@ Properly calculating compute pressure is architecture dependent and as such an i
 
 A better metric than utilization could be CPI (clock ticks per instruction, retained) that reports the amount of clock ticks it takes on average to execute an instruction. If the processor is waiting on memory I/O, CPI is rising sharply. If CPI is around or below 1, the system is usually doing well. This is also architecture dependent as some complex instructions take up multiple instructions. A competent implementation will take this into consideration.
 
-What buckets are useful for users
+Design considerations
 ---
-In order to enable web applications to react to changes in compute pressure with minimal degration in quality or service, or user experience, it is important to be notified while you can still adjust your workloads, and not when the system is already being throttled.
- 
-We suggest the following buckets:
+In order to enable web applications to react to changes in compute pressure with minimal degration in quality or service, or user experience, it is important to be notified while you can still adjust your workloads (temporal relevance), and not when the system is already being throttled. It is equally important to not notify too often for both privacy (data minimization) and developer ergonomics (conceptual weight minimization) reasons.
+
+In order to expose the minimum data necessary at the highest level of abstraction that satisfy the use cases, we suggest the following buckets:
 
 ⚪ **Nominal**: Work is minimal and the system is running on lower clock speed to preserve power.
 
@@ -86,9 +86,8 @@ At this point, if you add more work the system may move into critical.
 
 🔴 **Critical**: The system is now about to reach its limits, but it hasn’t reached _the_ limit yet. Critical doesn’t mean that the system is being actively throttled, but this state is not sustainable for the long run and might result in throttling if the workload remains the same. This signal is the last call for the web application to lighten its workload.
 
-Advantages
+API flow illustrated
 ---
-There are a lot of advantages to using the above buckets/states. For once, it is easier for web developers to understand. What web developers care about is delivering the best user experience to their users given the available resources that vary depending on the system. This may mean taking the system to its limits as long as it provides a better experience, but avoiding taxing the system so much that it starts throttling work.
 
 As an example, a video conferencing app might have the following dialogue with the API:
 
@@ -112,8 +111,9 @@ As an example, a video conferencing app might have the following dialogue with t
 
 > **System**: 🟡 *User still wants to keep background blur on, but pressure is now back to serious, so we are doing good*
 
-Other advantage
+Other considerations
 ---
+There are a lot of advantages to using the above states. For once, it is easier for web developers to understand. What web developers care about is delivering the best user experience to their users given the available resources that vary depending on the system. This may mean taking the system to its limits as long as it provides a better experience, but avoiding taxing the system so much that it starts throttling work.
  
 Another advantage is that this high-level abstraction allows for considering multiple signals and adapts to constant innovation in software and hardware below the API layer. For instance, a CPU can consider memory pressure, thermal conditions and map them to these states. As the industry strives to make the fastest silicon that offers the best user experience, it is important that the API abstraction that developers will depend on is future-proof and stands the test of time.
 
