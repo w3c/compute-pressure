@@ -1,18 +1,16 @@
 # Compute Pressure
 
-:new::sparkles: **This explainer is being updated. Please see [High-level states](high-level-states.md) for the latest proposal.**
----
-
 ## Authors:
 
-* Olivier Yiptong (Google)
-* Victor Costan (Google)
 * Kenneth Rohde Christiansen (Intel)
+* Anssi Kostiainen (Intel)
+* Victor Costan (Google)
+* Olivier Yiptong (formerly Google)
 
 
 ## Participate
 
-* [Issue tracker](https://github.com/oyiptong/compute-pressure/issues)
+* [Issue tracker](https://github.com/wicg/compute-pressure/issues)
 
 
 ## Table of Contents
@@ -22,48 +20,46 @@
 
 - [Introduction](#introduction)
 - [Goals / Motivating Use Cases](#goals--motivating-use-cases)
+  - [Future Goals](#future-goals)
 - [Non-goals](#non-goals)
-- [Concept - CPU utilization](#concept---cpu-utilization)
-- [Concept - CPU Clock Speed](#concept---cpu-clock-speed)
+- [Current approach - high-level states](#current-approach---high-level-states)
+- [Throttling](#throttling)
+- [Measuring compute pressure is quite complicated](#measuring-compute-pressure-is-quite-complicated)
+- [How to properly calculate pressure](#how-to-properly-calculate-pressure)
+- [Design considerations](#design-considerations)
+- [API flow illustrated](#api-flow-illustrated)
+- [Other considerations](#other-considerations)
 - [Compute Pressure Observer](#compute-pressure-observer)
 - [Key scenarios](#key-scenarios)
   - [Adjusting the number of video feeds based on CPU usage](#adjusting-the-number-of-video-feeds-based-on-cpu-usage)
 - [Detailed design discussion](#detailed-design-discussion)
   - [Prevent instead of mitigating bad user experiences](#prevent-instead-of-mitigating-bad-user-experiences)
-  - [Minimizing information exposure](#minimizing-information-exposure)
-    - [Normalizing CPU utilization](#normalizing-cpu-utilization)
-    - [Aggregating CPU utilization](#aggregating-cpu-utilization)
-    - [Normalizing CPU clock speed](#normalizing-cpu-clock-speed)
-    - [Aggregating CPU clock speed](#aggregating-cpu-clock-speed)
-    - [Quantization](#quantization)
+  - [Third-party contexts](#third-party-contexts)
 - [Considered alternatives](#considered-alternatives)
-  - [Named buckets for CPU utilization](#named-buckets-for-cpu-utilization)
+  - [Expose a thermal throttling indicator](#expose-a-thermal-throttling-indicator)
 - [Stakeholder Feedback / Opposition](#stakeholder-feedback--opposition)
-- [References & acknowledgements](#references--acknowledgements)
+- [References & acknowledgments](#references--acknowledgments)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
 ## Introduction
 
-We propose a new API that conveys the utilization of CPU resources on the
-user's device. This API targets applications that can trade off CPU resources
-for an improved user experience. For example, many applications can render
-video effects with varying degrees of sophistication. These applications aim
-to provide the best user experience, while avoiding driving the user's device
-in a high CPU utilization regime.
+We propose a new API that conveys the utilization of system resources, initially
+focusing on CPU resources (v1) with the plan to add other resources such as GPU
+resources in the future (post v1). 
 
-High CPU utilization is undesirable because it strongly degrades the user
-experience. Many smartphones, tablets and laptops become uncomfortably hot to
-the touch. The fans in laptops and desktops become so loud that they disrupt
-conversations or the users’ ability to focus. In many cases, a device under
-high CPU utilization appears to be unresponsive, as the operating system may
-fail to schedule the threads advancing the task that the user is waiting for.
+In a perfect world, a computing device is able to perform all the tasks assigned to it with guaranteed and consistent quality of service. In practice, the system is constantly balancing the needs of multiple tasks that compete for shared system resources. The underlying system software tries to minimize both the overall wait time and response time (time to interactive) and maximize throughput and fairness across multiple tasks running concurrently.
 
+This scheduling action is handled by an operating system module called scheduler whose work may also be assisted by hardware in modern systems. Notably, all this is transparent to web applications, and as a consequence, the user is only made aware the system is too busy when there's already a perceived degradation in quality of service. For example, a video conferencing application starts dropping video frames, or worse, the audio cuts out.
+
+As this is undesirable for the end-user, software developers would like ways to avoid
+such cases, by balancing the set of enabled features and their quality level against
+resource pressure happening on the end-user device.
 
 ## Goals / Motivating Use Cases
 
-The primary use case is informing CPU consumption decisions in video
+The primary use case for v1 is informing CPU consumption decisions in video
 conferencing and video games, which are highly popular
 [soft real-time applications](https://en.wikipedia.org/wiki/Real-time_computing#Criteria_for_real-time_computing).
 We aim to support the following decisions.
@@ -88,10 +84,15 @@ We aim to support the following decisions.
   * Tweak quality-vs-speed knobs in the game’s rendering engine (shadows
     quality, texture filtering, view distance)
 
-The secondary use case is measuring the CPU resource consumption of a
-feature. This ultimately supports the main goal of avoiding driving user
-devices into high CPU utilization. We aim to support the following decision
-processes.
+### Future Goals
+
+Post v1 we plan on looking into supporting other resource types, like GPU
+resources.
+
+Additionally, we would like to investigate whether we can enabling measurement
+of hardware resource consumption of different code paths in front end code.
+
+We aim to support the following decision processes.
 
 * Compare the CPU consumption of alternative implementations of the same
   feature, for the purpose of determining the most efficient implementation. We
@@ -101,7 +102,6 @@ processes.
   the devices owned by their users.
 * Estimate the impact of enabling a feature on CPU consumption. This cost
   estimate feeds into the decisions outlined in the primary use case.
-
 
 ## Non-goals
 
@@ -126,138 +126,217 @@ make the unsupported decisions above.
 *   CPU capabilities, such as number of cores, core speed, cache size
 *   CPU vendor and model
 
+## Current approach - high-level states
 
-## Concept - CPU utilization
+Compute Pressure defines a set of compute pressure states delivered to a web application to signal when adaptation of the workload is appropriate to ensure consistent quality of service. The signal is proactively delivered when the compute pressure trend is rising to allow timely adaptation. And conversely, when the pressure eases, a signal is provided to allow the web application to adapt accordingly.
 
-The **CPU utilization** of the user's device is the average of the
-utilization of all the device's CPU cores.
+Human-readable compute pressure states with semantics attached to them improve ergonomics for web developers and provide future-proofing against diversity of hardware. Furthermore, the high-level states abstract away complexities of system bottlenecks that cannot be adequately explained with low-level metrics such as processor clock speed and utilization.
 
-A CPU core's utilization is the fraction of time that the core has been
-executing code belonging to a thread, as opposed to being in an idle state.
+For instance, a processor might have additional cores that work can be distributed to in certain cases, and it might be able to adjust clock speed. The faster clock speed a processor runs at, the more power it consumes which can affect battery and the temperature of the processor. A processor that runs hot becomes unstable and may crash or even burn.
 
-A CPU utilization close to 1.0 is very likely to lead to a bad user
-experience. The device is likely overheating, and CPU cooling fans are making
-loud noises. Applications can help avoid bad user experiences by reducing
-their compute demands when the CPU utilization is high.
+For this reason processors adjust clock speed all the time, given the amount of work and whether it's on battery power or not (AC vs DC power) and whether the cooling system can keep the processor cool. Work often comes in bursts, like when the user is performing a certain operation, and in order to keep the system fast and responsive, modern processors use multiple boost modes, where it temporarily runs at an extremely high clock rate in order to get work out of the way and return to normal operations. As this happens in short bursts that is possible without heating up the processor too much. This is even more complex as boost frequencies depend on how many cores are utilized etc.
 
+Throttling
+---
+A processor might be throttled, run slower than usual, resulting in a poorer user experience. This can happen for a number of reasons, for example:
 
-## Concept - CPU Clock Speed
+- The temperature of the processor is hotter than that can be sustained
+- Other bottlenecks in the system, like work blocking on memory access
+- System is DC (battery) powered so longer battery life is preferred instead of high clock speed
+- To keep system more quiet (less fans) as a user preference
 
-Modern CPU cores support a set of clock speeds. The device's firmware or
-operating system can set the core clock speed, in order to trade off the
-available CPU computational resources with power consumption.
+Measuring compute pressure is quite complicated
+---
+Using utilization as a measurement for compute pressure is suboptimal. What you may think 90% CPU utilization means:
 
-From a user experience standpoint, the following are the most interesting
-clock speeds.
+```
+ _____________________________________________________________________
+|                                                         |           |
+|                          Busy                           |  Waiting  |
+|                                                         |  (idle)   |
+|_________________________________________________________|___________|
 
-* The minimum clock speed results in the lowest power consumption.
-* The **base clock speed** results in the power consumption that the CPU is
-  rated for. Marketing materials emphasize this speed.
-* The maximum clock speed (marketed as "Turbo boost" on Intel CPUs) causes
-  unsustainable amounts of heating. It can only be used for short periods of
-  time, to satisfy bursts in demand for CPU compute.
+```
 
-When a device's CPU utilization gets high, the device increases clock speeds
-across its CPU cores, in an attempt to meet the CPU compute demand. As the
-speeds exceed the base clock speed, the elevated power consumption increases the
-CPU's temperature. At some point, the device enters a **thermal throttling**
-regime, where the CPU clock speed is reduced, in order to bring the temperature
-down.
+What it might really mean is:
 
-By the time thermal throttling kicks in, the user is having a bad experience.
-Applications can help avoid thermal throttling by reducing their demands for CPU
-compute right as the CPU clock speeds approaches / exceeds the base speed.
+```
+ _____________________________________________________________________
+|          |                                              |           |
+|   Busy   |                   Waiting                    |  Waiting  |
+|          |                  (Stalled)                   |  (idle)   |
+|__________|______________________________________________|___________|
 
+```
+
+Stalled means that the processor is not making forward progress with instructions, and this usually happens because it is waiting on memory I/O. Chances are, you're mostly stalled.
+This is even more complicated when the processor has multiple cores and the cores you are using are busy but your work cannot simply be distributed to other cores.
+
+If you look at the overall system processor utilization it might be quite low, but your core can be running slower than usual as it is waiting on memory I/O, or it might even be actually busy but be throttled due to thermals.
+
+Furthermore, some modern systems have different kinds of cores, such as performance cores and efficiency cores, or even multiple levels of such. You can imagine a system with just an efficiency core running when workload is nominal (background check of notifications etc.) and performance cores taking over to prioritize UX when an application is in active use. In this scenario, system will never reach 100% overall utilizations as the efficiency core will never run when other cores are in use.
+ 
+Clock frequency is likewise a misleading measurement as the frequency is impacted by factors such as which core is active, whether the system is on battery power or plugged in, boost mode being active or not, or other factors.
+ 
+How to properly calculate pressure
+---
+Properly calculating compute pressure is architecture dependent and as such an implementation must consider multiple input signals that may vary by architecure, form factor, or other system characteristics. Possible signals could be, for example:
+
+* AC or DC power state
+* Thermals
+* Some weighted values of “utilization” including information about memory I/O
+
+A better metric than utilization could be CPI (clock ticks per instruction, retained) that reports the amount of clock ticks it takes on average to execute an instruction. If the processor is waiting on memory I/O, CPI is rising sharply. If CPI is around or below 1, the system is usually doing well. This is also architecture dependent as some complex instructions take up multiple instructions. A competent implementation will take this into consideration.
+
+Design considerations
+---
+In order to enable web applications to react to changes in compute pressure with minimal degration in quality or service, or user experience, it is important to be notified while you can still adjust your workloads (temporal relevance), and not when the system is already being throttled. It is equally important to not notify too often for both privacy (data minimization) and developer ergonomics (conceptual weight minimization) reasons.
+
+In order to expose the minimum data necessary at the highest level of abstraction that satisfy the use cases, we suggest the following buckets:
+
+⚪ **Nominal**: Work is minimal and the system is running on lower clock speed to preserve power.
+
+🟢 **Fair**: The system is doing fine, everything is smooth and it can take on additional work without issues.
+
+🟡 **Serious**: There is some serious pressure on the system, but it is sustainable and the system is doing well, but it is getting close to its limits:
+  * Clock speed (depending on AC or DC power) is consistently high
+  * Thermals are high but system can handle it
+
+At this point, if you add more work the system may move into critical.
+
+🔴 **Critical**: The system is now about to reach its limits, but it hasn’t reached _the_ limit yet. Critical doesn’t mean that the system is being actively throttled, but this state is not sustainable for the long run and might result in throttling if the workload remains the same. This signal is the last call for the web application to lighten its workload.
+
+API flow illustrated
+---
+
+As an example, a video conferencing app might have the following dialogue with the API:
+
+> **Developer**: *How is pressure?*
+
+> **System**: 🟢 *It's fair*
+
+> **Developer**: *OK, I'll use a better, more compute intensive audio codec*
+
+> **System**: 🟢 *Pressure is still fair*
+
+> **Developer**: *Show video stream for 8 instead of 4 people*
+
+> **System**: 🟡 *OK, pressure is now serious*
+
+> **Developer**: *Great, we are doing good and the user experience is optimal!*
+
+> **System**: 🔴 *The user turned on background blur, pressure is now critical. If you stay in this state for extended time, the system might start throttling*
+
+> **Developer**: *OK, let’s only show video stream for 4 people (instead of 8) and tell the users to turn off background blur for a better experience*
+
+> **System**: 🟡 *User still wants to keep background blur on, but pressure is now back to serious, so we are doing good*
+
+Other considerations
+---
+There are a lot of advantages to using the above states. For once, it is easier for web developers to understand. What web developers care about is delivering the best user experience to their users given the available resources that vary depending on the system. This may mean taking the system to its limits as long as it provides a better experience, but avoiding taxing the system so much that it starts throttling work.
+ 
+Another advantage is that this high-level abstraction allows for considering multiple signals and adapts to constant innovation in software and hardware below the API layer. For instance, a CPU can consider memory pressure, thermal conditions and map them to these states. As the industry strives to make the fastest silicon that offers the best user experience, it is important that the API abstraction that developers will depend on is future-proof and stands the test of time.
+
+If we'd expose low-level raw values such as clock speed, a developer might hardcode in the application logic that everything above 90% the base clock is considered critical, which could be the case on some systems today, but wouldn't generalize well. For example, on a desktop form factor or on a properly cooled laptop with an advanced CPU, you might go way beyond the base clock with frequency boosting without negative impacting user experience, while a passively-cooled mobile device would likely behave differently.
 
 ## Compute Pressure Observer
 
 We propose a design similar to
 [Intersection Observer](https://w3c.github.io/IntersectionObserver/) to let
-applications be notified when the system's CPU utilization and clock speed
-change.
+applications be notified when the system's pressure changes.
 
 ```js
-const observer = new ComputePressureObserver(
-    computePressureCallback,
-    {
-      // Thresholds divide the interval [0.0 .. 1.0] into ranges.
-      cpuUtilizationThresholds: [0.75, 0.9, 0.5],
-      // The minimum clock speed is 0, and the maximum speed is 1. 0.5 maps to
-      // the base clock speed.
-      cpuSpeedThresholds: [0.5],
-    });
-
-observer.observe();
-
-function computePressureCallback(update) {
-  // The CPU base clock speed is represented as 0.5.
-  if (update.cpuSpeed >= 0.5 && update.cpuUtilization >= 0.9) {
-    // Dramatically cut down compute requirements to avoid overheating.
-    return;
-  }
-
-  // Options applied are returned with every update.
-  // The options applied may be different than those requested.
-  // e.g. the user agent may have reduced the number of thresholds observed.
-  console.log(
-     "Effective CPU utilization thresholds: " +
-     JSON.stringify(update.options.cpuUtilizationThresholds));
-  console.log(
-     "Effective CPU speed thresholds: " +
-     JSON.stringify(update.options.cpuSpeedThresholds));
+function callback(entries) {
+  const lastEntry = entries[entries.length - 1];
+  console.log(`Current pressure ${lastEntry.state}`);
 }
-```
 
+const observer = new ComputePressureObserver(callback);
+observer.observe();
+```
 
 ## Key scenarios
 
-
 ### Adjusting the number of video feeds based on CPU usage
 
+A more advanced example where we lower the value of concurrent video streams
+if pressure becomes critical. As lowering the amount of streams might not result
+in exiting the critical state, or at least not immediately, we use a strategy
+where we lower one stream at the time every 30 seconds while still in the
+critical state.
+
+The example accomplishes this by creating an async iterable that will end
+iterating as soon as the pressure exists critical state, or every 30 seconds
+until then.
+
 ```js
-const observer = new ComputePressureObserver(
-    computePressureCallback,
-    {
-      // Thresholds divide the interval [0.0 .. 1.0] into ranges.
-      cpuUtilizationThresholds: [0.75, 0.9, 0.5],
-      // The minimum clock speed is 0, and the maximum speed is 1. 0.5 maps to
-      // the base clock speed.
-      cpuSpeedThresholds: [0.5],
-    });
+// Utility: A Promise that is also an Iterable that will iterate
+// at a given interval until the promise resolves.
 
-observer.observe();
+class IteratablePromise extends Promise {
+  #interval;
+  #fallback;
 
-function computePressureCallback(update) {
-  // The CPU base clock speed is represented as 0.5.
-  if (update.cpuSpeed >= 0.5) {
-    // Dramatically cut down compute requirements to avoid overheating.
-    limitVideoStreams(2);
-    return;
+  constructor(fn, interval, fallbackValue) {
+    super(fn);
+    this.#interval = interval;
+    this.#fallback = fallback;
   }
 
-  if (update.cpuUtilization >= 0.9) {
-    limitVideoStreams(2);
-  } else if (update.cpuUtilization >= 0.75) {
-    limitVideoStreams(4);
-  } else if (update.cpuUtilization >= 0.5) {
-    limitVideoStreams(8);
-  } else {
-    // The system is in great shape. Show all meeting participants.
-    showAllVideoStreams();
-  }
+  async* [Symbol.asyncIterator]() {
+    let proceed = true;
+    this.then(() => proceed = false);
 
-  // Options applied are returned with every update.
-  // The options applied may be different than those requested.
-  // e.g. the user agent may have reduced the number of thresholds observed.
-  console.log(
-     "Effective CPU utilization thresholds: " +
-     JSON.stringify(update.options.cpuUtilizationThresholds));
-  console.log(
-     "Effective CPU speed thresholds: " +
-     JSON.stringify(update.options.cpuSpeedThresholds));
-}
+    yield this.#fallback;
+
+    while (proceed) {
+      let value = await Promise.any([
+        this,
+        new Promise(resolve => setTimeout(resolve, this.#interval))
+      ]);
+          
+      yield value || this.#fallback;
+    }
+  }
+};
 ```
 
+```js
+// Allow to resolve a promise externally by calling resolveFn
+let resolveFn = null;
+function executor(resolve) {
+  resolveFn = value => resolve(value)
+}
+
+async function lowerStreamCountWhileCritical() {
+  let streamsCount = getStreamsCount();
+  let iter = new IteratablePromise(executor, 30_000, "critical");
+
+  for await (const state of iter) {
+    if (state !== "critical" || streamsCount == 1) {
+      break;
+    }
+    setStreamsCount(streamsCount--);
+  }
+}
+
+function pressureChange(entries) {
+  for (const entry of entries) {
+    if (resolveFn) {
+      resolveFn(entry.state);
+      resolveFn = null;
+      continue;
+    }
+
+    if (entry.state == "critical") {
+      lowerStreamCountWhileCritical();
+    }
+  }
+}
+
+const observer = new ComputePressureObserver(pressureChange);
+observer.observe();
+```
 
 ## Detailed design discussion
 
@@ -277,123 +356,6 @@ successful on desktop computers, where the user is insulated from the
 device's temperature changes, the fan noise variation is not as significant,
 and there is no battery.
 
-
-### Minimizing information exposure
-
-This proposal exposes information about the user's device, which
-[increases the risk of harming the user's privacy](https://w3ctag.github.io/design-principles/#device-ids).
-To minimize this risk, this proposal aims to only expose the absolute minimal
-amount of information needed to make the decisions we set out to support.
-
-The subsections below describe the processing model. At a high level, the
-information exposed is reduced by the following steps.
-
-1. **Normalization** - Per-core information reported by the operating system is
-   normalized to a number between 0.0 and 1.0. This removes variability across
-   CPU models and operating systems.
-
-2. **Aggregation** - Normalized per-core information is aggregated into one
-   overall number.
-
-3. **Quantization** (a.k.a. bucketing) - Each application (origin) must declare
-   a small number of value ranges (buckets) where it wants to behave
-   differently. The application doesn't receive the exact aggregation results,
-   and instead only gets to learn the range (bucket) that each aggregated number
-   falls within to.
-
-4. **Rate-limiting** - The user agent notifies the application of changes in
-   the information it can learn (buckets that each aggregated number). Change
-   notifications are rate-limited.
-
-#### Normalizing CPU utilization
-
-The user agent will normalize CPU core utilization information reported by the
-operating system to a number between 0.0 and 1.0.
-
-0.0 maps to 0% utilization, meaning the CPU core was always idle during the
-observed time window. 1.0 maps to 100% utilization, meaning the CPU core
-was never idle during the observed time window.
-
-#### Aggregating CPU utilization
-
-CPU utilization is averaged over all enabled CPU cores.
-
-Under normal circumstances, all of a system's cores are enabled. However,
-mitigating some recent micro-architectural attacks on some devices may require
-completely disabling some CPU cores. For example, some Intel systems require
-disabling hyperthreading.
-
-We recommend that user agents aggregate CPU utilization over a time window of 1
-second. Smaller windows increase the risk of facilitating a side-channel attack.
-Larger windows reduce the application's ability to make timely decisions that
-avoid bad user experiences.
-
-#### Normalizing CPU clock speed
-
-This API normalizes each CPU core's clock speed to a number between 0.0 and 1.0.
-The proposal intends to enable the decisions we set out to support, without
-exposing the clock speeds.
-
-We propose the following principles for normalizing a CPU core's clock speed.
-
-1. The minimum clock speed is always reported as 0.0.
-2. The base clock speed is always reported as 0.5.
-3. The maximum clock speed is always reported as 1.0.
-4. Speeds outside these values are clamped (to 0.0 or 1.0).
-5. Speeds between these values are linearly interpolated.
-
-#### Aggregating CPU clock speed
-
-TODO: Aggregating is an average of the current speed across all cores. No
-aggregation over a time window.
-
-TODO: Proposal for aggregating clock speeds across systems with heterogeneous
-CPU cores, such as [big.LITTLE](https://en.wikipedia.org/wiki/ARM_big.LITTLE).
-
-#### Quantizing values (a.k.a. Bucketing)
-
-Quantizing the aggregated CPU utilization and clock speed reduces the amount of
-information exposed by the API.
-
-Having applications designate the quantization ranges (buckets) reduces the
-quantization resolution that user agents must support in order to enable the
-decisions used in a multitude of applications.
-
-Applications communicate their desired quantization scheme by passing in a list
-of thresholds. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
-4-bucket scheme, where the buckets cover the value ranges 0-0.5, 0.5-0.75,
-0.75-0.9, and 0.9-1.0. We propose representing a bucket using the middle value
-in its range.
-
-For example, suppose an application used the threshold list above, and the user
-agent measured a CPU utilization of 0.87. This would fall under the 0.75-0.9
-bucket, and would be reported as 0.825 (the average of 0.75 and 0.9).
-
-We will recommend that user agents allow at most 5 buckets (4 thresholds) for
-CPU utilization, and 2 buckets (1 threshold) for CPU speed.
-
-
-#### Rate-limiting change notifications
-
-We propose exposing the quantized CPU utilization and clock speed via
-rate-limited change notifications. This aims to remove the ability to observe
-the precise time when a value transitions between two buckets.
-
-More precisely, once the compute pressure observer is installed, it will be
-called once with initial quantized values, and then be called when the quantized
-values change. The subsequent calls will be rate-limited. When the callback is
-called, the most recent quantized value is reported.
-
-The specification will recommend a rate limit of at most one call per second
-for the active window, and one call per 10 seconds for all other windows. We
-will also recommend that the call timings are jittered across origins.
-
-These measures benefit the user's privacy, by reducing the risk of
-identifying a device across multiple origins. The rate-limiting also benefits
-the user's security, by making it difficult to use this API for timing attacks.
-Last, rate-limiting change callbacks places an upper bound on the performance
-overhead of this API.
-
 ### Third-party contexts
 
 This API will only be available in frames served from the same origin as the
@@ -405,50 +367,6 @@ first-party contexts.
 
 
 ## Considered alternatives
-
-### Fixed quantization scheme
-
-Instead of having applications specify the thresholds they are interested in, we
-considered proposing a fixed quantization scheme. For example, we could round
-reported values to the closest 0.10 (10% of the range), which defines a
-10-bucket scheme.
-
-This alternative would result in a simpler mental model that may reduce the
-burden of using and implementing the API. However, a fixed quantization scheme
-would require more buckets to power the same decisions, resulting in higher
-risks to the user's privacy. Therefore, the
-[priority of constituents](https://www.w3.org/TR/html-design-principles/#priority-of-constituencies)
-requires that we discard this alternative, as it would favor authors and
-implementers over users.
-
-As a concrete example, let's assume two popular video conferencing
-applications that use different CPU clock speed thresholds (50% and 75%) to
-reduce the number of video feeds they display. A fixed bucketing scheme
-requires at least 3 buckets (0 - 50%, 50% - 75%, 75% - 100%) to optimally
-support both applications. By comparison, the current proposal supports both
-applications with two buckets.
-
-### Fine-grained quantization gated on permissions
-
-We considered adding an option to switch to a more fine-grained quantization
-schemes, such as 0.01 precision (100 equally-sized buckets) or 0.001 precision
-(1,000 equally-sized buckets). We considered gating the quantization switch on a
-user permission.
-
-We separately considered automatically switching to a finer-grained quantization
-scheme for applications that can access a device camera that is turned on. The
-privacy argument would have been that the user shared a very high amount of
-entropy with the application, so the privacy risks are much smaller in this
-case.
-
-This option would be very helpful for use cases such as benchmarking and A/B
-testing. As a concrete example, we have been made aware that A/B tests for
-optimizations in a popular video conferencing application sometimes rely on
-0.001 precision in CPU utilization values.
-
-We discarded this option in the interest of keeping the proposal more focused.
-The fine-grained quantization schemes discussed here can be added to the
-currently proposed API shape in a backwards-compatible manner.
 
 ### Expose a thermal throttling indicator
 
@@ -465,78 +383,19 @@ Theoretically, Chrome
 on Android, Chrome OS, and macOS. However, developer experience suggests that
 the macOS API is not reliable.
 
-### Combine CPU utilization and clock speed
-
-We considered reporting one number that accounts for both CPU utilization and
-CPU clock speed.
-
-A somewhat common practice is to multiply utilization by the ratio of the
-current and maximum CPU clock speed. For example, a CPU core that is 50% idle
-and runs at 50% of its maximum CPU speed (1.6 Ghz out of 3.2 Ghz) would be
-considered to be 25% utilized. This metric is
-[not always intuitive](https://docs.microsoft.com/sv-SE/troubleshoot/windows-client/performance/cpu-usage-exceeds-100).
-
-We discarded this option because we got developer feedback that mitigating bad
-user experiences requires being able to react differently to high CPU
-utilization and high CPU clock speeds. The latter needs to be addressed more
-urgently than the former.
-
-### Report quantization ranges instead of values
-
-We considered removing the quantization step that reduces a range to its middle
-value. So, given a CPU utilization value of 0.87 and a quantization scheme of
-[0.2, 0.5, 0.8], instead of reporting a quantized value of 0.9 (the middle of
-the range 0.8-1.0), the API would report an object `{low: 0.8, high: 1.0}`.
-
-The main benefit of this approach is that the user agent has a clear way to
-communicate adjustments to the quantization scheme. Expanding on the example
-above, suppose a user agent considers that the CPU utilization quantization
-scheme [0.2, 0.5, 0.8] reveals too much information, and cuts it down to [0.5].
-The 0.87 CPU utilization value would be reported as `{low: 0.5, high: 1.0}`.
-This is clearer than the value 0.75, which would be reported by the current
-design.
-
-The main drawback of this approach is added complexity in the application code
-that processes updates, as suggested below.
-
-
-```js
-function computePressureCallback(update) {
-  // Cut down compute requirements only when we're pretty sure that the device
-  // is overloaded.
-  if (update.cpuSpeed.low >= 0.5 && update.cpuUtilization.low >= 0.8) {
-    // Dramatically cut down compute requirements to avoid overheating.
-    return;
-  }
-
-  // Eliminate unnecessary visual effects when there's a good chance that the
-  // device is overloaded.
-  if ((update.cpuSpeed.low >= 0.25 && update.cpuUtilization.high >= 0.5) ||
-      (update.cpuUtilization.low >= 0.5 && update.cpuUtilization.high >= 0.8)) {
-    // Remove transitions and non-essential animations.
-    return;
-  }
-}
-```
-
-We did not pursue this option based on the mental models of the developers we
-partnered with while designing this API. We welcome feedback around how the API
-reports quantized values.
-
-
-### Named buckets for CPU utilization
 
 ## Stakeholder Feedback / Opposition
 
-* Chrome : Positive, authoring this explainer
-* Gecko : TODO
-* WebKit : TODO
-* Web developers : TODO
+* Chrome: Positive
+* Gecko: Negative
+* WebKit: TODO
+* Web developers: Positive
 
-## References & acknowledgements
+## References & acknowledgments
 
 Many thanks for valuable feedback and advice from:
 
+* Asaf Yaffe
 * Chen Xing
 * Evan Shrubsole
 * Jesse Barnes
@@ -544,6 +403,7 @@ Many thanks for valuable feedback and advice from:
 * Jan Gora
 * Joshua Bell
 * Matt Menke
+* Moh Haghighat
 * Nicolás Peña Moreno
 * Opal Voravootivat
 * Paul Jensen
