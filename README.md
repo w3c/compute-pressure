@@ -24,7 +24,7 @@
 - [Non-goals](#non-goals)
 - [Current approach - high-level states](#current-approach---high-level-states)
 - [Throttling](#throttling)
-- [Measuring compute pressure is quite complicated](#measuring-compute-pressure-is-quite-complicated)
+- [Measuring compute pressure is complicated](#measuring-compute-pressure-is-complicated)
 - [How to properly calculate pressure](#how-to-properly-calculate-pressure)
 - [Design considerations](#design-considerations)
 - [API flow illustrated](#api-flow-illustrated)
@@ -33,7 +33,7 @@
 - [Key scenarios](#key-scenarios)
   - [Adjusting the number of video feeds based on CPU usage](#adjusting-the-number-of-video-feeds-based-on-cpu-usage)
 - [Detailed design discussion](#detailed-design-discussion)
-  - [Prevent instead of mitigating bad user experiences](#prevent-instead-of-mitigating-bad-user-experiences)
+  - [Prevent instead of mitigate bad user experiences](#prevent-instead-of-mitigate-bad-user-experiences)
   - [Third-party contexts](#third-party-contexts)
 - [Considered alternatives](#considered-alternatives)
   - [Expose a thermal throttling indicator](#expose-a-thermal-throttling-indicator)
@@ -45,7 +45,7 @@
 
 ## Introduction
 
-We propose a new API that conveys the utilization of system resources, initially
+>🆕✨ We propose a new API that conveys the utilization of system resources, initially
 focusing on CPU resources (v1) with the plan to add other resources such as GPU
 resources in the future (post v1). 
 
@@ -53,16 +53,15 @@ In a perfect world, a computing device is able to perform all the tasks assigned
 
 This scheduling action is handled by an operating system module called scheduler whose work may also be assisted by hardware in modern systems. Notably, all this is transparent to web applications, and as a consequence, the user is only made aware the system is too busy when there's already a perceived degradation in quality of service. For example, a video conferencing application starts dropping video frames, or worse, the audio cuts out.
 
-As this is undesirable for the end-user, software developers would like ways to avoid
-such cases, by balancing the set of enabled features and their quality level against
-resource pressure happening on the end-user device.
+As this is undesirable for the end-user, software developers would like to avoid
+such cases and balance the set of enabled features and their quality level against
+the resource pressure of the end-user device.
 
 ## Goals / Motivating Use Cases
 
-The primary use case for v1 is informing CPU consumption decisions in video
-conferencing and video games, which are highly popular
-[soft real-time applications](https://en.wikipedia.org/wiki/Real-time_computing#Criteria_for_real-time_computing).
-We aim to support the following decisions.
+Two primary use cases enhanced by v1 are video conferencing and video games. These  popular
+[real-time applications](https://en.wikipedia.org/wiki/Real-time_computing#Criteria_for_real-time_computing) are classified as _soft_. That is, the quality of service degrades if the system is exercised beyond critical, but does not lead to a total system failure.
+These _soft_ real-time application greatly benefit from being able to adapt their workloads based on CPU consumption. Specifically, v1 aims to facilitate the following adaptation decisions for these use cases:
 
 * Video conferencing
   * Adjust the number of video feeds shown simultaneously during calls with
@@ -86,13 +85,13 @@ We aim to support the following decisions.
 
 ### Future Goals
 
-Post v1 we plan on looking into supporting other resource types, like GPU
+Post v1 we plan to explore support for other resource types, such as GPU
 resources.
 
-Additionally, we would like to investigate whether we can enabling measurement
+Additionally, we would like to investigate whether we can enable measurement
 of hardware resource consumption of different code paths in front end code.
 
-We aim to support the following decision processes.
+We aim to support the following decision processes:
 
 * Compare the CPU consumption of alternative implementations of the same
   feature, for the purpose of determining the most efficient implementation. We
@@ -101,14 +100,16 @@ We aim to support the following decision processes.
   and most developers cannot afford performance measurement labs covering all
   the devices owned by their users.
 * Estimate the impact of enabling a feature on CPU consumption. This cost
-  estimate feeds into the decisions outlined in the primary use case.
+  estimate feeds into the decisions outlined in the primary use cases.
 
 ## Non-goals
 
-This proposal is focused on exposing CPU utilization and thermal throttling.
+This proposal exposes a high-level abstraction that considers both CPU utilization and thermal throttling.
 This limitation leaves out some resource consumption decisions that Web
-applications could make to avoid the bad user experiences mentioned in the
-introduction. The following decisions will not be supported by this proposal.
+applications could make to avoid bad the user experiences mentioned in the
+introduction.
+
+The following decisions will not be supported by this proposal:
 
 * Routing video processing, such as
   [background replacement](https://support.google.com/meet/answer/10058482), to
@@ -119,8 +120,8 @@ introduction. The following decisions will not be supported by this proposal.
   (via [WebCodecs](https://wicg.github.io/web-codecs/)) or
   software (via WebAssembly).
 
-Video conferencing applications and games use the following information to
-make the unsupported decisions above.
+Video conferencing applications and games would require the following information to
+make the decisions enumerated above:
 
 *   GPU utilization
 *   CPU capabilities, such as number of cores, core speed, cache size
@@ -132,20 +133,24 @@ Compute Pressure defines a set of compute pressure states delivered to a web app
 
 Human-readable compute pressure states with semantics attached to them improve ergonomics for web developers and provide future-proofing against diversity of hardware. Furthermore, the high-level states abstract away complexities of system bottlenecks that cannot be adequately explained with low-level metrics such as processor clock speed and utilization.
 
-For instance, a processor might have additional cores that work can be distributed to in certain cases, and it might be able to adjust clock speed. The faster clock speed a processor runs at, the more power it consumes which can affect battery and the temperature of the processor. A processor that runs hot becomes unstable and may crash or even burn.
+For instance, a processor might have additional cores that work can be distributed to in certain cases, and it might be able to adjust clock speed. The faster clock speed a processor runs at, the more power it consumes which can affect battery and the temperature of the processor. A processor that runs hot may become unstable and crash or even burn.
 
-For this reason processors adjust clock speed all the time, given the amount of work and whether it's on battery power or not (AC vs DC power) and whether the cooling system can keep the processor cool. Work often comes in bursts, like when the user is performing a certain operation, and in order to keep the system fast and responsive, modern processors use multiple boost modes, where it temporarily runs at an extremely high clock rate in order to get work out of the way and return to normal operations. As this happens in short bursts that is possible without heating up the processor too much. This is even more complex as boost frequencies depend on how many cores are utilized etc.
+For this reason processors adjust clock speed all the time based on factors such as the amount of work, whether the device is on battery power or not (AC vs DC power) and whether the cooling system can keep the processor cool. Work often comes in bursts. For example, when the user is performing a certain operation that requires the system to be both fast and responsive, modern processors use multiple boost modes to temporarily runs the processor at an extremely high clock rate in order to get work out of the way and return to normal operation faster. When this happens in short bursts it does not heat up the processor too much. This is more complex in real life because boost frequencies depend on how many cores are utilized among other factors. 
+
+The high-level states proposal hides all this complexity from the web developer.
 
 Throttling
 ---
 A processor might be throttled, run slower than usual, resulting in a poorer user experience. This can happen for a number of reasons, for example:
 
-- The temperature of the processor is hotter than that can be sustained
-- Other bottlenecks in the system, like work blocking on memory access
-- System is DC (battery) powered so longer battery life is preferred instead of high clock speed
-- To keep system more quiet (less fans) as a user preference
+- The temperature of the processor is higher than what can be sustained for longer periods of time
+- Other bottlenecks exists in the system, e.g. work is blocked on memory access
+- System is battery-powered (DC), or its battery level is low
+- The user has explicitly set or the system is preconfigured with a preference for longer battery life over high performance, or better acoustic performance
 
-Measuring compute pressure is quite complicated
+User's preferences affecting throttling may be configured by the user via operating system provided affordances while some may be preconfigured policies set by the hardware vendor. These factor are often dynamically adjusted taking user's preference into consideration.
+
+Measuring compute pressure is complicated
 ---
 Using utilization as a measurement for compute pressure is suboptimal. What you may think 90% CPU utilization means:
 
@@ -172,15 +177,15 @@ What it might really mean is:
 Stalled means that the processor is not making forward progress with instructions, and this usually happens because it is waiting on memory I/O. Chances are, you're mostly stalled.
 This is even more complicated when the processor has multiple cores and the cores you are using are busy but your work cannot simply be distributed to other cores.
 
-If you look at the overall system processor utilization it might be quite low, but your core can be running slower than usual as it is waiting on memory I/O, or it might even be actually busy but be throttled due to thermals.
+The overall system processor utilization may be low for nonobvious reasons. An active core can be running slower waiting on memory I/O, or it may be busy but is throttled due to thermals.
 
-Furthermore, some modern systems have different kinds of cores, such as performance cores and efficiency cores, or even multiple levels of such. You can imagine a system with just an efficiency core running when workload is nominal (background check of notifications etc.) and performance cores taking over to prioritize UX when an application is in active use. In this scenario, system will never reach 100% overall utilizations as the efficiency core will never run when other cores are in use.
+Furthermore, some modern systems have different kind of cores, such as performance cores and efficiency cores, or even multiple levels of such. You can imagine a system with just an efficiency core running when workload is nominal (background check of notifications etc.) and performance cores taking over to prioritize UX when an application is in active use. In this scenario, system will never reach 100% overall utilizations as the efficiency core will never run when other cores are in use.
  
 Clock frequency is likewise a misleading measurement as the frequency is impacted by factors such as which core is active, whether the system is on battery power or plugged in, boost mode being active or not, or other factors.
  
 How to properly calculate pressure
 ---
-Properly calculating compute pressure is architecture dependent and as such an implementation must consider multiple input signals that may vary by architecure, form factor, or other system characteristics. Possible signals could be, for example:
+Properly calculating compute pressure is architecture dependent and as such an implementation must consider multiple input signals that may vary by architecture, form factor, or other system characteristics. Possible signals could be, for example:
 
 * AC or DC power state
 * Thermals
@@ -259,8 +264,8 @@ observer.observe();
 
 ### Adjusting the number of video feeds based on CPU usage
 
-A more advanced example where we lower the value of concurrent video streams
-if pressure becomes critical. As lowering the amount of streams might not result
+In this more advanced example we lower the number of concurrent video streams
+if compute pressure becomes critical. As lowering the amount of streams might not result
 in exiting the critical state, or at least not immediately, we use a strategy
 where we lower one stream at the time every 30 seconds while still in the
 critical state.
@@ -340,13 +345,13 @@ observer.observe();
 
 ## Detailed design discussion
 
-### Prevent instead of mitigating bad user experiences
+### Prevent instead of mitigate bad user experiences
 
-A key goal for our proposal is preventing, rather than mitigating, bad
-user experience. On mobile devices such as laptops, smartphones and tablets,
-pushing the user’s device into high CPU or GPU utilization causes the device
-to become uncomfortably hot, causes the device’s fans to get disturbingly
-loud, and drains the battery at an unacceptable rate.
+A key goal for our proposal is to prevent, rather than mitigate, bad
+user experience. Mobile devices such as laptops, smartphones and tablets,
+when pushed into high CPU or GPU utilization may cause the device
+to become uncomfortably hot, cause the device’s fans to get disturbingly
+loud, or drain the battery at an unacceptable rate.
 
 The key goal above disqualifies solutions such as
 [requestAnimationFrame()](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame),
@@ -354,7 +359,7 @@ which lead towards a feedback system where **bad user experience is
 mitigated, but not completely avoided**. Feedback systems have been
 successful on desktop computers, where the user is insulated from the
 device's temperature changes, the fan noise variation is not as significant,
-and there is no battery.
+and DC power means stable power supply.
 
 ### Third-party contexts
 
