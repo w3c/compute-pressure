@@ -19,11 +19,6 @@
     ],
     editors: [
       {
-        name: "Victor Costan",
-        company: "Google Inc.",
-        companyURL: "https://google.com",
-      },
-      {
         name: "Kenneth Rohde Christiansen",
         company: "Intel Corporation",
         companyURL: "https://intel.com",
@@ -34,6 +29,11 @@
         company: "Intel Corporation",
         companyURL: "https://intel.com",
         w3cid: 126342,
+      },
+      {
+        name: "Victor Costan",
+        company: "Google Inc.",
+        companyURL: "https://google.com",
       }
     ],
     testSuiteURI: "https://github.com/web-platform-tests/wpt/labels/compute-pressure",
@@ -42,7 +42,7 @@
 <section id="abstract">
   <p>
     The <cite>Compute Pressure API</cite> provides a way for websites to react to changes
-    in the CPU consumption of the target device, such that websites can trade off CPU
+    in the CPU consumption of the target device, such that websites can trade off
     resources for an improved user experience.
   </p>
 </section>
@@ -51,20 +51,20 @@
   <h2>Introduction</h2>
   <p>
     Modern applications often need to balance the trade offs and advantages of fully utilizing
-    the system's processing resources, in order to provide a modern and delightful user experience.
+    the system's computing resources, in order to provide a modern and delightful user experience.
   </p>
   <p>
     As an example, many applications can render video effects with varying degrees of sophistication.
     These applications aim to provide the best user experience, while avoiding driving the user's
-    device into a high [=load=] regime.
+    device into a high pressure regime.
   </p>
   <p>
-    [=Utilization=] of [=processing units=] close to and often reaching 100% can lead to a bad
+    Utilization of [=processing units=] close to and often reaching 100% can lead to a bad
     user experience, as different tasks are fighting for the processing time.
     This can lead to slowless, which is especially noticeable with input delay.
 
     Further, a prolonged utilization close 100% can cause the [=processing units=] to heat up due to prolonged
-    [=boosting=], which can lead to [=throttling=], resulting in an even worse user experience.
+    boosting, which can lead to throttling, resulting in an even worse user experience.
   </p>
   <p>
     As a result of thermal limits, many smartphones, tablets and laptops can become uncomfortably hot
@@ -72,7 +72,7 @@
     or the users’ ability to focus.
   </p>
   <p>
-    In many cases, a device under high [=load=] appears to be unresponsive, as the operating
+    In many cases, a device under high pressure appears to be unresponsive, as the operating
     system may fail to schedule the threads advancing the task that the user is waiting for. See also
     <a href="https://github.com/oyiptong/compute-pressure/#goals--motivating-use-cases">Compute Pressure:
     Use Cases</a>.
@@ -91,28 +91,28 @@
   </p>
   <aside class="example" title="Checking existence of ComputePressureObserver interface">
     <p>
-      This simple example illustrates how to check whether the User Agent exposes the ComputePressureObserver interface
+      This simple example illustrates how to check whether the User Agent exposes the
+      ComputePressureObserver interface
     </p>
     <pre class="js">
       if (typeof ComputePressureObserver == "function") {
         // use ComputePressureObserver interface
       }
 
-      if ("ComputePressureObserver" in window) {
+      if ("ComputePressureObserver" in globalThis) {
         // use ComputePressureObserver interface
       }
 
-      if (window.ComputePressureObserver) {
+      if (globalThis.ComputePressureObserver) {
         // use ComputePressureObserver interface
       }
-
-      // etc.
     </pre>
   </aside>
   <p>
     All of these tell you something about the presence and possible characteristics of an API.
-    They do not tell you anything, however, about whether that API is actually connected to a real [=platform collector=], whether the [=platform collector=] is collecting real telemetry readings,
-    or whether the user is going to allow you to access it.
+    They do not tell you anything, however, about whether that API is actually connected to a
+    real [=platform collector=], whether the [=platform collector=] is collecting real telemetry
+    readings, or whether the user is going to allow you to access it.
   </p>
 </section>
 <section>
@@ -124,71 +124,9 @@
     <h3><dfn>Processing Units</dfn></h3>
     <p>
       Computing devices consist of a multitude of different processing units such as the Central
-      Processing Unit (<dfn>CPU</dfn>), Graphics Processing Unit (GPU) and many specialized
+      Processing Unit (CPU), Graphics Processing Unit (GPU) and many specialized
       processing units are becoming popular such as ones designed to accelerate specific tasks like
-      machine learning or computer vision. This specification uses the term <dfn>XPU</dfn> to refer to
-      <em>any</em> of these processing units.
-    </p>
-  </section>
-  <section>
-    <h3><dfn>Utilization</dfn></h3>
-    <p>
-      [=Processing Unit=] utilization refers to a device’s usage of the [=XPU=] processing
-      resources, or the amount of work handled by an [=XPU=]. Not every task requires heavy [=XPU=]
-      time as the task might depend on other resources, such as reading data from memory.
-    </p>
-    <p>
-      [=XPU=] often contain multiple execution units/cores, so utilization refers to the
-      <em>average percentage of the total working time of all execution units.</em>
-    </p>
-    <p>
-      As an example, for a [=CPU=], the utilization is the fraction of time that each core has been
-      executing code belonging to a thread, as opposed to being in an idle state.
-    </p>
-    <p>
-      [=Processing Units=] are designed to run safely at 100% utilization. However, it means they have reached
-      their limit and cannot take on additional work and maybe not even handle the current work at
-      hand, resulting in perceptible slowness.
-    </p>
-  </section>
-  <section>
-    <h3><dfn>Load</dfn></h3>
-    <p>
-      For [=CPUs=], it is common to consider load in addition to [=utilization=]. Load is the number
-      of processes (queue length) being executed or waiting to be by the CPU. When a system is
-      heavily loaded, its [=CPU=] [=utilization=] is likely close to 100%, though a system with
-      2 processes in the queue and one with 10 are not comparable. For this reason it is common
-      to look at load average (average system load over a period of time) as a set of three
-      numbers, which represent the load during the last one-, five-, and fifteen-minute periods.
-    </p>
-  </section>
-  <section>
-    <h3><dfn>Frequency</dfn></h3>
-    <p>
-      [=Processing units=] run at a certain frequency, also known as clock rate, expressed in
-      cycles per second (e.g. gigahertz). The base frequency is a measure that the CPU manufacturer
-      guarantees the [=processing unit=] can run at with reasonable cooling.
-    </p>
-    <p>
-      To avoid [=processing units=] running at 100% utilization for long, some [=processing units=] can use <dfn>dynamic
-      frequency scaling</dfn> to temporarily <dfn data-lt="boost|boosting">boost</dfn> the
-      frequency of a certain execution unit and then assign the largest task to it, alleviating
-      the poor user experience in many situations.
-    </p>
-    <p>
-      The [=processing unit=] will try to increase the operating frequency in regular increments (steps)
-      as required to meet demand. The increased frequency is limited by the [=processing unit=]'s power,
-      current, and thermal limits, the number of execution units currently in use, and the maximum
-      frequency of the active ones.
-    </p>
-    <p>
-      [=Dynamic Frequency Scaling=] can also be used to
-      <dfn data-lt="throttle|throttling">throttle</dfn> the execution,
-      by slowing down the frequency to use less energy and conserve battery, especially in laptops.
-    </p>
-    <p>
-      Throttling can also happen as a result of an [=processing unit=] reaching its thermal limits. This
-      thermal throttling helps cool the [=processing unit=] down when it gets too hot by lowering the frequency.
+      machine learning or computer vision.
     </p>
   </section>
   <section>
@@ -248,6 +186,59 @@
   </p>
 </section>
 
+<section> <h2>Pressure States</h2>
+  <p>
+    <dfn>Pressure states</dfn> represents the minimal set of useful states that allows web applications
+    to react to changes in compute pressure with minimal degration in quality or service, or user
+    experience.
+  </p>
+  <pre class="idl">
+    enum PressureState { "nominal", "fair", "serious", "critical" };
+  </pre>
+  <p>
+    The <dfn>PressureState</dfn> enum represents the [=pressure state=] with the following states:
+  </p>
+  <p>
+    <style>
+      @counter-style pressure-states-emoji {
+        system: cyclic;
+        symbols: "⚪" "🟢" "🟡" "🔴";
+        suffix: " ";
+      }
+      .pressure-states {
+        list-style-type: pressure-states-emoji;
+      }
+    </style>
+    <ul class="pressure-states">
+      <li>
+        <b>Nominal</b>: Work is minimal and the system is running on lower clock speed to preserve power.
+      </li>
+      <li>
+        <b>Fair</b>: The system is doing fine, everything is smooth and it can take on additional work without issues.
+      </li>
+      <li>
+        <b>Serious</b>: There is some serious pressure on the system, but it is sustainable and the system
+        is doing well, but it is getting close to its limits:
+        <ul>
+          <li>
+            Clock speed (depending on AC or DC power) is consistently high
+          </li>
+          <li>
+            Thermals are high but system can handle it
+          </li>
+        </ul>
+        At this point, if you add more work the system may move into critical.
+      </li>
+      <li>
+        <b>Critical</b>: The system is now about to reach its limits, but it hasn’t reached <em>the</em> limit yet.
+        Critical doesn’t mean that the system is being actively throttled, but this state is not sustainable for
+        the long run and might result in throttling if the workload remains the same. This signal is the last call
+        for the web application to lighten its workload.
+      </li>
+    </ul>
+  </p>
+</section>
+
 <section> <h2>Compute Pressure Observer</h2>
 The Compute Pressure Observer API enables developers to understand the utilization characteristics of a CPU.
 
@@ -255,44 +246,29 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h3>The <a>ComputePressureUpdateCallback</a> callback</h3>
   <pre class="idl">
     callback ComputePressureUpdateCallback = undefined (
-      ComputePressureEntry update,
+      sequence&lt;ComputePressureEntry&gt; entries,
       ComputePressureObserver observer
     );
   </pre>
-  This callback will be invoked when [=CPU=] [=frequency=] and/or [=utilization=] crosses the user
-  set thresholds.
+  This callback will be invoked when the [=pressure state=] changes.
 </section>
 
 <section  data-dfn-for="ComputePressureObserver"> <h2>The <a>ComputePressureObserver</a> object</h2>
   <p>
-    The {{ComputePressureObserver}} can be used to observe changes in the [=CPU=] [=frequency=] and
-      <a>utilization</a>, following user set thresholds.
+    The {{ComputePressureObserver}} can be used to observe changes in the [=pressure states=].
   </p>
-  <p>
-    Providing a list of thresholds effectively separates the resource usage into buckets. For example,
-    the thresholds list `[0.5, 0.75, 0.9]` defines a 4-bucket scheme, where the buckets cover the ranges
-    `[0-0.5[`, `[0.5-0.75[`, `[0.75-0.9[`, and `[0.9-1.0]`.
-  </p>
-  <aside class="note">
-    <p>
-      The user of the API can request an arbitary number of thresholds, but the User Agent may choose to
-      observe only a subset of those requested.
-    </p>
-    <p>
-      It is recommended that user agents allow at most 5 buckets (4 thresholds) for CPU utilization, and
-      2 buckets (1 threshold) for CPU speed.
-    </p>
-  </aside>
   <pre class="idl">
     enum ComputePressureTarget { "cpu" };
 
     [Exposed=Window]
     interface ComputePressureObserver {
       constructor(ComputePressureUpdateCallback callback);
+
       undefined observe(ComputePressureTarget target, optional ComputePressureObserverOptions options = {});
       undefined unobserve(ComputePressureTarget target);
       undefined disconnect();
       sequence&lt;ComputePressureEntry&gt; takeRecords();
+
       [SameObject] static readonly attribute FrozenArray&lt;DOMString&gt; supportedTargetTypes;
     };
   </pre>
@@ -357,30 +333,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
             A [=queue=] of zero or more {{ComputePressureEntry}} objects.
           </td>
         </tr>
-        <tr>
-          <td>
-            <dfn>[[\CPUUtilizationThresholds]]</dfn>
-          </td>
-          <td>
-            An empty [=list=].
-          </td>
-          <td>
-            A [=list=] of {{double}}s between 0 and 1, representing
-            the user requested {{CPU}} {{utilization}} thresholds.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <dfn>[[\CPUSpeedThresholds]]</dfn>
-          </td>
-          <td>
-            An empty [=list=].
-          </td>
-          <td>
-            A [=list=] of {{double}}s between 0 and 1, representing
-            the user requested [=CPU=] [=frequency=] thresholds.
-          </td>
-        </tr>
       </tbody>
     </table>
   </section>
@@ -413,28 +365,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           If |target| is not equal to "`cpu`", abort these steps.
         </li>
         <li>
-          If |options|.|cpuUtilizationThresholds:list| exists, set |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}}
-          be a [=list=] equal to that.
-        </li>
-        <li>
-          If any value in |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}} is less than 0.0 or greater than 1.0,
-          throw a {{RangeError}} exception.
-        </li>
-        <li>
-          Sort |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}} in ascending order.
-        </li>
-        <li>
-          If |options|.|cpuSpeedThresholds:list| exists, set |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}}
-          be a [=list=] equal to that.
-        </li>
-        <li>
-          If any value in |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} is less than 0.0 or greater than 1.0,
-          throw a {{RangeError}} exception.
-        </li>
-        <li>
-          Sort |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} in ascending order.
-        </li>
-        <li>
           If [=active observers=] is equal to `0`, activate the underlying [=platform collector=].
         </li>
         <li>
@@ -464,12 +394,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         <li>
           Set |this|.{{ComputePressureObserver/[[Activated]]}} to `false`.
         </li>
-        <li>
-          Set |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}} to an empty [=list=].
-        </li>
-        <li>
-          Set |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} to an empty [=list=].
-        </li>
       </ol>
     </p>
   </section>
@@ -488,12 +412,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </li>
         <li>
           Set |this|.{{ComputePressureObserver/[[Activated]]}} to `false`.
-        </li>
-        <li>
-          Set |this|.{{ComputePressureObserver/[[CPUUtilizationThresholds]]}} to an empty [=list=].
-        </li>
-        <li>
-          Set |this|.{{ComputePressureObserver/[[CPUSpeedThresholds]]}} to an empty [=list=].
         </li>
         <li>
           [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
@@ -546,23 +464,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h3>The <dfn>ComputePressureEntry</dfn> dictionary</h3>
   <pre class="idl">
     dictionary ComputePressureEntry {
-      double cpuSpeed;
-      double cpuUtilization;
+      PressureState state;
       ComputePressureObserverOptions options;
     };
   </pre>
   <section>
-    <h3>The <dfn>cpuSpeed</dfn> attribute</h3>
+    <h3>The <dfn>state</dfn> attribute</h3>
     <p>
-      The {{ComputePressureEntry/cpuSpeed}} attribute represents the current [=CPU=] [=frequency=]
-      as a {{double}} value between `0` and `1`.
-    </p>
-  </section>
-  <section>
-    <h3>The <dfn>cpuUtilization</dfn> attribute</h3>
-    <p>
-      The {{ComputePressureEntry/cpuUtilization}} attribute represents the current CPU <a> utilization</a>
-      as a {{double}} value between `0` and `1`.
+      The {{ComputePressureEntry/state}} attribute represents the current CPU [=pressure state=].
     </p>
   </section>
   <section>
@@ -578,148 +487,15 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h3>The <dfn>ComputePressureObserverOptions</dfn> dictionary</h3>
   <pre class="idl">
     dictionary ComputePressureObserverOptions {
-      sequence&lt;double&gt; cpuUtilizationThresholds = [];
-      sequence&lt;double&gt; cpuSpeedThresholds = [];
     };
   </pre>
-  <section>
-    <h3>The <dfn>cpuUtilizationThresholds</dfn> member</h3>
-    <p>
-      The {{ComputePressureObserverOptions/cpuUtilizationThresholds}} member represents the current {{CPU}} {{utilization}}
-      thresholds, as a sequence of {{double}}s values between `0` and `1`.
-    </p>
-  </section>
-  <section>
-    <h3>The <dfn>cpuSpeedThresholds</dfn> member</h3>
-    <p>
-      The {{ComputePressureObserverOptions/cpuSpeedThresholds}} member represents the current [=CPU=] [=frequency=]
-      thresholds, as a sequence of {{double}}s values between `0` and `1`.
-    </p>
-  </section>
 </section>
+
 <section id="processing-model">
   <h3>Processing Model</h3>
   <p>
     This section outlines the steps the user agent must take when implementing the Compute Pressure Observer API.
   </p>
-  <section id="handle-cpu-utilization">
-    <h3>Normalize and aggregate CPU utilization</h3>
-    <aside class="note">
-      <p>
-      CPU utilization can have different meaning. In the context of Compute Pressure API, CPU utilization is the time when
-      the CPU core is not in idle state. Any other state is considered to be an utilization state. Utilization states can be
-      when the CPU core is busy or is stalled or waiting for memory I/O for example.
-      </p>
-      <p>
-      Depending on the platform, CPU utilization can be directly read at time t, or can be derived from a calculation of different
-      utilization state during a pre-defined time interval.
-      </p>
-    </aside>
-    <ol class="algorithm">
-      <li>
-        Let |core count| equal to the numbers of CPU cores as part of |platform reading|.
-      </li>
-      <li>
-        Let |aggregated utilization| be `0.0`.
-      </li>
-        [=list/For each=] CPU core,
-        <ol>
-          <li>
-            Calculate or read CPU |utilization|.
-          </li>
-          <li>
-            Normalize |utilization| so that its value is in between 0.0 and 1.0.
-          </li>
-          <li>
-            Set |aggregated utilization| to |aggregated utilization| + |utilization|.
-          </li>
-        </ol>
-      <li>
-        Set |aggregated utilization| to |aggregated utilization| / |core count|.
-      </li>
-    </ol>
-  </section>
-  <section id="handle-cpu-frequency">
-    <h3>Normalize and aggregate CPU frequency</h3>
-    <aside class="note">
-      <p>
-        CPU cores may support a variety of complex [=dynamic frequency scaling=] technologies to raise the
-        clock frequency beyond the base frequency (max frequency without [=boosting=]).
-      </p>
-      <p>
-        The [=boosting=] max frequency can depend on the type of core in heterogeneous systems, but even
-        the same cores can have different max frequency. In modern Intel CPUs, one or two P-cores (performance
-        cores) are considered <em>favored cores</em> with even higher max frequency.
-      </p>
-      <p>
-        Beyond this, Intel CPUs might support <em>Thermal Velocity Boost</em> (TVB), which allows an even higher
-        frequency, going beyond the max frequency if the CPU’s within temperature limits and turbo power budget is
-        available.
-      </p>
-      <p>
-        Overclocked CPUs can similarly go beyond the [=boosting=] max frequency.
-      </p>
-      <p>
-        Frequencies beyond [=boosting=] max frequency are ignored by this specification and frequencies are
-        clamped to the [=boosting=] max frequency.
-      </p>
-      <p>
-        More information about Intel based boosting technologies <a
-        href="https://www.intel.com/content/www/us/en/gaming/resources/how-intel-technologies-boost-cpu-performance.html">
-        here</a>.
-      </p>
-    </aside>
-    This algorithm, when invoked, MUST run the following step, given the argument |platform reading|:
-    <ol class="algorithm">
-      <li>
-        Let |core count| equal to the numbers of CPU cores as part of |platform reading|.
-      </li>
-      <li>
-        Let |aggregated frequency| be `0.0`.
-      </li>
-      <li>
-        [=list/For each=] CPU core reading |core info| as part of |platform reading|,
-        <ol>
-          <li>
-            Let |frequency| be the current frequency associated with |core info|.
-          </li>
-          <li>
-            Let |min|, |base| and |turbo| be the CPU core's minimum, base and turbo [=boosting=] max frequencies.
-          </li>
-          <li>
-            If |frequency| < |base|,
-            <ul>
-              <li>
-                Set |frequency| to (|frequency| - |min|) / ((|base| - |min|) * 2).
-              </li>
-            </ul>
-          </li>
-          <li>
-            If |frequency| &#8805 |base|,
-            <ul>
-              <li>
-                Set |frequency| to (|frequency| - |base|) / ((|turbo|  - |base|) * 2) + 0.5.
-              </li>
-            </ul>
-          </li>
-          <li>
-            Set |frequency| to <a href="https://tc39.es/ecma262/#eqn-max">max</a>(0, |frequency|).
-          </li>
-          <li>
-            Set |frequency| to <a href="https://tc39.es/ecma262/#eqn-min">min</a>(1, |frequency|).
-          </li>
-          <li>
-            Set |aggregated frequency| to |aggregated frequency| + |frequency|.
-          </li>
-        </ol>
-      <li>
-        Set |aggregated frequency| to |aggregated frequency| / |core count|.
-      </li>
-      <li>
-        Return |aggregated frequency|.
-      </li>
-    </ol>
-  </section>
   <section id="create-entry">
     <h3>Create and populate a ComputePressureEntry</h3>
     <ol class="algorithm">
@@ -730,7 +506,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         Let |entry:ComputePressureEntry| be a new {{ComputePressureEntry}} instance.
       </li>
       <li>
-        Let |entry|.|cpuSpeed:double| be the result of invoking [[[#handle-cpu-frequency]]] with
+        Let |entry|.|state:PressureState| be the result of invoking ... with
         |readings|.
       </li>
       <li>
@@ -816,7 +592,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>Minimizing information exposure</h3>
     <p>
-      Exposing hardware related events related to [=CPU=] [=utilization=]
+      Exposing hardware related events related to low level details such as exact CPU
+      utilization or clock speed
       <a href="https://w3ctag.github.io/design-principles/#device-ids">
       increases the risk of harming the user's privacy</a>.
     </p>
@@ -829,133 +606,22 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       information exposed is reduced by the following steps:
       <ol>
         <li>
-          <b>Normalization</b> - Per-core information reported by the operating system is
-          normalized to a number between 0.0 and 1.0. This removes variability across
-          CPU models and operating systems.
-        </li>
-        <li>
-          <b>Aggregation</b> - Normalized per-core information is aggregated into one
-          overall number.
-        </li>
-        <li>
-          <b>Quantization</b> (a.k.a. bucketing) - Each application (origin) must declare
-          a small number of value ranges (buckets) where it wants to behave
-          differently. The application doesn't receive the exact aggregation results,
-          and instead only gets to learn the range (bucket) that each aggregated number
-          falls within to.
-        </li>
-        <li>
           <b>Rate-limiting</b> - The user agent notifies the application of changes in
-          the information it can learn (buckets that each aggregated number). Change
-          notifications are rate-limited.
+          the information it can learn. Change notifications are rate-limited.
         </li>
       </ol>
       <section>
-        <h4>Normalizing CPU utilization</h4>
-        <p>
-          The user agent will normalize CPU core utilization information reported by the
-          operating system to a number between 0.0 and 1.0.
-        </p>
-        <p>
-          0.0 maps to 0% utilization, meaning the CPU core was always idle during the
-          observed time window. 1.0 maps to 100% utilization, meaning the CPU core
-          was never idle during the observed time window.
-        </p>
-      </section>
-      <section>
-        <h4>Aggregating CPU utilization</h4>
-        <p>
-          CPU utilization is averaged over all enabled CPU cores.
-        </p>
-        <p>
-          Under normal circumstances, all of a system's cores are enabled. However,
-          mitigating some recent micro-architectural attacks on some devices may require
-          completely disabling some CPU cores. For example, some Intel systems require
-          disabling hyperthreading.
-        </p>
-        <p>
-          We recommend that user agents aggregate CPU utilization over a time window of 1
-          second. Smaller windows increase the risk of facilitating a side-channel attack.
-          Larger windows reduce the application's ability to make timely decisions that
-          avoid bad user experiences.
-        </p>
-      </section>
-      <section>
-        <h4>Normalizing CPU frequency</h4>
-        <p>
-          This API normalizes each CPU core's frequency to a number between `0.0` and `1.0`.
-          The proposal intends to enable the decisions we set out to support, without
-          exposing the [=CPU=] frequency steps.
-        </p>
-        <p>
-           We recommend the following principles for normalizing a CPU core's [=frequencies=]
-           <ul>
-             <li>
-              The minimum frequency is always reported as `0.0`.
-             </li>
-             <li>
-              The base frequency is always reported as `0.5`.
-             </li>
-             <li>
-              The maximum frequency is always reported as `1.0`.
-             </li>
-             <li>
-              Speeds outside these values are clamped (to `0.0` or `1.0`).
-             </li>
-             <li>
-              Speeds between these values are linearly interpolated.
-             </li>
-           </ul>
-        </p>
-      </section>
-      <section>
-        <h4>Aggregating CPU frequency</h4>
-        <p class="issue">
-          TODO: Aggregating is an average of the current speed across all cores. No
-          aggregation over a time window. Proposal for aggregating frequencies across
-          systems with heterogeneous CPU cores
-        </p>
-      </section>
-      <section>
-        <h4>Quantizing values (a.k.a. Bucketing)</h4>
-        <p>
-          Quantizing the aggregated CPU utilization and frequency reduces the amount of
-          information exposed by the API.
-        </p>
-        <p>
-          Having applications designate the quantization ranges (buckets) reduces the
-          quantization resolution that user agents must support in order to enable the
-          decisions used in a multitude of applications.
-        </p>
-        <p>
-          Applications communicate their desired quantization scheme by passing in a list
-          of thresholds. For example, the thresholds list `[0.5, 0.75, 0.9]` defines a
-          4-bucket scheme, where the buckets cover the value ranges `0`-`0.5`, `0.5`-`0.75`,
-          `0.75`-`0.9`, and `0.9`-`1.0`. We propose representing a bucket using the middle
-          value in its range.
-        </p>
-        <p class="example">
-          Suppose an application used the threshold list above, and the user
-          agent measured a CPU utilization of `0.87`. This would fall under the `0.75`-`0.9`
-          bucket, and would be reported as `0.825` (the average of `0.75` and `0.9`).
-        </p>
-        <p>
-          We recommend that user agents allow at most 5 buckets (4 thresholds) for
-          CPU utilization, and 2 buckets (1 threshold) for CPU speed.
-        </p>
-      </section>
-      <section>
         <h4>Rate-limiting change notifications</h4>
         <p>
-          We propose exposing the quantized CPU utilization and frequency via
+          We propose exposing the pressure state via
           rate-limited change notifications. This aims to remove the ability to observe
-          the precise time when a value transitions between two buckets.
+          the precise time when a value transitions between two states.
         </p>
         <p>
-          More precisely, once the compute pressure observer is installed, it will be
-          called once with initial quantized values, and then be called when the quantized
-          values change. The subsequent calls will be rate-limited. When the callback is
-          called, the most recent quantized value is reported.
+          More precisely, once the compute pressure observer is activated, it will be
+          called once with initial values, and then be called when the values change.
+          The subsequent calls will be rate-limited. When the callback is
+          called, the most recent value is reported.
         </p>
         <p>
           The specification will recommend a rate limit of at most one call per second
@@ -990,32 +656,24 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     Examples
   </h2>
   <pre class="example js" title="Adjusting the number of video feeds based on CPU usage">
-    const observer = new ComputePressureObserver(computePressureCallback);
+    let timerId = -1;
+    function pressureChange(entries) {
+      clearTimeout(timerId);
 
-    observer.observe("cpu", {
-      cpuUtilizationThresholds: [0.75, 0.9, 0.5],
-      cpuSpeedThresholds: [0.5],
-    });
+      const lastEntryArray = [entries.at(entries.length - 1)];
+      timerId = setTimeout(pressureChange.bind(this, lastentryArray), 30_000);
 
-    function computePressureCallback(update) {
-      // The CPU base frequency is represented as 0.5.
-      if (update.cpuSpeed >= 0.5) {
-        // Dramatically cut down compute requirements to avoid overheating.
-        limitVideoStreams(2);
-        return;
-      }
 
-      if (update.cpuUtilization >= 0.9) {
-        limitVideoStreams(2);
-      } else if (update.cpuUtilization >= 0.75) {
-        limitVideoStreams(4);
-      } else if (update.cpuUtilization >= 0.5) {
-        limitVideoStreams(8);
-      } else {
-        // The system is in great shape. Show all meeting participants.
-        showAllVideoStreams();
+      for (const entry of entries) {
+        if (entry.state == "critical") {
+          let streamsCount = getStreamsCount();
+          setStreamsCount(streamsCount--);
+        }
       }
     }
+
+    const observer = new ComputePressureObserver(pressureChange);
+    observer.observe("cpu");
   </pre>
 </section>
 <section id="conformance">
@@ -1028,6 +686,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <p>
     Many thanks for valuable feedback and advice from
     Arnaud Mandy,
+    Asaf Yaffe,
     Chen Xing,
     Evan Shrubsole,
     Jesse Barnes,
@@ -1035,6 +694,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     Jan Gora,
     Joshua Bell,
     Matt Menke,
+    Moh Haghighat,
     Nicolás Peña Moreno,
     Opal Voravootivat,
     Paul Jensen,
