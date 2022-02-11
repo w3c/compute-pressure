@@ -673,13 +673,18 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <pre class="example js" title="Adjusting the number of video feeds based on CPU usage">
     let timerId = -1;
     function pressureChange(entries) {
+      // Clear timer every time we are called, either by an actual state change,
+      // or when called by setTimeout (see below).
       if (timerId > 0) {
         clearTimeout(timerId);
       }
 
+      // When entering critical state, we want to recheck every 30sec if we are
+      // still in critical state and if so, further reduce our concurrent streams.
+      // For this reason we create a timer for 30 seconds that will call us back
+      // with the last result in there were no change.
       const lastEntryArray = [entries.at(entries.length - 1)];
       timerId = setTimeout(pressureChange.bind(this, lastentryArray), 30_000);
-
 
       for (const entry of entries) {
         if (entry.state == "critical") {
