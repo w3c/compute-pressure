@@ -95,15 +95,7 @@
       ComputePressureObserver interface
     </p>
     <pre class="js">
-      if (typeof ComputePressureObserver == "function") {
-        // use ComputePressureObserver interface
-      }
-
       if ("ComputePressureObserver" in globalThis) {
-        // use ComputePressureObserver interface
-      }
-
-      if (globalThis.ComputePressureObserver) {
         // use ComputePressureObserver interface
       }
     </pre>
@@ -124,7 +116,7 @@
     <h3><dfn>Processing Units</dfn></h3>
     <p>
       Computing devices consist of a multitude of different processing units such as the Central
-      Processing Unit (CPU), Graphics Processing Unit (GPU) and many specialized
+      Processing Unit (CPU), the Graphics Processing Unit (GPU) and many specialized
       processing units are becoming popular such as ones designed to accelerate specific tasks like
       machine learning or computer vision.
     </p>
@@ -188,7 +180,7 @@
 
 <section> <h2>Pressure States</h2>
   <p>
-    <dfn>Pressure states</dfn> represents the minimal set of useful states that allows web applications
+    <dfn>Pressure states</dfn> represents the minimal set of useful states that allows web sites
     to react to changes in compute pressure with minimal degration in quality or service, or user
     experience.
   </p>
@@ -362,7 +354,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       |options:ComputePressureObserverOptions|:
       <ol class="algorithm">
         <li>
-          If |target| is not equal to "`cpu`", abort these steps.
+          If |target| is not equal to {{ComputePressureTarget/cpu}}, abort these steps.
         </li>
         <li>
           If [=active observers=] is equal to `0`, activate the underlying [=platform collector=].
@@ -383,7 +375,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       following step, given the arguments |target:ComputePressureTarget|:
       <ol class="algorithm">
         <li>
-          If |target| is not equal to "`cpu`", abort these steps.
+          If |target| is not equal to {{ComputePressureTarget/cpu}}, abort these steps.
         </li>
         <li>
           Decrement the [=active observers=] counter.
@@ -505,8 +497,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       <li>
         Let |entry:ComputePressureEntry| be a new {{ComputePressureEntry}} instance.
       </li>
+      <aside class="note">
+        TODO: Find out how to handle the below step.
+      </aside>
       <li>
-        Let |entry|.|state:PressureState| be the result of invoking ... with
+        Let |entry|.|state:PressureState| be the result of invoking (future algo) with
         |readings|.
       </li>
       <li>
@@ -635,6 +630,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Last, rate-limiting change callbacks places an upper bound on the performance
           overhead of this API.
         </p>
+        <p>
+          Rate limiting can be implemented in the user agent, but it might also be
+          possible to simply change the polling frequency of the underlying hardware
+          counters, if not accessed via a higher level framework.
+        </p>
       </section>
       <section>
         <h4>Third-party contexts</h4>
@@ -655,10 +655,25 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h2>
     Examples
   </h2>
+  <p>
+    In this example we want to lower the number of concurrent video streams if pressure
+    becomes critical. For the same of simplicity we only consider this one state.
+  </p>
+  <p>
+    As lowering the amount of streams might not result in exiting the critical state,
+    or at least not immediately, we use a strategy where we lower one stream at the time
+    every 30 seconds while still in the critical state.
+  </p>
+  <p>
+    We accomplish this by making sure the callback is called at least once every 30 seconds,
+    or when the state actually changes. When the state changes we reset the interval timer.
+  </p>
   <pre class="example js" title="Adjusting the number of video feeds based on CPU usage">
     let timerId = -1;
     function pressureChange(entries) {
-      clearTimeout(timerId);
+      if (timerId > 0) {
+        clearTimeout(timerId);
+      }
 
       const lastEntryArray = [entries.at(entries.length - 1)];
       timerId = setTimeout(pressureChange.bind(this, lastentryArray), 30_000);
