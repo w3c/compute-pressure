@@ -101,8 +101,10 @@
     </pre>
   </aside>
   <p>
-    All of these tell you something about the presence and possible characteristics of an API.
-    They do not tell you anything, however, about whether that API is actually connected to a
+    Checking against 'globalThis' will work everywhere JavaScript is available, even in a worker
+    and if the above is `true`, then the API is present.
+
+    The check, however, does not tell whether that API is actually connected to a
     real [=platform collector=], whether the [=platform collector=] is collecting real telemetry
     readings, or whether the user is going to allow you to access it.
   </p>
@@ -498,11 +500,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         Let |entry:ComputePressureEntry| be a new {{ComputePressureEntry}} instance.
       </li>
       <aside class="note">
-        TODO: Find out how to handle the below step.
+        TODO: https://github.com/WICG/compute-pressure/issues/46
       </aside>
       <li>
-        Let |entry|.|state:PressureState| be the result of invoking (future algo) with
-        |readings|.
+        Let |entry|.|state:PressureState| be an [=implementation-defined=] state given
+        the data available from the [=platform collector=].
       </li>
       <li>
         Return |entry|.
@@ -657,7 +659,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </h2>
   <p>
     In this example we want to lower the number of concurrent video streams if pressure
-    becomes critical. For the same of simplicity we only consider this one state.
+    becomes critical. For the sake of simplicity we only consider this one state.
   </p>
   <p>
     As lowering the amount of streams might not result in exiting the critical state,
