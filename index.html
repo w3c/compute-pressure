@@ -699,6 +699,36 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     const observer = new ComputePressureObserver(pressureChange);
     observer.observe("cpu");
   </pre>
+  <pre class="example js" title="Usage of unobserve">
+    function pressureChange(entries) {
+      // do something with entries
+    }
+
+    const observer = new ComputePressureObserver(pressureChange);
+    observer.observe("cpu");
+
+    /* some time later... */
+
+    observer.unobserve("cpu");
+
+    // expected to have entries if callback pressureChange hasn't been called.
+    var observerEntries = observer.takeRecord();
+  </pre>
+  <pre class="example js" title="Usage of disconnect">
+    function pressureClange(entries) {
+      // do something with entries
+    }
+
+    const observer = new ComputePressureObserver(pressureChange);
+    observer.observe("cpu");
+
+    /* some time later... */
+
+    observer.disconnect();
+
+    // list expected to be empty because of previous disconnect().
+    var observerEntries = observer.takeRecord();
+  </pre>
 </section>
 <section id="conformance">
   <p>
