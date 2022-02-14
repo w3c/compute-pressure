@@ -699,6 +699,22 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     const observer = new ComputePressureObserver(pressureChange);
     observer.observe("cpu");
   </pre>
+  <pre class="example js" title="Usage of takeRecords">
+    function pressureChange(entries) {
+      // do something with entries
+    }
+
+    const observer = new ComputePressureObserver(pressureChange);
+    observer.observe("cpu");
+
+    // observe.disconnect() will be called promptly, no time to wait for
+    // callback. latest entries are needed immediately.
+    var entries = takeRecords();
+
+    // do something with entries.
+
+    observer.disconnect();
+  </pre>
   <pre class="example js" title="Usage of unobserve">
     function pressureChange(entries) {
       // do something with entries
