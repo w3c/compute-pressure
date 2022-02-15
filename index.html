@@ -712,6 +712,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     const observer = new ComputePressureObserver(pressureChange);
     observer.observe("cpu");
   </pre>
+  <p>
+    In the following example, we want to demonstrate the usage of {{ComputePressureObserver/takeRecords()}},
+    by retrieving the remaining |entries| accumulated since the last callback.
+  </p>
+  <p>
+    It is recommended to do so before {{ComputePressureObserver/disconnect()}}, otherwise {{ComputePressureObserver/disconnect()}} will clear them and they will be lost.
+  </p>
   <pre class="example js" title="Usage of takeRecords">
     function pressureChange(entries) {
       // do something with entries
@@ -721,13 +728,18 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     observer.observe("cpu");
 
     // observe.disconnect() will be called promptly, no time to wait for
-    // callback. latest entries are needed immediately.
-    var entries = takeRecords();
+    // callback. latest entries are needed immediately or will be lost otherwise.
+    const entries = takeRecords();
 
     // do something with entries.
 
     observer.disconnect();
   </pre>
+  <p>
+    In the following example, we want to demonstrate the usage of {{ComputePressureObserver/unobserve()}}.
+    {{ComputePressureObserver/unobserve()}} will stop observing the specified |target:ComputePressureTarget|.
+    It will not clear the pending |entries| collected since the last callback.
+  </p>
   <pre class="example js" title="Usage of unobserve">
     function pressureChange(entries) {
       // do something with entries
@@ -736,13 +748,19 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     const observer = new ComputePressureObserver(pressureChange);
     observer.observe("cpu");
 
-    /* some time later... */
+    // some time later...
 
     observer.unobserve("cpu");
 
     // expected to have entries if callback pressureChange hasn't been called.
-    var observerEntries = observer.takeRecord();
+    const observerEntries = observer.takeRecord();
   </pre>
+  <p>
+    In the following example, we want to demonstrate the usage of {{ComputePressureObserver/disconnect()}}.
+    {{ComputePressureObserver/disconnect()}} will stop observing all |target:ComputePressureTarget| chosen 
+    by previous {{ComputePressureObserver/observe()}} calls.
+    At the same time it will also clear all pending |entries| collected since the last callback.
+  </p>
   <pre class="example js" title="Usage of disconnect">
     function pressureClange(entries) {
       // do something with entries
@@ -751,12 +769,12 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     const observer = new ComputePressureObserver(pressureChange);
     observer.observe("cpu");
 
-    /* some time later... */
+    // some time later...
 
     observer.disconnect();
 
     // list expected to be empty because of previous disconnect().
-    var observerEntries = observer.takeRecord();
+    const observerEntries = observer.takeRecord();
   </pre>
 </section>
 <section id="conformance">
