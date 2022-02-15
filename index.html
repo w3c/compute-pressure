@@ -707,6 +707,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     It is recommended to do so before {{ComputePressureObserver/disconnect()}}, 
     otherwise {{ComputePressureObserver/disconnect()}} will clear them and they will be lost forever.
   </p>
+  <p>
+    For example, we might want to check the pressure while loading some benchmarking/test workload.
+    When the task is completed, we want to disconnect quickly, but we are still interested in the last entries provided.
+  </p>
   <pre class="example js" title="Usage of takeRecords">
     function pressureChange(entries) {
       // do something with entries
@@ -715,8 +719,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     const observer = new ComputePressureObserver(pressureChange);
     observer.observe("cpu");
 
-    // observe.disconnect() will be called promptly, no time to wait for
-    // callback. Latest entries are needed immediately or will be lost otherwise.
+    // observe.disconnect() will be called promptly, no need to wait for
+    // callback. Latest entries must be fetched or will be lost otherwise.
     const entries = observer.takeRecords();
 
     // do something with entries.
