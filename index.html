@@ -722,7 +722,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </p>
   <p>
     For example, we might want to check the pressure while loading some benchmarking/test workload.
-    When the task is completed, we want to disconnect quickly, but we are still interested in the last entries provided.
+    When the task is completed, you want to disconnect immediately but still know the values of any pending state changes.
   </p>
   <pre class="example js" title="Usage of takeRecords">
     function pressureChange(entries) {
@@ -733,7 +733,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     observer.observe("cpu");
 
     // observe.disconnect() will be called promptly, no need to wait for
-    // callback. Latest entries must be fetched or will be lost otherwise.
+    // callback to be invoked during next event loop rotation.
+    // Pending state change records delivery must be read before, otherwise they will be cleared.
     const entries = observer.takeRecords();
 
     // do something with entries.
