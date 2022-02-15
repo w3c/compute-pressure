@@ -416,6 +416,19 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </section>
   <section>
     <h3>The <dfn>takeRecords()</dfn> method</h3>
+    <aside class="note">
+      <p>
+        A common use case for this is to immediately fetch all pending state change records
+        immediately prior to disconnecting the observer, so that any pending state changes
+        can be processed when shutting down the observer.
+      </p>
+      <p>
+        Another use case is the ability to receive any pending, already-generated states
+        changes without waiting for the callbacks to be invoked. Callbacks are invoked from
+        a task queue as part of the event loop cycle, so this allows for conferring the
+        current state outside of the event loop cycle.
+      </p>
+    </aside>
     <p>
       The {{ComputePressureObserver/takeRecords()}} method, when invoked, MUST run the
       following step:
