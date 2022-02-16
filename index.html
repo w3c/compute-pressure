@@ -709,11 +709,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </p>
   <p>
     For example, we might want to check the pressure while loading some benchmarking/test workload.
-    When the task is completed, you want to disconnect immediately but still know the values of any pending state changes.
+    When the task is completed, we disconnect immediately but still want to know the values of any pending state changes up till this time.
   </p>
   <pre class="example js" title="Usage of takeRecords">
     function pressureChange(entries) {
-      // do something with entries
+      // do something with entries.
     }
 
     const observer = new ComputePressureObserver(pressureChange);
@@ -735,7 +735,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </p>
   <pre class="example js" title="Usage of unobserve">
     function pressureChange(entries) {
-      // do something with entries
+      // do something with entries.
     }
 
     const observer = new ComputePressureObserver(pressureChange);
