@@ -708,8 +708,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     otherwise {{ComputePressureObserver/disconnect()}} will clear them and they will be lost forever.
   </p>
   <p>
-    For example, we might want to check the pressure while loading some benchmarking/test workload.
-    When the task is completed, we disconnect immediately but still want to know the values of any pending state changes up till this time.
+    For example, we might want to measure the pressure during a benchmarking workload, and thus
+    want pressure telemetry for the exact duration of the workload. This means disconnecting all
+    observers immediately when the task is completed, and manually requesting any pending pressure
+    telemetry up to this point that might not have been delivered yet as part of the event loop cycle.
   </p>
   <pre class="example js" title="Usage of takeRecords">
     function pressureChange(entries) {
