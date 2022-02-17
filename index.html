@@ -601,17 +601,20 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h2>
     Security and privacy considerations
   </h2>
+  <p>
+    Please consult the <a href="security-privacy-self-assessment.md">Security and Privacy Self-Assessment</a>
+    based upon the [[[security-privacy-questionnaire]]].
+  </p>
   <section>
     <h3>Minimizing information exposure</h3>
     <p>
-      Exposing hardware related events related to low level details such as exact CPU
-      utilization or clock speed
+      Exposing hardware related events related to low -level details such as exact CPU
+      utilization or frequency
       <a href="https://w3ctag.github.io/design-principles/#device-ids">
       increases the risk of harming the user's privacy</a>.
     </p>
     <p>
-      To minimize this risk, only the absolute minimal
-      amount of information needed to to support the use-cases is exposed.
+      To mitigate this risk, no such low level details are exposed.
     </p>
     <p>
       The subsections below describe the processing model. At a high level, the
