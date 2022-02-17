@@ -5,26 +5,50 @@ responses for the Compute Pressure API
 
 ### 2.1. What information might this feature expose to Web sites or other parties, and for what purposes is that exposure necessary?
 
-This API exposes the following information in first-party contexts.
+This API exposes a high-level pressure state, consisting of four levels,
+used to indicate whether the system is under pressure and how serious that
+pressure is. This allows websites to react to increases in pressure to
+reduce it before it results in throttling or applications fighting over
+compute resources. Though generally having a nice smooth system is preferred
+from a user point of view, such throttling can be detrimental  to certain
+application types such as e-sports, games and video conferencing.
 
-* CPU utilization
-  * Approximates the average utilization across all the CPU cores on the user's
-    device.
-  * Conceptually, a number between 0 and 1. Exposed as a quantized value.
+In e-sports and games, throttling can result in input lag making you lose the
+game, and in video conferencing systems, throttling can result in connection
+breakage - important words not coming across, or even making it impossible
+to type up minutes while listening to others talk.
 
-* CPU clock speed - we have less certainty here
-  * Approximates the average per-core CPU clock speed, relative to the baseline
-    speed and to the maximum speed.
-  * Conceptually, a number between 0 and 1. Exposed as a quantized value.
+Earlier approach
+---
+
+An earlier revision of this feature exposed CPU utilization and frequency (clock
+ticks) with certain modifications as the values being averaged across cores and
+normalized to a value between 0 and 1 (ignoring certain kinds of boost modes).
+
+The website could then configure a certain set of thresholds they were interested
+in, but the amount of thresholds would depend on the user agent. This resulted in
+lots of uncertainties and issues. Like some early adopters were uncertain why
+certain thresholds were never crossed due to having created one too
+many thresholds.
+
+Also, utilization and frequency are not the best metrics available. For instance,
+thermal conditions can easily affect throttling. Utilization might also be
+artificially high because certain processes are stalled on I/O.
+
+Additionally, CPU design is becoming heterogeneous with different kind of cores
+(e.g. performance core vs efficient core). There are even systems today with more
+than 3 different core types, where all cores are never active at the same time.
+This makes it very hard to look at aggregates and normalized utilization and frequency
+and base programming decisions upon that in a way that they make sense across a
+wide range of current and future devices.
+
+The new design allows the user agent or underlying system to provide much better
+pressure levels depending on the host system without the user needing to know
+what system the code is running on.
 
 ### 2.2. Is this specification exposing the minimum amount of information necessary to power the feature?
 
 The API design aggressively limits the amount of information exposed.
-
-Applications must convey the thresholds / ranges they use to
-make decisions before receiving data, so user agents don't reveal more
-information than is absolutely necessary. The specification gives latitude to
-user agents to expose fewer / broader ranges than the application requested.
 
 The information is exposed as a series of change events, which makes it easy for
 user agents to rate-limit the amount of information revealed over time. The
