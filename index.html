@@ -242,7 +242,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h3>The <a>ComputePressureUpdateCallback</a> callback</h3>
   <pre class="idl">
     callback ComputePressureUpdateCallback = undefined (
-      sequence&lt;ComputePressureEntry&gt; entries,
+      sequence&lt;ComputePressureRecord&gt; changes,
       ComputePressureObserver observer
     );
   </pre>
@@ -263,7 +263,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       undefined observe(ComputePressureTarget target, optional ComputePressureObserverOptions options = {});
       undefined unobserve(ComputePressureTarget target);
       undefined disconnect();
-      sequence&lt;ComputePressureEntry&gt; takeRecords();
+      sequence&lt;ComputePressureRecord&gt; takeRecords();
 
       [SameObject] static readonly attribute FrozenArray&lt;DOMString&gt; supportedTargetTypes;
     };
@@ -320,13 +320,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </tr>
         <tr>
           <td>
-            <dfn>[[\QueuedEntries]]</dfn>
+            <dfn>[[\QueuedRecords]]</dfn>
           </td>
           <td>
             An empty [=queue=].
           </td>
           <td>
-            A [=queue=] of zero or more {{ComputePressureEntry}} objects.
+            A [=queue=] of zero or more {{ComputePressureRecord}} objects.
           </td>
         </tr>
       </tbody>
@@ -410,7 +410,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Set |this|.{{ComputePressureObserver/[[Activated]]}} to `false`.
         </li>
         <li>
-          [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+          [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
         </li>
       </ol>
     </p>
@@ -434,15 +434,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       The {{ComputePressureObserver/takeRecords()}} method, when invoked, MUST run the
       following step:
       <ol class="algorithm">
-
         <li>
-          Let |entries| be a [=list/clone=] of |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+          Let |records| be a [=list/clone=] of |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
         </li>
         <li>
-          [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+          [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
         </li>
         <li>
-          Return |entries|.
+          Return |records|.
         </li>
       </ol>
     </p>
@@ -469,10 +468,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </section>
 </section>
 
-<section data-dfn-for="ComputePressureEntry">
-  <h3>The <dfn>ComputePressureEntry</dfn> dictionary</h3>
+<section data-dfn-for="ComputePressureRecord">
+  <h3>The <dfn>ComputePressureRecord</dfn> dictionary</h3>
   <pre class="idl">
-    dictionary ComputePressureEntry {
+    dictionary ComputePressureRecord {
       PressureState state;
       ComputePressureObserverOptions options;
     };
@@ -480,13 +479,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The <dfn>state</dfn> attribute</h3>
     <p>
-      The {{ComputePressureEntry/state}} attribute represents the current CPU [=pressure state=].
+      The {{ComputePressureRecord/state}} attribute represents the current CPU [=pressure state=].
     </p>
   </section>
   <section>
     <h3>The <dfn>options</dfn> attribute</h3>
     <p>
-      The {{ComputePressureEntry/options}} attribute represents the {{ComputePressureObserverOptions}}
+      The {{ComputePressureRecord/options}} attribute represents the {{ComputePressureObserverOptions}}
       dictionary that {{ComputePressureObserver}} was constructed with.
     </p>
   </section>
@@ -506,39 +505,39 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <p>
     This section outlines the steps the user agent must take when implementing the Compute Pressure Observer API.
   </p>
-  <section id="create-entry">
-    <h3>Create and populate a ComputePressureEntry</h3>
+  <section id="create-record">
+    <h3>Create and populate a ComputePressureRecord</h3>
     <ol class="algorithm">
       <li>
         Let |readings| be the latest reading of the [=platform collector=].
       </li>
       <li>
-        Let |entry:ComputePressureEntry| be a new {{ComputePressureEntry}} instance.
+        Let |record:ComputePressureRecord| be a new {{ComputePressureRecord}} instance.
       </li>
       <aside class="note">
         TODO: https://github.com/WICG/compute-pressure/issues/46
       </aside>
       <li>
-        Let |entry|.|state:PressureState| be an [=implementation-defined=] state given
+        Let |record|.|state:PressureState| be an [=implementation-defined=] state given
         the data available from the [=platform collector=].
       </li>
       <li>
-        Return |entry|.
+        Return |record|.
       </li>
     </ol>
   </section>
   <section>
-    <h3>Queue a ComputePressureEntry</h3>
+    <h3>Queue a ComputePressureRecord</h3>
     <p>
-      To queue a {{ComputePressureEntry}} for a {{ComputePressureObserver}}
+      To queue a {{ComputePressureRecord}} for a {{ComputePressureObserver}}
       |observer:ComputePressureObserver|, given a [=document=] |document:Document|, run these steps:
     </p>
     <ol class="algorithm">
       <li>
-        Let |entry| be the result of running [[[#create-entry]]].
+        Let |record| be the result of running [[[#create-record]]].
       </li>
       <li>
-        [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+        [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
       </li>
       <li>
         [=Queue a compute pressure observer task=] for |document|.
@@ -581,16 +580,16 @@ The Compute Pressure Observer API enables developers to understand the utilizati
             If |observer|.{{ComputePressureObserver/[[Activated]]}} is `false`, then [=iteration/continue=].
           </li>
           <li>
-            If |observer|.{{ComputePressureObserver/[[QueuedEntries]]}} [=list/is empty=], then [=iteration/continue=].
+            If |observer|.{{ComputePressureObserver/[[QueuedRecords]]}} [=list/is empty=], then [=iteration/continue=].
           </li>
           <li>
-            Let |entries| be a [=list/clone=] of |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+            Let |records| be a [=list/clone=] of |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
           </li>
           <li>
-            [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedEntries]]}}.
+            [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
           </li>
           <li>
-            Invoke |observer|.{{ComputePressureObserver/[[Callback]]}} with |entries| and |observer|.
+            Invoke |observer|.{{ComputePressureObserver/[[Callback]]}} with |records| and |observer|.
           </li>
         </ol>
       </li>
@@ -621,6 +620,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         <li>
           <b>Rate-limiting</b> - The user agent notifies the application of changes in
           the information it can learn. Change notifications are rate-limited.
+        </li>
+        <li>
+          <b>first-party context</b> - The feature is only available in first-party
+          contexts.
         </li>
       </ol>
       <section>
@@ -655,7 +658,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </p>
       </section>
       <section>
-        <h4>Third-party contexts</h4>
+        <h4>First-party contexts</h4>
         <p>
           This API will only be available in frames served from the same origin as the
           top-level frame. This requirement is necessary for preserving the privacy
@@ -674,8 +677,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     Examples
   </h2>
   <p>
-    In this example we want to lower the number of concurrent video streams if pressure
-    becomes critical. For the sake of simplicity we only consider this one state.
+    In the following example we want to lower the number of concurrent video streams when the
+    compute pressure becomes critical. For the sake of simplicity we only consider this one state.
   </p>
   <p>
     As lowering the amount of streams might not result in exiting the critical state,
@@ -686,9 +689,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     We accomplish this by making sure the callback is called at least once every 30 seconds,
     or when the state actually changes. When the state changes we reset the interval timer.
   </p>
-  <pre class="example js" title="Adjusting the number of video feeds based on CPU usage">
+  <pre class="example js" title="How to adjust the number of video feeds based on CPU pressure">
     let timerId = -1;
-    function pressureChange(entries) {
+    function pressureChange(records) {
       // Clear timer every time we are called, either by an actual state change,
       // or when called by setTimeout (see below).
       if (timerId > 0) {
@@ -699,11 +702,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       // still in critical state and if so, further reduce our concurrent streams.
       // For this reason we create a timer for 30 seconds that will call us back
       // with the last result in there were no change.
-      const lastEntryArray = [entries.at(entries.length - 1)];
-      timerId = setTimeout(pressureChange.bind(this, lastentryArray), 30_000);
+      const lastRecordArray = [records.at(records.length - 1)];
+      timerId = setTimeout(pressureChange.bind(this, lastRecordArray), 30_000);
 
-      for (const entry of entries) {
-        if (entry.state == "critical") {
+      for (const record of records) {
+        if (record.state == "critical") {
           let streamsCount = getStreamsCount();
           setStreamsCount(streamsCount--);
         }
@@ -715,7 +718,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </pre>
   <p>
     In the following example, we want to demonstrate the usage of {{ComputePressureObserver/takeRecords()}},
-    by retrieving the remaining |entries| accumulated since the last callback.
+    by retrieving the remaining |records| accumulated since the the callback was last
+    invoked.
   </p>
   <p>
     It is recommended to do so before {{ComputePressureObserver/disconnect()}}, 
@@ -727,71 +731,70 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     observers immediately when the task is completed, and manually requesting any pending pressure
     telemetry up to this point that might not have been delivered yet as part of the event loop cycle.
   </p>
-  <pre class="example js" title="Usage of takeRecords">
-    function pressureChange(entries) {
-      // do something with entries.
+  <pre class="example js" title="How to handle all state changes right up until disconnect">
+    function logWorkloadStatistics(records) {
+      // do something with records.
     }
 
-    const observer = new ComputePressureObserver(pressureChange);
+    const observer = new ComputePressureObserver(logWorkloadStatistics);
     observer.observe("cpu");
 
-    // observe.disconnect() will be called promptly, no need to wait for
-    // callback to be invoked during next event loop rotation.
-    // Pending state change records delivery must be read before, otherwise they will be cleared.
-    const entries = observer.takeRecords();
-
-    // do something with entries.
+    // Read pending state change records, otherwise they will be cleared
+    // when we disconnect.
+    const records = observer.takeRecords();
+    logWorkloadStatistics(records);
 
     observer.disconnect();
   </pre>
   <p>
-    In the following example, we want to demonstrate the usage of {{ComputePressureObserver/unobserve()}}.
-    {{ComputePressureObserver/unobserve()}} will stop observing the specified |target:ComputePressureTarget|.
-    It will not clear the pending |entries| collected since the last callback.
+    In the following example, we show how to tell the observer to stop watching a specific
+    |target:ComputePressureTarget| by invoking {{ComputePressureObserver/unobserve()}}
+    with |target|.
   </p>
-  <pre class="example js" title="Usage of unobserve">
-    function pressureChange(entries) {
-      // do something with entries.
-    }
+  <aside class="note">
+    The example uses 'gpu', which could be a potential future addition to the specification. It aims to show
+    that the API is extentable to support other types of compute pressure in the future
+  </aside>
+  <pre class="example js" title="How to tell the observer to stop watching for state changes for a specific target">
+    const observer = new ComputePressureObserver(records => { // do something with records. }));
 
-    const observer = new ComputePressureObserver(pressureChange);
     observer.observe("cpu");
+    observer.observe("gpu");
 
-    // some time later...
+    // Callback now gets called whenever the pressure state changes for 'cpu' or 'gpu'.
 
-    observer.unobserve("cpu");
+    observer.unobserve("gpu");
 
-    // expected to have entries if callback pressureChange hasn't been called.
-    const observerEntries = observer.takeRecords();
+    // Callback now only gets called whenever the pressure state changes for 'cpu'.
   </pre>
   <p>
-    In the following example, we want to demonstrate the usage of {{ComputePressureObserver/disconnect()}}.
-    {{ComputePressureObserver/disconnect()}} will stop observing all |target:ComputePressureTarget| chosen 
+    In the following example, we show how to tell the observer to stop watching for any
+    state changes by calling {{ComputePressureObserver/disconnect()}}. Calling
+    {{ComputePressureObserver/disconnect()}} will stop observing all targets observed
     by previous {{ComputePressureObserver/observe()}} calls.
-    At the same time it will also clear all pending |entries| collected since the last callback.
   </p>
-  <pre class="example js" title="Usage of disconnect">
-    function pressureClange(entries) {
-      // do something with entries
-    }
-
-    const observer = new ComputePressureObserver(pressureChange);
+  <p>
+    Additionally it will clear all pending records collected since the last callback was invoked.
+  </p>
+  <pre class="example js" title="how to tell the observer to stop watching for any state changes">
+    const observer = new ComputePressureObserver(records => { // do something with records. });
     observer.observe("cpu");
+    observer.observe("gpu");
 
     // some time later...
 
     observer.disconnect();
 
-    // list expected to be empty because of previous disconnect().
-    const observerEntries = observer.takeRecords();
+    // records will be an empty array, because of the previous disconnect().
+    const records = observer.takeRecords();
   </pre>
 </section>
 <section id="conformance">
   <p>
-    This is required for specifications that contain normative material.
+    This specification defines conformance criteria for a single product: a
+    <dfn>user agent</dfn> that implements the interfaces that it contains.
   </p>
 </section>
-
 <section class="appendix informative" id="acknowledgments"> <h2>Acknowledgments</h2>
   <p>
     Many thanks for valuable feedback and advice from
