@@ -103,7 +103,7 @@
   </aside>
   <p>
     Checking against 'globalThis' will work everywhere JavaScript is available, even in a worker
-    and if the above is `true`, then the API is present.
+    and if the above is true, then the API is present.
 
     The check, however, does not tell whether that API is actually connected to a
     real [=platform collector=], whether the [=platform collector=] is collecting real telemetry
@@ -181,6 +181,36 @@
   </p>
 </section>
 
+<section>
+  <h3>
+    Internal Slot Definitions
+  </h3>
+  <p>
+    Each [=similar-origin window agent=], [=dedicated worker agent=] and [=shared worker agent=]
+    has:
+    <ul>
+      <li>
+        a <dfn>compute pressure observer task queued</dfn> (a boolean), which is initially false.
+      </li>
+    </ul>
+  </p>
+  <p>
+    A constructed  {{ComputePressureObserver}} object has the following internal slots:
+  </p>
+  <ul data-dfn-for="ComputePressureObserver">
+    <li>
+      a <dfn>[[\Callback]]</dfn> of type {{ComputePressureUpdateCallback}} set on creation.
+    </li>
+    <li>
+      a <dfn>[[\QueuedRecords]]</dfn> [=queue=] of zero or more {{ComputePressureRecord}}
+      objects, which is initially empty.
+    </li>
+    <li>
+      an <dfn>[[\Activated]]</dfn> boolean, which is initially false.
+    </li>
+  </ul>
+</section>
+
 <section> <h2>Pressure States</h2>
   <p>
     <dfn>Pressure states</dfn> represents the minimal set of useful states that allows websites
@@ -256,7 +286,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <pre class="idl">
     enum ComputePressureTarget { "cpu" };
 
-    [Exposed=Window]
+    [Exposed=(DedicatedWorker,SharedWorker,Window), SecureContext]
     interface ComputePressureObserver {
       constructor(ComputePressureUpdateCallback callback);
 
@@ -271,67 +301,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
 
   <p>The <dfn>ComputePressureObserver</dfn> interface represents a {{ComputePressureObserver}}.</p>
 
-  <section  data-dfn-for="ComputePressureObserver">
-    <h3>
-      Internal slots
-    </h3>
-    <p data-dfn-for="Document">
-      Each [=document=] has an <dfn>[[\ComputePressureObserverTaskQueued]]</dfn> flag which is initialized to `false`.
-    </p>
-    <p>
-      A constructed  {{ComputePressureObserver}} object has the following internal slots.
-    </p>
-    <table class="simple">
-      <thead>
-        <tr>
-          <th>
-            Internal slot
-          </th>
-          <th>
-            Initial value
-          </th>
-          <th>
-            Description
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <dfn>[[\Callback]]</dfn>
-          </td>
-          <td>
-            {{undefined}}
-          </td>
-          <td>
-            An optional function of type {{ComputePressureUpdateCallback}}.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <dfn>[[\Activated]]</dfn>
-          </td>
-          <td>
-            `false`
-          </td>
-          <td>
-            A {{boolean}} whether the observer is actively observing or not.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <dfn>[[\QueuedRecords]]</dfn>
-          </td>
-          <td>
-            An empty [=queue=].
-          </td>
-          <td>
-            A [=queue=] of zero or more {{ComputePressureRecord}} objects.
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
   <section>
     <h3>The <dfn>constructor()</dfn> method</h3>
     <p>
@@ -367,7 +336,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Increment the [=active observers=] counter.
         </li>
         <li>
-          Set |this|.{{ComputePressureObserver/[[Activated]]}} to `true`.
+          Set |this|.{{ComputePressureObserver/[[Activated]]}} to true.
         </li>
       </ol>
     </p>
@@ -388,7 +357,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           If [=active observers=] is equal to `0`, deactivate the underlying [=platform collector=].
         </li>
         <li>
-          Set |this|.{{ComputePressureObserver/[[Activated]]}} to `false`.
+          Set |this|.{{ComputePressureObserver/[[Activated]]}} to false.
         </li>
       </ol>
     </p>
@@ -400,14 +369,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       following step:
       <ol class="algorithm">
         <li>
-          If |this|.{{ComputePressureObserver/[[Activated]]}} is `true`,
+          If |this|.{{ComputePressureObserver/[[Activated]]}} is true,
           decrement the [=active observers=] counter.
         </li>
         <li>
           If [=active observers=] is equal to `0`, deactivate the underlying [=platform collector=].
         </li>
         <li>
-          Set |this|.{{ComputePressureObserver/[[Activated]]}} to `false`.
+          Set |this|.{{ComputePressureObserver/[[Activated]]}} to false.
         </li>
         <li>
           [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
@@ -550,17 +519,17 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       The <dfn>ComputePressureObserver task source</dfn> is a [=task source=] used for scheduling tasks to [[[#notify-observers]]].
     </p>
     <p>
-      To <dfn>queue a compute pressure observer task</dfn> for a [=document=] |document:Document|, run these steps:
+      To <dfn>queue a compute pressure observer task</dfn> run these steps:
     </p>
     <ol class="algorithm">
       <li>
-        If |document|.{{Document/[[ComputePressureObserverTaskQueued]]}} is set to `true`, return.
+        If the <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>'s [=compute pressure observer task queued=] is true, then return.
       </li>
       <li>
-        Set |document|.{{Document/[[ComputePressureObserverTaskQueued]]}} to `true`.
+        Set the <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>'s [=compute pressure observer task queued=] to true.
       </li>
       <li>
-        [=Queue=] a task on the [=ComputePressureObserver task source=] associated with the |document|'s [=event loop=] to [[[#notify-observers]]].
+        [=Queue=] a [=task=] on the [=ComputePressureObserver task source=] to [[[#notify-observers]]].
       </li>
     </ol>
   </section>
@@ -577,7 +546,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         [=list/For each=] {{ComputePressureObserver}} instance |observer:ComputePressureObserver|,
         <ol>
           <li>
-            If |observer|.{{ComputePressureObserver/[[Activated]]}} is `false`, then [=iteration/continue=].
+            If |observer|.{{ComputePressureObserver/[[Activated]]}} is false, then [=iteration/continue=].
           </li>
           <li>
             If |observer|.{{ComputePressureObserver/[[QueuedRecords]]}} [=list/is empty=], then [=iteration/continue=].
