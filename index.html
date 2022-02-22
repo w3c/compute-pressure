@@ -92,23 +92,26 @@
   </p>
   <aside class="example" title="Checking existence of ComputePressureObserver interface">
     <p>
-      This simple example illustrates how to check whether the User Agent exposes the
-      ComputePressureObserver interface
+      This simple example illustrates how to check whether the [=User Agent=] exposes the
+      {{ComputePressureObserver}} interface
     </p>
     <pre class="js">
       if ("ComputePressureObserver" in globalThis) {
-        // use ComputePressureObserver interface
+        // Use ComputePressureObserver interface
       }
     </pre>
   </aside>
-  <p>
-    Checking against 'globalThis' will work everywhere JavaScript is available, even in a worker
-    and if the above is true, then the API is present.
-
-    The check, however, does not tell whether that API is actually connected to a
-    real [=platform collector=], whether the [=platform collector=] is collecting real telemetry
-    readings, or whether the user is going to allow you to access it.
-  </p>
+  <aside class="note">
+    <p>
+      Checking against {{globalThis/globalThis}} will work on any [=ECMAScript/agent=] as defined by
+      [[ECMAScript]], thus also in workers.
+    </p>
+    <p>
+      It does however not tell you whether that API is actually connected to a
+      real [=platform collector=], whether the [=platform collector=] is collecting real telemetry
+      readings, or whether the user is going to allow you to access it.
+    </p>
+  </aside>
 </section>
 <section>
   <h2>Concepts</h2>
@@ -156,9 +159,13 @@
     framework) or by the [=user agent=], if it has a direct access to hardware counters.
   </p>
   <p>
+    A [=platform collector=] can support telemetry for different <dfn>target types</dfn> of computing
+    devices defined by {{ComputePressureTarget}}, or there can be multiple [=platform collectors=].
+  </p>
+  <p>
     From the implementation perspective [=platform collector=] can be treated as a software proxy for the
     corresponding hardware counters. It is possible to have multiple [=platform collector=] simultaneously
-    interacting with the same underlying hardware if the underlying platform suppports it.
+    interacting with the same underlying hardware if the underlying platform supports it.
   </p>
   <p>
     In simple cases, a [=platform collector=] represents individual hardware counters, but if the provided
@@ -167,9 +174,7 @@
   </p>
   <p>
     As collecting telemetry data often means polling hardware counters, it is not a free operation and thus,
-    it should not happen if there are no one observing the data. The term <dfn>active observers</dfn> refer
-    to a [=user agent=] wide counter, representing how many instances of {{ComputePressureObserver}} that
-    are active across the [=user agent=]. The [=active observers=] value is initially `0`.
+    it should not happen if there are no one observing the data. See [[[#life-cycle]]] for more information.
   </p>
   <p>
     A [=platform collector=] samples data at a specific frequency. A [=user agent=] may modify this frequency
@@ -192,7 +197,12 @@
       <li>
         a <dfn>compute pressure observer task queued</dfn> (a boolean), which is initially false.
       </li>
+      <li>
+        a <dfn>registered observer list</dfn> per supported [=target type=], which is initially empty.
+      </li>
     </ul>
+    A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{ComputePressureObserver}} object)
+    and <dfn>options</dfn> (a {{ComputePressureObserverOptions}} dictionary).
   </p>
   <p>
     A constructed  {{ComputePressureObserver}} object has the following internal slots:
@@ -204,9 +214,6 @@
     <li>
       a <dfn>[[\QueuedRecords]]</dfn> [=queue=] of zero or more {{ComputePressureRecord}}
       objects, which is initially empty.
-    </li>
-    <li>
-      an <dfn>[[\Activated]]</dfn> boolean, which is initially false.
     </li>
   </ul>
 </section>
@@ -327,16 +334,29 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       |options:ComputePressureObserverOptions|:
       <ol class="algorithm">
         <li>
-          If |target| is not equal to {{ComputePressureTarget/cpu}}, abort these steps.
+          If |target| is not a supported [=target type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
-          If [=active observers=] is equal to `0`, activate the underlying [=platform collector=].
+          If [=registered observer list=] for |target| is empty, activate the underlying
+          [=platform collector=] for |target|.
         </li>
         <li>
-          Increment the [=active observers=] counter.
+          [=list/For each=] |registered| of [=registered observer list=] for |target|,
+          if |registered|’s [=observer=] is [=this=]:
+          <ol>
+            <li>
+              Set |registered|’s [=options=] to |options|.
+            </li>
+          </ol>
         </li>
         <li>
-          Set |this|.{{ComputePressureObserver/[[Activated]]}} to true.
+          Otherwise:
+          <ol>
+            <li>
+              [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
+              and [=options=] is |options| to [=registered observer list=] for |target|.
+            </li>
+          </ol>
         </li>
       </ol>
     </p>
@@ -348,16 +368,18 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       following step, given the arguments |target:ComputePressureTarget|:
       <ol class="algorithm">
         <li>
-          If |target| is not equal to {{ComputePressureTarget/cpu}}, abort these steps.
+          If |target| is not a supported [=target type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
-          Decrement the [=active observers=] counter.
+          [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
         </li>
         <li>
-          If [=active observers=] is equal to `0`, deactivate the underlying [=platform collector=].
+          Remove any [=registered observer=] from [=registered observer list=] for
+          |target| for which [=this=] is the [=observer=].
         </li>
         <li>
-          Set |this|.{{ComputePressureObserver/[[Activated]]}} to false.
+          If the above [=registered observer list=] becomes [=list/empty=], deactivate the
+          underlying [=platform collector=] for the associated |target|.
         </li>
       </ol>
     </p>
@@ -369,17 +391,15 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       following step:
       <ol class="algorithm">
         <li>
-          If |this|.{{ComputePressureObserver/[[Activated]]}} is true,
-          decrement the [=active observers=] counter.
-        </li>
-        <li>
-          If [=active observers=] is equal to `0`, deactivate the underlying [=platform collector=].
-        </li>
-        <li>
-          Set |this|.{{ComputePressureObserver/[[Activated]]}} to false.
-        </li>
-        <li>
           [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
+        </li>
+        <li>
+          Remove any [=registered observer=] from [=registered observer list=] for
+          all supported [=target types=] for which [=this=] is the [=observer=].
+        </li>
+        <li>
+          If any [=registered observer list=] becomes [=list/empty=], deactivate the
+          underlying [=platform collector=] for the associated |target|.
         </li>
       </ol>
     </p>
@@ -425,13 +445,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Let |targets| be a [=list=] of |target:ComputePressureTarget|.
         </li>
         <li>
-          Return |observer|'s frozen array of supported target types.
+          Return |observer|'s frozen array of supported [=target types=].
         </li>
       </ol>
     </p>
     <aside class="note">
       <p>
-        This attribute allows web developers to easily know which target types are supported by the user agent.
+        This attribute allows web developers to easily know which [=target types=] are supported by the user agent.
       </p>
     </aside>
   </section>
@@ -448,7 +468,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The <dfn>state</dfn> attribute</h3>
     <p>
-      The {{ComputePressureRecord/state}} attribute represents the current CPU [=pressure state=].
+      The {{ComputePressureRecord/state}} attribute represents the current [=pressure state=].
     </p>
   </section>
   <section>
@@ -467,6 +487,36 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       // For future-proofing - expect things to be added here later.
     };
   </pre>
+</section>
+
+<section id="life-cycle">
+  <h3>Life-cycle and garbage collection</h3>
+  <p>
+    The <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agents</a> have a
+    strong reference to [=registered observers=] in their [=registered observer list=]
+    (one per target).
+  </p>
+  <aside class="note">
+    <p>
+      A {{ComputePressureObserver}} is observing a |target:ComputePressureTarget| if it
+      exists in the [=registered observer list=], modified by invocations of
+      {{ComputePressureObserver/observe()}},
+      {{ComputePressureObserver/unobserve()}}
+      and {{ComputePressureObserver/disconnect()}}.
+    </p>
+    <p>
+      This means that {{ComputePressureObserver}} |observer:ComputePressureObserver| will
+      remain alive until both of these conditions hold:
+      <ul>
+        <li>
+          There are no scripting references to the |observer|.
+        </li>
+        <li>
+          The |observer| is not observing any |target|.
+        </li>
+      </ul>
+    </p>
+  </aside>
 </section>
 
 <section id="processing-model">
@@ -509,7 +559,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
       </li>
       <li>
-        [=Queue a compute pressure observer task=] for |document|.
+        Let |document:Document| be the [=environment settings object/responsible document=] of the [=current settings object=].
+      </li>
+      <li>
+        If |document| is not [=Document/fully active=], about these steps.
+      </li>
+      <li>
+        [=Queue a compute pressure observer task=].
       </li>
     </ol>
   </section>
@@ -537,20 +593,16 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>Notify Compute Pressure Observers</h3>
     <ol class="algorithm">
       <li>
-        Let |document:Document| be the [=environment settings object/responsible document=] of the [=current settings object=].
+        Set the <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>'s [=compute pressure observer task queued=] to false.
       </li>
       <li>
-        If |document| is not [=Document/fully active=], about these steps.
+        Let |notifySet| be a new [=set=] of all [=observers=] in
+        <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>’s
+        [=registered observer lists=].
       </li>
       <li>
-        [=list/For each=] {{ComputePressureObserver}} instance |observer:ComputePressureObserver|,
+        [=list/For each=] |observer:ComputePressureObserver| of |notifySet|:
         <ol>
-          <li>
-            If |observer|.{{ComputePressureObserver/[[Activated]]}} is false, then [=iteration/continue=].
-          </li>
-          <li>
-            If |observer|.{{ComputePressureObserver/[[QueuedRecords]]}} [=list/is empty=], then [=iteration/continue=].
-          </li>
           <li>
             Let |records| be a [=list/clone=] of |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
           </li>
@@ -558,7 +610,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
             [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
           </li>
           <li>
-            Invoke |observer|.{{ComputePressureObserver/[[Callback]]}} with |records| and |observer|.
+            If |records| is not [=list/empty=], then invoke |observer|.{{ComputePressureObserver/[[Callback]]}}
+            with |records| and |observer|. If this throws an exception, catch it, and [=report the exception=].
           </li>
         </ol>
       </li>
@@ -694,7 +747,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     invoked.
   </p>
   <p>
-    It is recommended to do so before {{ComputePressureObserver/disconnect()}}, 
+    It is recommended to do so before {{ComputePressureObserver/disconnect()}},
     otherwise {{ComputePressureObserver/disconnect()}} will clear them and they will be lost forever.
   </p>
   <p>
