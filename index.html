@@ -38,6 +38,12 @@
       }
     ],
     testSuiteURI: "https://github.com/web-platform-tests/wpt/labels/compute-pressure",
+    xref: {
+      profile: "web-platform",
+      specs: [
+        "permissions",
+      ]
+    }
   };
 </script>
 <section id="abstract">
@@ -187,6 +193,37 @@
 
 <section>
   <h3>
+    Permissions and user prompts
+  </h3>
+  <p>
+    The [[[PERMISSIONS]]] API provides a uniform way for websites to request
+    permissions from users and query which permissions they have.
+  </p>
+  <p>
+    A <a>user agent</a> can per [=origin=] deny observation of a
+    particular compute pressure [=target type=] by any
+    [=implementation-defined=] reason, such as platform setting or user
+    preference.
+  </p>
+  <p>
+    It is RECOMMENDED that a [=user agent=] show some form of unobtrusive
+    notification that informs the user when a compute pressure observer is active,
+    as well as provides the user with the means to block the ongoing operation,
+    or simply dismiss the notification.
+  </p>
+  <section>
+    <h3>
+      Permissions integration
+    </h3>
+    <p>
+      The Compute Pressure API is a [=powerful feature=] which is identified
+      by the name "`compute-pressure`".
+    </p>
+  </section>
+</section>
+
+<section>
+  <h3>
     Internal Slot Definitions
   </h3>
   <p>
@@ -302,6 +339,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       sequence&lt;ComputePressureRecord&gt; takeRecords();
 
       [SameObject] static readonly attribute FrozenArray&lt;DOMString&gt; supportedTargetTypes;
+
+      [Exposed=Window] static Promise&lt;PermissionState&gt; requestPermission();
     };
   </pre>
 
@@ -332,6 +371,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       following step, given the arguments |target:ComputePressureTarget| and
       |options:ComputePressureObserverOptions|:
       <ol class="algorithm">
+        <li>
+          Let |permissionState:PermissionState| be the result of
+          [=getting the current permission state=] with "`compute-pressure`".
+        </li>
+        <li>
+          If |permissionState| is [=permission/denied=], throw {{NotAllowedError}}.
+        </li>
         <li>
           If |target| is not a supported [=target type=], throw {{"NotSupportedError"}}.
         </li>
@@ -453,6 +499,38 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         This attribute allows web developers to easily know which [=target types=] are supported by the user agent.
       </p>
     </aside>
+  </section>
+  <section>
+    <h3>The static <dfn>requestPermission()</dfn> method</h3>
+    <p>
+      The {{ComputePressureObserver/requestPermission()}} method, when invoked, MUST run the
+      following step:
+      <ol class="algorithm">
+        <li>
+          If the [=relevant global object=] of [=this=] does not have [=transient activation=],
+          return [=a new promise=] [=rejected=] with a {{NotAllowedError}}.
+        </li>
+        <li>
+          Let |return:Promise| be [=a new promise=].
+        </li>
+        <li>
+          Run these steps [=in parallel=]:
+          <ol>
+            <li>
+              Let |permissionState:PermissionState| be the result of
+              [=requesting permission to use=] the [=powerful feature=] named "`compute-pressure`".
+            </li>
+            <li>
+              [=Queue a global task=] on the [=relevant global object=] of [=this=] using
+              the [=permissions task source=] to [=resolve=] |result| with |permissionState|.
+            </li>
+            <li>
+              Return |result|.
+            </li>
+          </ol>
+        </li>
+      </ol>
+    </p>
   </section>
 </section>
 
