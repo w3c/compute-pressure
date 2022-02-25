@@ -186,8 +186,8 @@
     (if possible) for privacy reasons, or ignore and fuse certain readings.
   </p>
   <p>
-    When a sample is obtained from the [=platform collector=], the [=user agent=] MUST run the [[[#notify-observers]]]
-    algorithm a per the [[[#processing-model]]]
+    When a sample is obtained from the [=platform collector=], the [=user agent=] MUST run
+    the [=queue telemetry data=] algorithm per the [[[#processing-model]]].
   </p>
 </section>
 
@@ -601,11 +601,35 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <p>
     This section outlines the steps the user agent must take when implementing the Compute Pressure Observer API.
   </p>
+  <section>
+    <h3>Queue a ComputePressureRecord</h3>
+    <p>
+      To <dfn>queue telemetry data</dfn> of [=target type=] |target|,
+      run these steps:
+    </p>
+    <ol class="algorithm">
+      <li>
+        Let |record:ComputePressureRecord| be the result of running [[[#create-record]]] for |target|.
+      </li>
+      <li>
+        [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
+      </li>
+      <li>
+        Let |document:Document| be the [=environment settings object/responsible document=] of the [=current settings object=].
+      </li>
+      <li>
+        If |document| is not {{undefined}} and is not [=Document/fully active=], about these steps.
+      </li>
+      <li>
+        [=Queue a compute pressure observer task=].
+      </li>
+    </ol>
+  </section>
   <section id="create-record">
     <h3>Create and populate a ComputePressureRecord</h3>
     <ol class="algorithm">
       <li>
-        Let |readings| be the latest reading of the [=platform collector=].
+        Let |readings| be the latest reading of the [=platform collector=] for [=target type=] |target|.
       </li>
       <li>
         Let |record:ComputePressureRecord| be a new {{ComputePressureRecord}} instance.
@@ -615,34 +639,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       </aside>
       <li>
         Let |record|.|state:PressureState| be an [=implementation-defined=] state given
-        the data available from the [=platform collector=].
+        |target| and the data available from the [=platform collector=].
       </li>
       <li>
         Return |record|.
-      </li>
-    </ol>
-  </section>
-  <section>
-    <h3>Queue a ComputePressureRecord</h3>
-    <p>
-      To queue a {{ComputePressureRecord}} for a {{ComputePressureObserver}}
-      |observer:ComputePressureObserver|, given a [=document=] |document:Document|, run these steps:
-    </p>
-    <ol class="algorithm">
-      <li>
-        Let |record| be the result of running [[[#create-record]]].
-      </li>
-      <li>
-        [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
-      </li>
-      <li>
-        Let |document:Document| be the [=environment settings object/responsible document=] of the [=current settings object=].
-      </li>
-      <li>
-        If |document| is not [=Document/fully active=], about these steps.
-      </li>
-      <li>
-        [=Queue a compute pressure observer task=].
       </li>
     </ol>
   </section>
