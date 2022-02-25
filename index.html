@@ -629,22 +629,26 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>Create and populate a ComputePressureRecord</h3>
     <ol class="algorithm">
       <li>
-        Let |readings| be the latest reading of the [=platform collector=] for [=target type=] |target|.
+        Let |data| be the latest available telemetry data from the [=platform collector=],
+        required by the [=user agent=] to determine a |pressure state| for [=target type=] |target|.
       </li>
       <li>
         Let |record:ComputePressureRecord| be a new {{ComputePressureRecord}} instance.
       </li>
-      <aside class="note">
-        TODO: https://github.com/WICG/compute-pressure/issues/46
-      </aside>
       <li>
         Let |record|.|state:PressureState| be an [=implementation-defined=] state given
-        |target| and the data available from the [=platform collector=].
+        |data| and |target|.
       </li>
       <li>
         Return |record|.
       </li>
     </ol>
+    <aside class="note">
+      The mapping between system telemetry data and [=pressure states=] is
+      [=implementation-defined=] and may use many different metrics. For instance,
+      for CPU, it might consider processor frequency and utilization, as well
+      as thermal conditions.
+    </aside>
   </section>
   <section>
     <h3>Queue a ComputePressureObserver Task</h3>
