@@ -779,7 +779,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     Examples
   </h2>
   <p>
-    As Compute Pressure is considered a [=powerful feature=] it requires permission in
+    As Compute Pressure is considered a [=powerful feature=], it requires user permission in
     order to be used.
   </p>
   <p>
@@ -795,7 +795,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         startUsingComputePressure();
         break;
       case "prompt":
-        showExplainationAndToogleToAllowComputePressure();
+        showExplanationAndToogleToAllowComputePressure();
         break;
       case "denied":
         // Do nothing, user prefers not to use compute pressure.
@@ -808,18 +808,57 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     shared across [=browsing contexts=] and workers which are [=same origin=].
   </p>
   <p>
-    The below example shows you how to ask for permission before using the feature.
+    The below examples shows you how to ask for permission before using the feature.
   </p>
   <pre class="example js" title="How to ask for permission before use">
-    let observer;
+    function handleComputePressureChange(records) {
+      // do something with records.
+    }
+
     button.onclick = async () => {
-      const state = ComputePressureObserver.requestPermission();
+      const state = await ComputePressureObserver.requestPermission();
       if (state === "granted") {
-        observer = new ComputePressureObserver(handleComputePressureChange);
+        const observer = new ComputePressureObserver(handleComputePressureChange);
         observer.observe("cpu");
       }
     }
   </pre>
+  <aside class="example" title="How to use it in a worker with permission">
+    <p>
+      Compute pressure is handled in a worker `worker.js`:
+    </p>
+    <pre class="js">
+      const observer = new ComputePressureObserver(records => {
+        // do something with records.
+      });
+
+      self.onmessage = event => {
+        let { command } = event.data;
+
+        if (command === "observe") {
+          observer.observe("cpu");
+        }
+        if (command === "unobserve") {
+          observer.unobserve("cpu");
+        }
+      }
+    </pre>
+    <p>
+      And permission and worker instantiation is handled from the main [=browsing context=]:
+    </p>
+    <pre class="js">
+      let worker;
+      checkbox.onchange = event => {
+        if (event.target.checked) {
+          worker ??= new Worker('/worker.js'); // Create worker if it doesn't exist.
+          worker.postMessage('observe');
+        } else if (worker) {
+          worker.postMessage('unobserve');
+        }
+      }
+    </pre>
+  </aside>
+
   <p>
     In the following example we want to lower the number of concurrent video streams when the
     compute pressure becomes critical. For the sake of simplicity we only consider this one state.
