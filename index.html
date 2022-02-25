@@ -779,6 +779,48 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     Examples
   </h2>
   <p>
+    As Compute Pressure is considered a [=powerful feature=] it requires permission in
+    order to be used.
+  </p>
+  <p>
+    You can check whether the user has already granted permission using the [[[Permissions]]]
+    API, both from the [=browsing context/active window=] or from a worker.
+  </p>
+  <pre class="example js" title="How to check whether user has granted permission">
+    const { state } = await navigator.permissions.query({
+      name: "compute-pressure"
+    });
+    switch (state) {
+      case "granted":
+        startUsingComputePressure();
+        break;
+      case "prompt":
+        showExplainationAndToogleToAllowComputePressure();
+        break;
+      case "denied":
+        // Do nothing, user prefers not to use compute pressure.
+        break;
+    }
+  </pre>
+  <p>
+    Asking for permission has to happen in the [=browsing context/active window=] and
+    can not be done from a worker, but the permission state is per [=origin=] and thus
+    shared across [=browsing contexts=] and workers which are [=same origin=].
+  </p>
+  <p>
+    The below example shows you how to ask for permission before using the feature.
+  </p>
+  <pre class="example js" title="How to ask for permission before use">
+    let observer;
+    button.onclick = async () => {
+      const state = ComputePressureObserver.requestPermission();
+      if (state === "granted") {
+        observer = new ComputePressureObserver(handleComputePressureChange);
+        observer.observe("cpu");
+      }
+    }
+  </pre>
+  <p>
     In the following example we want to lower the number of concurrent video streams when the
     compute pressure becomes critical. For the sake of simplicity we only consider this one state.
   </p>
