@@ -376,7 +376,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           [=getting the current permission state=] with "`compute-pressure`".
         </li>
         <li>
-          If |permissionState| is [=permission/denied=], throw {{NotAllowedError}}.
+          If |permissionState| is not [=permission/granted=], throw {{NotAllowedError}}.
         </li>
         <li>
           If |target| is not a supported [=target type=], throw {{"NotSupportedError"}}.
@@ -511,7 +511,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           return [=a new promise=] [=rejected=] with a {{NotAllowedError}}.
         </li>
         <li>
-          Let |return:Promise| be [=a new promise=].
+          Let |result:Promise| be [=a new promise=].
         </li>
         <li>
           Run these steps [=in parallel=]:
