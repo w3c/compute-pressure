@@ -186,8 +186,9 @@
     (if possible) for privacy reasons, or ignore and fuse certain readings.
   </p>
   <p>
-    When a sample is obtained from the [=platform collector=], the [=user agent=] MUST run
-    the [=queue telemetry data=] algorithm per the [[[#processing-model]]].
+    When a |data| sample of [=target type=] |type| is obtained from the [=platform collector=],
+    the [=user agent=] MUST run the [=queue telemetry data=] algorithm per the [[[#processing-model]]]
+    with |type| and |data|.
   </p>
 </section>
 
@@ -604,12 +605,12 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>Queue a ComputePressureRecord</h3>
     <p>
-      To <dfn>queue telemetry data</dfn> of [=target type=] |target|,
+      To <dfn>queue telemetry data</dfn> given the arguments |target| and |data|,
       run these steps:
     </p>
     <ol class="algorithm">
       <li>
-        Let |record:ComputePressureRecord| be the result of running [[[#create-record]]] for |target|.
+        Let |record:ComputePressureRecord| be the result of running [=create a record=] with |target| and |data|.
       </li>
       <li>
         [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
@@ -627,11 +628,17 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </section>
   <section id="create-record">
     <h3>Create and populate a ComputePressureRecord</h3>
+    <p>
+      To <dfn>create a record</dfn> given the arguments |target| and |data|,
+      run these steps:
+    </p>
+    <aside class="note">
+      The |data| sample and mapping between |data| sample and [=pressure states=]
+      is [=implementation-defined=] and may use many different metrics. For instance,
+      for CPU, it might consider processor frequency and utilization, as well
+      as thermal conditions.
+    </aside>
     <ol class="algorithm">
-      <li>
-        Let |data| be the latest available telemetry data from the [=platform collector=],
-        required by the [=user agent=] to determine a |pressure state| for [=target type=] |target|.
-      </li>
       <li>
         Let |record:ComputePressureRecord| be a new {{ComputePressureRecord}} instance.
       </li>
@@ -643,12 +650,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         Return |record|.
       </li>
     </ol>
-    <aside class="note">
-      The mapping between system telemetry data and [=pressure states=] is
-      [=implementation-defined=] and may use many different metrics. For instance,
-      for CPU, it might consider processor frequency and utilization, as well
-      as thermal conditions.
-    </aside>
   </section>
   <section>
     <h3>Queue a ComputePressureObserver Task</h3>
