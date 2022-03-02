@@ -863,7 +863,29 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       }
     </pre>
   </aside>
+  <p>
+    The callback is called with the observer it is invoked from. That allows to unobserve when
+    certain conditions are met, or even to differenciate depending on who invoked it, if invoked
+    by multiple observers or externally, say by `setTimeout()`.
+  </p>
+  <pre class="example js" title="How to access observer from callback">
+    const samples = [];
 
+    function pressureChange(records, observer) {
+      for (const record of records) {
+        samples.push(record.state);
+
+        // We only want 20 samples.
+        if (samples.length == 20) {
+          observer.disconnect();
+          return;
+        }
+      }
+    }
+
+    const observer = new ComputePressureObserver(pressureChange);
+    observer.observe("cpu");
+  </pre>
   <p>
     In the following example we want to lower the number of concurrent video streams when the
     compute pressure becomes critical. For the sake of simplicity we only consider this one state.
