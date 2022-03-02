@@ -186,9 +186,10 @@
     (if possible) for privacy reasons, or ignore and fuse certain readings.
   </p>
   <p>
-    When a |data| sample of [=target type=] |type| is obtained from the [=platform collector=],
-    the [=user agent=] MUST run the [=queue telemetry data=] algorithm per the [[[#processing-model]]]
-    with |type| and |data|.
+    When a [=implementation-defined=] |data| sample of [=target type=] |target:ComputePressureTarget| is
+    obtained from the [=platform collector=], the [=user agent=] MUST run the [=queue telemetry data=]
+    algorithm per the [[[#processing-model]]] for all observers |observer:ComputePressureObserver| in
+    the [=registered observer list=] for |target| with |observer|, |target| and |data|.
   </p>
 </section>
 
@@ -615,6 +616,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     </p>
     <ol class="algorithm">
       <li>
+        Let |document:Document| be the [=environment settings object/responsible document=]
+        of the [=current settings object=].
+      </li>
+      <li>
+        If |document| is not {{undefined}} and is not [=Document/fully active=], about these steps.
+      </li>
+      <li>
         Let |record:ComputePressureRecord| be the result of running [=create a record=] with |target| and |data|.
       </li>
       <li>
@@ -638,13 +646,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       as thermal conditions.
     </aside>
     <ol class="algorithm">
-      <li>
-        Let |document:Document| be the [=environment settings object/responsible document=]
-        of the [=current settings object=].
-      </li>
-      <li>
-        If |document| is not {{undefined}} and is not [=Document/fully active=], about these steps.
-      </li>
       <li>
         Let |record:ComputePressureRecord| be a new {{ComputePressureRecord}} instance.
       </li>
