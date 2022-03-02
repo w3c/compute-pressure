@@ -594,6 +594,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </li>
       </ul>
     </p>
+    <p>
+      [[[#cb-observer-example]]] contains an example of how to use the
+      {{ComputePressureObserver/disconnect()}} (or any other {{ComputePressureObserver}}
+      method) from the observer callback.
+    </p>
   </aside>
 </section>
 
@@ -868,7 +873,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     certain conditions are met, or even to differenciate depending on who invoked it, if invoked
     by multiple observers or externally, say by `setTimeout()`.
   </p>
-  <pre class="example js" title="How to access observer from callback">
+  <pre class="example js" title="How to access observer from callback" id="cb-observer-example">
     const samples = [];
 
     function pressureChange(records, observer) {
