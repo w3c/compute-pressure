@@ -164,8 +164,8 @@
     framework) or by the [=user agent=], if it has a direct access to hardware counters.
   </p>
   <p>
-    A [=platform collector=] can support telemetry for different <dfn>target types</dfn> of computing
-    devices defined by {{ComputePressureTarget}}, or there can be multiple [=platform collectors=].
+    A [=platform collector=] can support telemetry for different <dfn>source types</dfn> of computing
+    devices defined by {{ComputePressureSource}}, or there can be multiple [=platform collectors=].
   </p>
   <p>
     From the implementation perspective [=platform collector=] can be treated as a software proxy for the
@@ -186,10 +186,10 @@
     (if possible) for privacy reasons, or ignore and fuse certain readings.
   </p>
   <p>
-    When a [=implementation-defined=] |data| sample of [=target type=] |target:ComputePressureTarget| is
+    When a [=implementation-defined=] |data| sample of [=source type=] |source:ComputePressureSource| is
     obtained from the [=platform collector=], the [=user agent=] MUST run the [=queue telemetry data=]
     algorithm per the [[[#processing-model]]] for all observers |observer:ComputePressureObserver| in
-    the [=registered observer list=] for |target| with |observer|, |target| and |data|.
+    the [=registered observer list=] for |source| with |observer|, |source| and |data|.
   </p>
 </section>
 
@@ -203,7 +203,7 @@
   </p>
   <p>
     A <a>user agent</a> can per [=origin=] deny observation of a
-    particular compute pressure [=target type=] by any
+    particular compute pressure [=source type=] by any
     [=implementation-defined=] reason, such as platform setting or user
     preference.
   </p>
@@ -236,7 +236,7 @@
         a <dfn>compute pressure observer task queued</dfn> (a boolean), which is initially false.
       </li>
       <li>
-        a <dfn>registered observer list</dfn> per supported [=target type=], which is initially empty.
+        a <dfn>registered observer list</dfn> per supported [=source type=], which is initially empty.
       </li>
     </ul>
     A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{ComputePressureObserver}} object)
@@ -263,10 +263,10 @@
     experience.
   </p>
   <pre class="idl">
-    enum PressureState { "nominal", "fair", "serious", "critical" };
+    enum ComputePressureState { "nominal", "fair", "serious", "critical" };
   </pre>
   <p>
-    The <dfn>PressureState</dfn> enum represents the [=pressure state=] with the following states:
+    The <dfn>ComputePressureState</dfn> enum represents the [=pressure state=] with the following states:
   </p>
   <p>
     <style>
@@ -329,18 +329,18 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     The {{ComputePressureObserver}} can be used to observe changes in the [=pressure states=].
   </p>
   <pre class="idl">
-    enum ComputePressureTarget { "cpu" };
+    enum ComputePressureSource { "cpu" };
 
     [Exposed=(DedicatedWorker,SharedWorker,Window), SecureContext]
     interface ComputePressureObserver {
       constructor(ComputePressureUpdateCallback callback);
 
-      undefined observe(ComputePressureTarget target, optional ComputePressureObserverOptions options = {});
-      undefined unobserve(ComputePressureTarget target);
+      undefined observe(ComputePressureSource source, optional ComputePressureObserverOptions options = {});
+      undefined unobserve(ComputePressureSource source);
       undefined disconnect();
       sequence&lt;ComputePressureRecord&gt; takeRecords();
 
-      [SameObject] static readonly attribute FrozenArray&lt;DOMString&gt; supportedTargetTypes;
+      [SameObject] static readonly attribute FrozenArray&lt;DOMString&gt; supportedSources;
 
       [Exposed=Window] static Promise&lt;PermissionState&gt; requestPermission();
     };
@@ -370,7 +370,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>observe()</dfn> method</h3>
     <p>
       The {{ComputePressureObserver/observe()}} method, when invoked, MUST run the
-      following step, given the arguments |target:ComputePressureTarget| and
+      following step, given the arguments |source:ComputePressureSource| and
       |options:ComputePressureObserverOptions|:
       <ol class="algorithm">
         <li>
@@ -381,14 +381,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           If |permissionState| is not [=permission/granted=], throw {{NotAllowedError}}.
         </li>
         <li>
-          If |target| is not a supported [=target type=], throw {{"NotSupportedError"}}.
+          If |source| is not a supported [=source type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
-          If [=registered observer list=] for |target| is empty, activate the underlying
-          [=platform collector=] for |target|.
+          If [=registered observer list=] for |source| is empty, activate the underlying
+          [=platform collector=] for |source|.
         </li>
         <li>
-          [=list/For each=] |registered| of [=registered observer list=] for |target|,
+          [=list/For each=] |registered| of [=registered observer list=] for |source|,
           if |registered|’s [=observer=] is [=this=]:
           <ol>
             <li>
@@ -401,7 +401,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           <ol>
             <li>
               [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
-              and [=options=] is |options| to [=registered observer list=] for |target|.
+              and [=options=] is |options| to [=registered observer list=] for |source|.
             </li>
           </ol>
         </li>
@@ -412,21 +412,21 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>unobserve()</dfn> method</h3>
     <p>
       The {{ComputePressureObserver/unobserve()}} method, when invoked, MUST run the
-      following step, given the arguments |target:ComputePressureTarget|:
+      following step, given the arguments |source:ComputePressureSource|:
       <ol class="algorithm">
         <li>
-          If |target| is not a supported [=target type=], throw {{"NotSupportedError"}}.
+          If |source| is not a supported [=source type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
           [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
         </li>
         <li>
           Remove any [=registered observer=] from [=registered observer list=] for
-          |target| for which [=this=] is the [=observer=].
+          |source| for which [=this=] is the [=observer=].
         </li>
         <li>
           If the above [=registered observer list=] becomes [=list/empty=], deactivate the
-          underlying [=platform collector=] for the associated |target|.
+          underlying [=platform collector=] for the associated |source|.
         </li>
       </ol>
     </p>
@@ -442,11 +442,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </li>
         <li>
           Remove any [=registered observer=] from [=registered observer list=] for
-          all supported [=target types=] for which [=this=] is the [=observer=].
+          all supported [=source types=] for which [=this=] is the [=observer=].
         </li>
         <li>
           If any [=registered observer list=] becomes [=list/empty=], deactivate the
-          underlying [=platform collector=] for the associated |target|.
+          underlying [=platform collector=] for the associated |source|.
         </li>
       </ol>
     </p>
@@ -483,22 +483,22 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     </p>
   </section>
   <section>
-    <h3>The <dfn>supportedTargetTypes</dfn> attribute</h3>
+    <h3>The <dfn>supportedSources</dfn> attribute</h3>
     <p>
-      The {{ComputePressureObserver/supportedTargetTypes}} attribute is informing on the supported target by the [=platform collector=].
-      When {{ComputePressureObserver/supportedTargetTypes}}'s attribute getter is called, MUST run the following steps:
+      The {{ComputePressureObserver/supportedSources}} attribute is informing on the supported source by the [=platform collector=].
+      When {{ComputePressureObserver/supportedSources}}'s attribute getter is called, MUST run the following steps:
       <ol class="algorithm">
         <li>
-          Let |targets| be a [=list=] of |target:ComputePressureTarget|.
+          Let |sources| be a [=list=] of |source:ComputePressureSource|.
         </li>
         <li>
-          Return |observer|'s frozen array of supported [=target types=].
+          Return |observer|'s frozen array of supported [=source types=].
         </li>
       </ol>
     </p>
     <aside class="note">
       <p>
-        This attribute allows web developers to easily know which [=target types=] are supported by the user agent.
+        This attribute allows web developers to easily know which [=source types=] are supported by the user agent.
       </p>
     </aside>
   </section>
@@ -540,10 +540,17 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h3>The <dfn>ComputePressureRecord</dfn> dictionary</h3>
   <pre class="idl">
     dictionary ComputePressureRecord {
-      PressureState state;
+      ComputePressureSource source;
+      ComputePressureState state;
       ComputePressureObserverOptions options;
     };
   </pre>
+  <section>
+    <h3>The <dfn>source</dfn> attribute</h3>
+    <p>
+      The {{ComputePressureRecord/source}} attribute represents the current [=source type=].
+    </p>
+  </section>  
   <section>
     <h3>The <dfn>state</dfn> attribute</h3>
     <p>
@@ -573,11 +580,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <p>
     The <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agents</a> have a
     strong reference to [=registered observers=] in their [=registered observer list=]
-    (one per target).
+    (one per source).
   </p>
   <aside class="note">
     <p>
-      A {{ComputePressureObserver}} is observing a |target:ComputePressureTarget| if it
+      A {{ComputePressureObserver}} is observing a |source:ComputePressureSource| if it
       exists in the [=registered observer list=], modified by invocations of
       {{ComputePressureObserver/observe()}},
       {{ComputePressureObserver/unobserve()}}
@@ -591,7 +598,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           There are no scripting references to the |observer|.
         </li>
         <li>
-          The |observer| is not observing any |target|.
+          The |observer| is not observing any |source|.
         </li>
       </ul>
     </p>
@@ -612,7 +619,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>Queue a ComputePressureRecord</h3>
     <p>
       To <dfn>queue telemetry data</dfn> given the arguments |observer:ComputePressureObserver|,
-      |target:ComputePressureTarget| and [=implementation-defined=] |data|, run these steps:
+      |source:ComputePressureSource| and [=implementation-defined=] |data|, run these steps:
     </p>
     <ol class="algorithm">
       <li>
@@ -623,7 +630,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         If |document| is not {{undefined}} and is not [=Document/fully active=], about these steps.
       </li>
       <li>
-        Let |record:ComputePressureRecord| be the result of running [=create a record=] with |target| and |data|.
+        Let |record:ComputePressureRecord| be the result of running [=create a record=] with |source| and |data|.
       </li>
       <li>
         [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
@@ -636,7 +643,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section id="create-record">
     <h3>Create and populate a ComputePressureRecord</h3>
     <p>
-      To <dfn>create a record</dfn> given the arguments |target:ComputePressureTarget|
+      To <dfn>create a record</dfn> given the arguments |source:ComputePressureSource|
       and [=implementation-defined=] |data|, run these steps:
     </p>
     <aside class="note">
@@ -650,8 +657,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         Let |record:ComputePressureRecord| be a new {{ComputePressureRecord}} instance.
       </li>
       <li>
-        Let |record|.|state:PressureState| be an [=implementation-defined=] state given
-        |data| and |target|.
+        Set |record|.|source:ComputePressureSource| to |source|.
+      </li>
+      <li>
+        Let |record|.|state:ComputePressureState| be an [=implementation-defined=] state given
+        |data| and |source|.
       </li>
       <li>
         Return |record|.
@@ -965,14 +975,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </pre>
   <p>
     In the following example, we show how to tell the observer to stop watching a specific
-    |target:ComputePressureTarget| by invoking {{ComputePressureObserver/unobserve()}}
-    with |target|.
+    |source:ComputePressureSource| by invoking {{ComputePressureObserver/unobserve()}}
+    with |source|.
   </p>
   <aside class="note">
     The example uses 'gpu', which could be a potential future addition to the specification. It aims to show
     that the API is extentable to support other types of compute pressure in the future
   </aside>
-  <pre class="example js" title="How to tell the observer to stop watching for state changes for a specific target">
+  <pre class="example js" title="How to tell the observer to stop watching for state changes for a specific source">
     const observer = new ComputePressureObserver(records => { // do something with records. }));
 
     observer.observe("cpu");
@@ -987,7 +997,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <p>
     In the following example, we show how to tell the observer to stop watching for any
     state changes by calling {{ComputePressureObserver/disconnect()}}. Calling
-    {{ComputePressureObserver/disconnect()}} will stop observing all targets observed
+    {{ComputePressureObserver/disconnect()}} will stop observing all sources observed
     by previous {{ComputePressureObserver/observe()}} calls.
   </p>
   <p>
