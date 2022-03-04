@@ -185,12 +185,6 @@
     A [=platform collector=] samples data at a specific frequency. A [=user agent=] may modify this frequency
     (if possible) for privacy reasons, or ignore and fuse certain readings.
   </p>
-  <p>
-    When a [=implementation-defined=] |data| sample of [=source type=] |source:ComputePressureSource| is
-    obtained from the [=platform collector=], the [=user agent=] MUST run the [=queue telemetry data=]
-    algorithm per the [[[#processing-model]]] for all observers |observer:ComputePressureObserver| in
-    the [=registered observer list=] for |source| with |observer|, |source| and |data|.
-  </p>
 </section>
 
 <section>
@@ -616,21 +610,54 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     This section outlines the steps the user agent must take when implementing the Compute Pressure Observer API.
   </p>
   <section>
+    <h3>Respond to new platform collector readings</h3>
+    <p>
+      When a [=implementation-defined=] |data| sample of [=source type=] |source:ComputePressureSource| is
+      obtained from the [=platform collector=], the [=user agent=] MUST run these steps:
+      <ol>
+        <li>
+          Let |document:Document| be the [=environment settings object/responsible document=]
+          of the [=current settings object=].
+        </li>
+        <li>
+          If |document| is not {{undefined}} and is not [=Document/fully active=], about these steps.
+        </li>
+        <li>
+          Let |source:ComputePressureSource| be the [=source type=] of the |data| sample.
+        </li>
+        <li>
+          Let |state:ComputePressureState| be an [=implementation-defined=] state given
+          |data| and |source|.
+        </li>
+        <aside class="note">
+          The |data| sample and mapping between |data| sample and [=pressure states=]
+          is [=implementation-defined=] and may use many different metrics. For instance,
+          for CPU, it might consider processor frequency and utilization, as well
+          as thermal conditions.
+        </aside>
+        <li>
+          If |state| has not changed since last sample for |source|, abort these steps.
+        </li>
+        <li>
+          [=list/For each=] |observer| in the [=registered observer list=] for |source|:
+          <ol>
+            <li>
+              Run [=queue a record=] with |observer|, |source| and |state|.
+            </li>
+          </ol>
+        </li>
+      </ol>
+    </p>
+  </section>
+  <section>
     <h3>Queue a ComputePressureRecord</h3>
     <p>
-      To <dfn>queue telemetry data</dfn> given the arguments |observer:ComputePressureObserver|,
-      |source:ComputePressureSource| and [=implementation-defined=] |data|, run these steps:
+      To <dfn>queue a record</dfn> given the arguments |observer:ComputePressureObserver|,
+      |source:ComputePressureSource| and |state:ComputePressureState|, run these steps:
     </p>
     <ol class="algorithm">
       <li>
-        Let |document:Document| be the [=environment settings object/responsible document=]
-        of the [=current settings object=].
-      </li>
-      <li>
-        If |document| is not {{undefined}} and is not [=Document/fully active=], about these steps.
-      </li>
-      <li>
-        Let |record:ComputePressureRecord| be the result of running [=create a record=] with |source| and |data|.
+        Let |record:ComputePressureRecord| be the result of running [=create a record=] with |source| and |state|.
       </li>
       <li>
         [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
@@ -644,14 +671,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>Create and populate a ComputePressureRecord</h3>
     <p>
       To <dfn>create a record</dfn> given the arguments |source:ComputePressureSource|
-      and [=implementation-defined=] |data|, run these steps:
+      and |state:ComputePressureState|, run these steps:
     </p>
-    <aside class="note">
-      The |data| sample and mapping between |data| sample and [=pressure states=]
-      is [=implementation-defined=] and may use many different metrics. For instance,
-      for CPU, it might consider processor frequency and utilization, as well
-      as thermal conditions.
-    </aside>
     <ol class="algorithm">
       <li>
         Let |record:ComputePressureRecord| be a new {{ComputePressureRecord}} instance.
@@ -660,8 +681,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         Set |record|.|source:ComputePressureSource| to |source|.
       </li>
       <li>
-        Let |record|.|state:ComputePressureState| be an [=implementation-defined=] state given
-        |data| and |source|.
+        Set |record|.|state:ComputePressureState| be |state|.
       </li>
       <li>
         Return |record|.
