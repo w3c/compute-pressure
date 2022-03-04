@@ -248,6 +248,11 @@
       objects, which is initially empty.
     </li>
   </ul>
+  <p>
+    The [=user agent=] additionally has a <dfn>max queued records</dfn> integer, which
+    is set to an [=implementation-defined=] value, larger than 0.
+    </li>
+  </p>
 </section>
 
 <section> <h2>Pressure States</h2>
@@ -544,7 +549,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <p>
       The {{ComputePressureRecord/source}} attribute represents the current [=source type=].
     </p>
-  </section>  
+  </section>
   <section>
     <h3>The <dfn>state</dfn> attribute</h3>
     <p>
@@ -660,7 +665,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         Let |record:ComputePressureRecord| be the result of running [=create a record=] with |source| and |state|.
       </li>
       <li>
-        [=Append=] it to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
+        If [=list/size=] of |observer|.{{ComputePressureObserver/[[QueuedRecords]]}} is greater than
+        [=max queued records=], then [=list/remove=] the first [=list/item=].
+      <li>
+        [=list/Append=] |record| to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
       </li>
       <li>
         [=Queue a compute pressure observer task=].
