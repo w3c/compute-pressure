@@ -309,6 +309,34 @@
   </p>
 </section>
 
+<section> <h2>Pressure Factors</h2>
+  <p>
+    <dfn>Pressure factors</dfn> represents factors affecting system performance and current [=pressure state=].
+    In case the [=pressure state=] is nominal, the {{ComputePressureRecord.factors}} will always an [=list/empty=]
+    sequence.
+  </p>
+  <aside class="note">
+    The [=user agent=] might not be able to expose the factors for all systems or for all [=pressure states=].
+  </aside>
+  <pre class="idl">
+    enum ComputePressureFactor { "thermal", "power-supply" };
+  </pre>
+  <p>
+    The <dfn>ComputePressureFactor</dfn> enum represents the [=pressure factors=]:
+  </p>
+  <p>
+    <ul>
+      <li>
+        <b>Thermal</b>: The system is under elevated thermal conditions resulting in the system being
+        unable to keep temperature down at peak power.
+      </li>
+      <li>
+        <b>Power</b>: The power supply (incl. battery capacity) is too weak to run at peak power.
+      </li>
+    </ul>
+  </p>
+</section>
+
 <section> <h2>Compute Pressure Observer</h2>
 The Compute Pressure Observer API enables developers to understand the utilization characteristics of a CPU.
 
@@ -541,6 +569,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     dictionary ComputePressureRecord {
       ComputePressureSource source;
       ComputePressureState state;
+      sequence&lt;ComputePressureFactor&gt; factors;
       ComputePressureObserverOptions options;
     };
   </pre>
@@ -554,6 +583,12 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>state</dfn> attribute</h3>
     <p>
       The {{ComputePressureRecord/state}} attribute represents the current [=pressure state=].
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>factors</dfn> attribute</h3>
+    <p>
+      The {{ComputePressureRecord/factor}} attribute represents a [=sequence=] of the current [=pressure factors=].
     </p>
   </section>
   <section>
@@ -634,8 +669,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Let |state:ComputePressureState| be an [=implementation-defined=] state given
           |data| and |source|.
         </li>
+        <li>
+          Let |factors:sequence&lt;ComputePressureFactor&gt;| be an [=implementation-defined=]
+          [=sequence=] given |data| and |source|, potentially [=list/empty=].
+        </li>
         <aside class="note">
-          The |data| sample and mapping between |data| sample and [=pressure states=]
+          The |data| sample and mapping between |data| sample, and [=pressure states=]
+          and [=pressure factors=] contributing to the current state,
           is [=implementation-defined=] and may use many different metrics. For instance,
           for CPU, it might consider processor frequency and utilization, as well
           as thermal conditions.
@@ -647,7 +687,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           [=list/For each=] |observer| in the [=registered observer list=] for |source|:
           <ol>
             <li>
-              Run [=queue a record=] with |observer|, |source| and |state|.
+              Run [=queue a record=] with |observer|, |source|, |state| and |factors|.
             </li>
           </ol>
         </li>
@@ -658,11 +698,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>Queue a ComputePressureRecord</h3>
     <p>
       To <dfn>queue a record</dfn> given the arguments |observer:ComputePressureObserver|,
-      |source:ComputePressureSource| and |state:ComputePressureState|, run these steps:
+      |source:ComputePressureSource|, |state:ComputePressureState| and
+      |factors:sequence&lt;ComputePressureFactor&gt;|, run these steps:
     </p>
     <ol class="algorithm">
       <li>
-        Let |record:ComputePressureRecord| be the result of running [=create a record=] with |source| and |state|.
+        Let |record:ComputePressureRecord| be the result of running [=create a record=] witho
+        |source|, |state| and |factors|.
       </li>
       <li>
         If [=list/size=] of |observer|.{{ComputePressureObserver/[[QueuedRecords]]}} is greater than
@@ -678,8 +720,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section id="create-record">
     <h3>Create and populate a ComputePressureRecord</h3>
     <p>
-      To <dfn>create a record</dfn> given the arguments |source:ComputePressureSource|
-      and |state:ComputePressureState|, run these steps:
+      To <dfn>create a record</dfn> given the arguments |source:ComputePressureSource|,
+      |state:ComputePressureState| and |factors:sequence&lt;ComputePressureFactor&gt;|,
+      run these steps:
     </p>
     <ol class="algorithm">
       <li>
@@ -690,6 +733,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       </li>
       <li>
         Set |record|.|state:ComputePressureState| be |state|.
+      </li>
+      <li>
+        Set |record|.|factors:sequence&lt;ComputePressureFactor&gt;| be |factors|.
       </li>
       <li>
         Return |record|.
