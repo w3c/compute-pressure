@@ -318,6 +318,16 @@
   <aside class="note">
     The [=user agent=] might not be able to expose the factors for all systems or for all [=pressure states=].
   </aside>
+  <style>
+    @counter-style pressure-factors-emoji {
+      system: cyclic;
+      symbols: "🌡" "🔌";
+      suffix: " ";
+    }
+    .pressure-factors {
+      list-style-type: pressure-factors-emoji;
+    }
+  </style>
   <pre class="idl">
     enum ComputePressureFactor { "thermal", "power-supply" };
   </pre>
@@ -325,13 +335,15 @@
     The <dfn>ComputePressureFactor</dfn> enum represents the [=pressure factors=]:
   </p>
   <p>
-    <ul>
+    <ul class="pressure-factors">
       <li>
         <b>Thermal</b>: The source is under elevated thermal conditions and the system is
         unable to keep temperature below safe limits at peak power.
       </li>
       <li>
-        <b>Power</b>: The power supply (incl. battery capacity) is too weak to run at peak power.
+        <b>Power</b>: The power supply (incl. battery capacity) is too weak to run at peak power,
+        or artificially limited by a system or user initiated power mode to conserve power or
+        avoid fan noise.
       </li>
     </ul>
   </p>
