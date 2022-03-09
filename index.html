@@ -41,7 +41,7 @@
     xref: {
       profile: "web-platform",
       specs: [
-        "permissions",
+        "permissions"
       ]
     }
   };
@@ -662,17 +662,90 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     This section outlines the steps the user agent must take when implementing the Compute Pressure Observer API.
   </p>
   <section>
+    <h3>Supporting algorithms</h3>
+    <p>
+      <aside class="note">
+        Readings are available for [=documents=] (incl. [=iframes=] and popup windows),
+        matching the following criteria:
+        <ul>
+          <li>
+            They are [=Document/fully active=] [=documents=].
+          </li>
+          <li>
+            Their [=origin=] is [=same origin-domain=] with the
+            <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
+            currently focused area</a> document.
+          </li>
+        </ul>
+        Reading are available for workers matching the following critetia:
+        <ul>
+          <li>
+            They are <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">active needed workers</a>.
+          </li>
+          <li>
+            Their [=origin=] is [=same origin-domain=] with the
+            <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
+            currently focused area</a> document.
+          </li>
+        </ul>
+      </aside>
+      The <dfn>should receive readings</dfn> steps given [=global object=] |o|, are as follows:
+      <ol>
+        <li>
+          Let |focused document:Document| be the
+          <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
+          currently focused area</a> document.
+        </li>
+        <li>
+          Let |origin| be |focused document|'s [=origin=].
+        </li>
+        <li>
+          If |o| is a {{Window}} object:
+          <ol>
+            <li>
+              Let |document:Document| be |o|'s [=associated document=].
+            </li>
+            <li>
+              If |document| is not [=Document/fully active=], return false.
+            </li>
+            <li>
+              If |document|'s [=origin=] is [=same origin=] with |focused documents|'s [=origin=], return true.
+            </li>
+          </ol>
+        </li>
+        <li>
+          If |o| is a {{WorkerGlobalScope}} object:
+          <ol>
+            <li>
+              If |o|'s relevant worker is not a <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
+              active needed worker</a>, return false.
+            </li>
+            <li>
+              Let |settings object| be |o|'s [=relevant settings object=].
+            </li>
+            <li>
+              If |settings object|'s [=origin=] is [=same origin=] with |focused documents|'s [=origin=], return true.
+            </li>
+          </ol>
+        </li>
+        <li>
+          Otherwise, return false.
+        </li>
+      </ol>
+    </p>
+  </section>
+  <section>
     <h3>Respond to new platform collector readings</h3>
     <p>
       When a [=implementation-defined=] |data| sample of [=source type=] |source:ComputePressureSource| is
       obtained from the [=platform collector=], the [=user agent=] MUST run these steps:
       <ol>
         <li>
-          Let |document:Document| be the [=environment settings object/responsible document=]
-          of the [=current settings object=].
+          Let |settings object| be the [=current settings object=].
         </li>
         <li>
-          If |document| is not {{undefined}} and is not [=Document/fully active=], abort these steps.
+          If running [=should receive readings=] with |settings object|'s [=global object=]
+          returns false, abort these steps.
         </li>
         <li>
           Let |source:ComputePressureSource| be the [=source type=] of the |data| sample.
@@ -865,6 +938,40 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Rate limiting can be implemented in the user agent, but it might also be
           possible to simply change the polling frequency of the underlying hardware
           counters, if not accessed via a higher level framework.
+        </p>
+      </section>
+      <section>
+        <h4>No side-channels</h4>
+        <p>
+          It is possible to identify users across non-[=same origin=] sites if unique
+          or very precise values can be accessed at the same time by sites not sharing
+          origin.
+        </p>
+        <p>
+          If the same [=pressure state=] and timestamp is observed by two origins, that
+          would be a good indication that the origin is used by the same user on the
+          same machine. For this reason, Compute Pressure API limits reporting [=pressure
+          state=] changes to one origin at the time.
+        </p>
+        <p>
+          A common way to do this, is only to report changes to the focused page, but
+          one of the main users of this API are video conferencing sites. These sites
+          want to make sure that the video streams and effects doesn't negatively affect
+          the system and thus the conferencing experience - but there are two common
+          cases where the site will usually not be focused:
+          <ul>
+            <li>
+              The user is taking meeting notes and the site is in the background. Commonly
+              the video stream is only visible via a picture-in-picture window.
+            </li>
+            <li>
+              The user is sharing an external application window such as a presentation,
+              or sharing the whole screen, unusually with some UI indicating sharing is
+              happening.
+            </li>
+          </ul>
+          For this reason, the Compute Pressure API considers these two cases to have
+          higher priority than whether the site is focused.
         </p>
       </section>
       <section>
