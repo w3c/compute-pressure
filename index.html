@@ -692,24 +692,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       The <dfn>should receive readings</dfn> steps given [=global object=] |o|, are as follows:
       <ol>
         <li>
-          Let |focused document:Document| be the
-          <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
-          currently focused area</a> document.
-        </li>
-        <li>
-          Let |origin| be |focused document|'s [=origin=].
-        </li>
-        <li>
           If |o| is a {{Window}} object:
           <ol>
             <li>
-              Let |document:Document| be |o|'s [=associated document=].
-            </li>
-            <li>
-              If |document| is not [=Document/fully active=], return false.
-            </li>
-            <li>
-              If |document|'s [=origin=] is [=same origin=] with |focused documents|'s [=origin=], return true.
+              If |o|'s [=associated document=] is not [=Document/fully active=], return false.
             </li>
           </ol>
         </li>
@@ -720,13 +706,12 @@ The Compute Pressure Observer API enables developers to understand the utilizati
               If |o|'s relevant worker is not a <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
               active needed worker</a>, return false.
             </li>
-            <li>
-              Let |settings object| be |o|'s [=relevant settings object=].
-            </li>
-            <li>
-              If |settings object|'s [=origin=] is [=same origin=] with |focused documents|'s [=origin=], return true.
-            </li>
           </ol>
+        <li>
+          If |o|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with
+          <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
+            currently focused area</a>'s [=origin=], return true.
+        </li>
         </li>
         <li>
           Otherwise, return false.
