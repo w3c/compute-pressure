@@ -689,8 +689,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           </li>
         </ul>
       </aside>
-      The <dfn>should receive readings</dfn> steps given [=global object=] |o|, are as follows:
+      The <dfn>should receive readings</dfn> steps given the argument |observer:ComputePressureObserver|, are as follows:
       <ol>
+        <li>
+          Let |o| be |observer|'s [=relevant global object=].
+        </li>
         <li>
           If |o| is a {{Window}} object:
           <ol>
@@ -726,13 +729,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       obtained from the [=platform collector=], the [=user agent=] MUST run these steps:
       <ol>
         <li>
-          Let |settings object| be the [=current settings object=].
-        </li>
-        <li>
-          If running [=should receive readings=] with |settings object|'s [=global object=]
-          returns false, abort these steps.
-        </li>
-        <li>
           Let |source:ComputePressureSource| be the [=source type=] of the |data| sample.
         </li>
         <li>
@@ -756,6 +752,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         <li>
           [=list/For each=] |observer| in the [=registered observer list=] for |source|:
           <ol>
+            <li>
+              If running [=should receive readings=] with |observer|
+              returns false, [=iteration/continue=].
+            </li>
             <li>
               Run [=queue a record=] with |observer|, |source|, |state| and |factors|.
             </li>
