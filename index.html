@@ -41,7 +41,7 @@
     xref: {
       profile: "web-platform",
       specs: [
-        "permissions"
+        "permissions", "hr-time"
       ]
     }
   };
@@ -582,6 +582,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       ComputePressureSource source;
       ComputePressureState state;
       sequence&lt;ComputePressureFactor&gt; factors;
+      DOMHighResTimeStamp timestamp;
       ComputePressureObserverOptions options;
     };
   </pre>
@@ -601,6 +602,12 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>factors</dfn> attribute</h3>
     <p>
       The {{ComputePressureRecord/factor}} attribute represents a [=sequence=] of the current [=pressure factors=].
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>timestamp</dfn> attribute</h3>
+    <p>
+      The {{ComputePressureRecord/timestamp}} attribute represents timestamp when the date was obtained from the system.
     </p>
   </section>
   <section>
@@ -739,6 +746,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Let |factors:sequence&lt;ComputePressureFactor&gt;| be an [=implementation-defined=]
           [=sequence=] given |data| and |source|, potentially [=list/empty=].
         </li>
+        <li>
+          Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
+          obtained from the [=platform collector=].
+        </li>
         <aside class="note">
           The |data| sample and mapping between |data| sample, and [=pressure states=]
           and [=pressure factors=] contributing to the current state,
@@ -757,7 +768,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
               returns false, [=iteration/continue=].
             </li>
             <li>
-              Run [=queue a record=] with |observer|, |source|, |state| and |factors|.
+              Run [=queue a record=] with |observer|, |source|, |state|, |factors| and |timestamp|.
             </li>
           </ol>
         </li>
@@ -768,13 +779,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>Queue a ComputePressureRecord</h3>
     <p>
       To <dfn>queue a record</dfn> given the arguments |observer:ComputePressureObserver|,
-      |source:ComputePressureSource|, |state:ComputePressureState| and
-      |factors:sequence&lt;ComputePressureFactor&gt;|, run these steps:
+      |source:ComputePressureSource|, |state:ComputePressureState|,
+      |factors:sequence&lt;ComputePressureFactor&gt;| and |timestamp:DOMHighResTimeStamp|,
+      run these steps:
     </p>
     <ol class="algorithm">
       <li>
         Let |record:ComputePressureRecord| be the result of running [=create a record=] with
-        |source|, |state| and |factors|.
+        |source|, |state|, |factors| and |timestamp|.
       </li>
       <li>
         If [=list/size=] of |observer|.{{ComputePressureObserver/[[QueuedRecords]]}} is greater than
@@ -791,8 +803,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>Create and populate a ComputePressureRecord</h3>
     <p>
       To <dfn>create a record</dfn> given the arguments |source:ComputePressureSource|,
-      |state:ComputePressureState| and |factors:sequence&lt;ComputePressureFactor&gt;|,
-      run these steps:
+      |state:ComputePressureState|, |factors:sequence&lt;ComputePressureFactor&gt;|
+      and |timestamp:DOMHighResTimeStamp|, run these steps:
     </p>
     <ol class="algorithm">
       <li>
@@ -806,6 +818,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       </li>
       <li>
         Set |record|.|factors:sequence&lt;ComputePressureFactor&gt;| be |factors|.
+      </li>
+      <li>
+        Set |record|.|timestamp:DOMHighResTimeStamp| be |timestamp|.
       </li>
       <li>
         Return |record|.
