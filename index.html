@@ -140,17 +140,41 @@
       at which the [=user agent=] obtains telemetry readings from the underlying platform.
     </p>
     <p>
+      The [=sampling frequency=] is equal to the [=requested sampling frequency=] if the [=user agent=]
+      can support it.
+    </p>
+    <p>
+      The [=sampling frequency=] differs from the [=requested sampling frequency=] in the following cases:
+      <ul>
+        <li>
+          The [=requested sampling frequency=] exceeds upper or lower sampling frequency bounds
+          supported or accepted by the underlying platform and [=user agent=]<sup>†</sup>.
+        </li>
+      </ul>
+      <p>
+        <sup>†</sup>It is recommended that the [=user agent=] limits the [=reporting frequency=]
+        as outlined in [[[#rate-limiting-change-notifications]]].
+      </p>
+    </p>
+    <p>
       The <dfn>reporting frequency</dfn> is the rate at which the {{ComputePressureUpdateCallback}}
-      will be queued as a [=task=] on the [=ComputePressureObserver task source=], as long as there
-      has been a change in the [=pressure state=].
+      will be queued as a [=task=] on the [=ComputePressureObserver task source=] in case there
+      is data to report.
     </p>
     <p>
-      This means that the [=reporting frequency=] can never exceed the [=sampling frequency=].
+      The [=reporting frequency=] is not allowed to exceed the [=sampling frequency=].
     </p>
     <p>
-      It is recommended that the [=user agent=] limits the [=reporting frequency=]
-      as outlined in [[[#rate-limiting-change-notifications]]].
+      In case the user didn't request a [=sampling frequency=], the [=sampling frequency=]
+      is [=implementation-defined=].
     </p>
+    <aside class="note">
+      In case there are multiple instances of {{ComputePressureObserver}} active with different
+      [=sampling frequencies=], it is up to the [=user agent=] to set a [=platform collector=]
+      level [=sampling frequency=] that best fulfills these requests, while
+      making sure that the [=reporting frequency=] of all {{ComputePressureObserver}}s does
+      not exceed their respective [=requested sampling frequencies=].
+    </aside>
   </section>
 </section>
 
@@ -623,9 +647,28 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <h3>The <dfn>ComputePressureObserverOptions</dfn> dictionary</h3>
   <pre class="idl">
     dictionary ComputePressureObserverOptions {
-      // For future-proofing - expect things to be added here later.
+      double frequency;
     };
   </pre>
+  <section>
+    <h3>The <dfn>frequency</dfn> member</h3>
+    <p>
+      The {{ComputePressureObserverOptions/frequency}} member represents the <dfn>requested sampling
+      frequency</dfn> in hertz.
+    </p>
+    <aside class="note">
+      <p>
+        For slow reporting frequency (less than 1hz), it is common to use seconds and talk about
+        period instead of frequency. Fortunately, it is easy to convert between the two, as hertz
+        is rotations per second. If you want to request a sampling frequency of 10 seconds, then
+        just use the value of 0.1.
+      </p>
+      <p>
+        A [=user agent=] might not be able to respect the requested frequency. For more information
+        consult [[[#sampling-and-reporting-frequency]]].
+      </p>
+    </aside>
+  </section>
 </section>
 
 <section id="life-cycle">
