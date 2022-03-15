@@ -481,7 +481,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           If |source| is not a supported [=source type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
-          [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
+          [=list/Remove=] from |observer|.{{ComputePressureObserver/[[QueuedRecords]]}} all 
+          |records| associated with |source|.
         </li>
         <li>
           Remove any [=registered observer=] from [=registered observer list=] for
