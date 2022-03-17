@@ -410,7 +410,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       undefined disconnect();
       sequence&lt;ComputePressureRecord&gt; takeRecords();
 
-      [SameObject] static readonly attribute FrozenArray&lt;DOMString&gt; supportedSources;
+      [SameObject] static readonly attribute FrozenArray&lt;ComputePressureSource&gt; supportedSources;
 
       [Exposed=Window] static Promise&lt;PermissionState&gt; requestPermission();
     };
