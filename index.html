@@ -257,8 +257,7 @@
         a <dfn>registered observer list</dfn> per supported [=source type=], which is initially empty.
       </li>
     </ul>
-    A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{ComputePressureObserver}} object)
-    and <dfn>options</dfn> (a {{ComputePressureObserverOptions}} dictionary).
+    A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{ComputePressureObserver}} object).
   </p>
   <p>
     A constructed  {{ComputePressureObserver}} object has the following internal slots:
@@ -268,8 +267,16 @@
       a <dfn>[[\Callback]]</dfn> of type {{ComputePressureUpdateCallback}} set on creation.
     </li>
     <li>
+      a <dfn>[[\Options]]</dfn> of type {{ComputePressureObserverOptions}} set on creation.
+    </li>
+    <li>
       a <dfn>[[\QueuedRecords]]</dfn> [=queue=] of zero or more {{ComputePressureRecord}}
       objects, which is initially empty.
+    </li>
+    <li>
+      a <dfn>[[\LastRecordMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{ComputePressureSource}},
+      representing the [=source type=] to which the last record belongs.
+      The [=ordered map=]'s [=map/value=] is a {{ComputePressureRecord}}.
     </li>
   </ul>
   <p>
@@ -396,9 +403,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
 
     [Exposed=(DedicatedWorker,SharedWorker,Window), SecureContext]
     interface ComputePressureObserver {
-      constructor(ComputePressureUpdateCallback callback);
+      constructor(ComputePressureUpdateCallback callback, optional ComputePressureObserverOptions options = {});
 
-      undefined observe(ComputePressureSource source, optional ComputePressureObserverOptions options = {});
+      undefined observe(ComputePressureSource source);
       undefined unobserve(ComputePressureSource source);
       undefined disconnect();
       sequence&lt;ComputePressureRecord&gt; takeRecords();
@@ -415,10 +422,14 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>constructor()</dfn> method</h3>
     <p>
       The {{ComputePressureObserver/constructor()}} method, when invoked, MUST run the
-      following step, given the arguments |callback:ComputePressureUpdateCallback|:
+      following step, given the arguments |callback:ComputePressureUpdateCallback|
+      and |options:ComputePressureObserverOptions|:
       <ol class="algorithm">
         <li>
           Let |this:ComputePressureObserver| be a new the {{ComputePressureObserver}} object.
+        </li>
+        <li>
+          Set |this|.{{ComputePressureObserver/[[Options]]}} to |options|.
         </li>
         <li>
           Set |this|.{{ComputePressureObserver/[[Callback]]}} to |callback|.
@@ -433,8 +444,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>observe()</dfn> method</h3>
     <p>
       The {{ComputePressureObserver/observe()}} method, when invoked, MUST run the
-      following step, given the arguments |source:ComputePressureSource| and
-      |options:ComputePressureObserverOptions|:
+      following step, given the arguments |source:ComputePressureSource|:
       <ol class="algorithm">
         <li>
           Let |permissionState:PermissionState| be the result of
@@ -451,22 +461,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           [=platform collector=] for |source|.
         </li>
         <li>
-          [=list/For each=] |registered| of [=registered observer list=] for |source|,
-          if |registered|’s [=observer=] is [=this=]:
-          <ol>
-            <li>
-              Set |registered|’s [=options=] to |options|.
-            </li>
-          </ol>
+          [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
+          to [=registered observer list=] for |source|.
         </li>
-        <li>
-          Otherwise:
-          <ol>
-            <li>
-              [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
-              and [=options=] is |options| to [=registered observer list=] for |source|.
-            </li>
-          </ol>
         </li>
       </ol>
     </p>
@@ -481,12 +478,15 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           If |source| is not a supported [=source type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
-          [=list/Remove=] from |observer|.{{ComputePressureObserver/[[QueuedRecords]]}} all 
+          [=list/Remove=] from |this|.{{ComputePressureObserver/[[QueuedRecords]]}} all
           |records| associated with |source|.
         </li>
         <li>
+          [=map/Remove=] |this|.{{ComputePressureObserver/[[LastRecordMap]]}}[|source|].
+        </li>
+        <li>
           Remove any [=registered observer=] from [=registered observer list=] for
-          |source| for which [=this=] is the [=observer=].
+          |source| for which [=this=] is the [=registered observer=].
         </li>
         <li>
           If the above [=registered observer list=] becomes [=list/empty=], deactivate the
@@ -503,6 +503,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       <ol class="algorithm">
         <li>
           [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
+        </li>
+        <li>
+          [=map/Clear=] |this|.{{ComputePressureObserver/[[LastRecordMap]]}}.
         </li>
         <li>
           Remove any [=registered observer=] from [=registered observer list=] for
@@ -608,7 +611,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       ComputePressureState state;
       sequence&lt;ComputePressureFactor&gt; factors;
       DOMHighResTimeStamp timestamp;
-      ComputePressureObserverOptions options;
     };
   </pre>
   <section>
@@ -633,13 +635,6 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>timestamp</dfn> attribute</h3>
     <p>
       The {{ComputePressureRecord/timestamp}} attribute represents timestamp when the date was obtained from the system.
-    </p>
-  </section>
-  <section>
-    <h3>The <dfn>options</dfn> attribute</h3>
-    <p>
-      The {{ComputePressureRecord/options}} attribute represents the {{ComputePressureObserverOptions}}
-      dictionary that {{ComputePressureObserver}} was constructed with.
     </p>
   </section>
 </section>
@@ -740,7 +735,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           </li>
         </ul>
       </aside>
-      The <dfn>should receive readings</dfn> steps given the argument |observer:ComputePressureObserver|, are as follows:
+      The <dfn>passes privacy test</dfn> steps given the argument |observer:ComputePressureObserver|, are as follows:
       <ol>
         <li>
           Let |o| be |observer|'s [=relevant global object=].
@@ -769,6 +764,51 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         </li>
         <li>
           Otherwise, return false.
+        </li>
+      </ol>
+      <aside class="note">
+        As there might be multiple observers, each with a different [=requested sampling frequency=], the underlying
+        [=platform collector=] will need to use a [=sampling frequency=] that fulfills all these requirements. This also
+        means that not every data sample from the [=platform collector=] needs to be delivered to each active
+        observer.
+      </aside>
+      The <dfn>passes frequency test</dfn> steps given the argument |observer:ComputePressureObserver|,
+      |source:ComputePressureSource| and |timestamp:DOMHighResTimeStamp|, are as follows:
+      <ol>
+        <li>
+          If |observer|.{{ComputePressureObserver/[[LastRecordMap]]}}[|source|] does not [=map/exist=], return true.
+        </li>
+        <li>
+          Let |record:ComputePressureRecord| be |observer|.{{ComputePressureObserver/[[LastRecordMap]]}}[|source|].
+        </li>
+        <li>
+          Let |frequency| be |observer|.{{ComputePressureObserver/[[Options]]}}.{{ComputePressureObserverOptions/frequency}}.
+        </li>
+        <li>
+          Let |timeDelta:DOMHighResTimeStamp| = |record|.{{ComputePressureRecord/timestamp}} - |timestamp|.
+        </li>
+        <li>
+          If |timeDelta| &gt; (1 / |frequency|), return true, otherwise return false.
+        </li>
+      </ol>
+      The <dfn>has change in data</dfn> steps given the argument |observer:ComputePressureObserver|,
+      |state:ComputePressureState| and |factors:sequence&lt;ComputePressureFactor&gt;|, are as follows:
+      <ol>
+        <li>
+          If |observer|.{{ComputePressureObserver/[[LastRecordMap]]}}[|source|] does not [=map/exist=], return true.
+        </li>
+        <li>
+          Let |record:ComputePressureRecord| be |observer|.{{ComputePressureObserver/[[LastRecordMap]]}}[|source|].
+        </li>
+        <li>
+          If |record|.{{ComputePressureRecord/state}} is not equal to |state|, return false.
+        </li>
+        <li>
+          If |record|.{{ComputePressureRecord/factors}} and |factors| does not [=list/contain=] the same [=list/items=],
+          return false.
+        </li>
+        <li>
+          Return true.
         </li>
       </ol>
     </p>
@@ -805,10 +845,18 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           If |state| has not changed since last sample for |source|, abort these steps.
         </li>
         <li>
-          [=list/For each=] |observer| in the [=registered observer list=] for |source|:
+          [=list/For each=] |observer:ComputePressureObserver| in the [=registered observer list=] for |source|:
           <ol>
             <li>
-              If running [=should receive readings=] with |observer|
+              If running [=passes privacy test=] with |observer|
+              returns false, [=iteration/continue=].
+            </li>
+            <li>
+              If running [=passes frequency test=] with |observer|, |source| and |timestamp|
+              returns false, [=iteration/continue=].
+            </li>
+            <li>
+              If running [=has change in data=] with |observer|, |state| and |factors|
               returns false, [=iteration/continue=].
             </li>
             <li>
@@ -837,6 +885,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         [=max queued records=], then [=list/remove=] the first [=list/item=].
       <li>
         [=list/Append=] |record| to |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
+      </li>
+      <li>
+        Set |observer|.{{ComputePressureObserver/[[LastRecordMap]]}}[|source|] to |record|.
       </li>
       <li>
         [=Queue a compute pressure observer task=].
