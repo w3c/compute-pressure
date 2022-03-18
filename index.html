@@ -454,7 +454,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           If |permissionState| is not [=permission/granted=], throw {{NotAllowedError}}.
         </li>
         <li>
-          If |source| is not a supported [=source type=], throw {{"NotSupportedError"}}.
+          If |source| is not a supported [=source type=], throw {{"TypeError"}}.
         </li>
         <li>
           If [=registered observer list=] for |source| is empty, activate the underlying
@@ -475,7 +475,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       following step, given the arguments |source:ComputePressureSource|:
       <ol class="algorithm">
         <li>
-          If |source| is not a supported [=source type=], throw {{"NotSupportedError"}}.
+          If |source| is not a supported [=source type=], throw {{"TypeError"}}.
         </li>
         <li>
           [=list/Remove=] from |this|.{{ComputePressureObserver/[[QueuedRecords]]}} all
