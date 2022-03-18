@@ -610,7 +610,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       ComputePressureSource source;
       ComputePressureState state;
       sequence&lt;ComputePressureFactor&gt; factors;
-      DOMHighResTimeStamp timestamp;
+      DOMHighResTimeStamp time;
     };
   </pre>
   <section>
@@ -632,9 +632,11 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     </p>
   </section>
   <section>
-    <h3>The <dfn>timestamp</dfn> attribute</h3>
+    <h3>The <dfn>time</dfn> attribute</h3>
     <p>
-      The {{ComputePressureRecord/timestamp}} attribute represents timestamp when the date was obtained from the system.
+      The {{ComputePressureRecord/time}} attribute represents a {{DOMHighResTimeStamp}} that corresponds to the
+      time the data was obtained from the system, relative to the [=time origin=] of the global object associated with
+      the {{ComputePressureObserver}} instance that generated the notification.
     </p>
   </section>
 </section>
@@ -785,7 +787,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           Let |frequency| be |observer|.{{ComputePressureObserver/[[Options]]}}.{{ComputePressureObserverOptions/frequency}}.
         </li>
         <li>
-          Let |timeDelta:DOMHighResTimeStamp| = |record|.{{ComputePressureRecord/timestamp}} - |timestamp|.
+          Let |timeDelta:DOMHighResTimeStamp| = |record|.{{ComputePressureRecord/time}} - |timestamp|.
         </li>
         <li>
           If |timeDelta| &gt; (1 / |frequency|), return true, otherwise return false.
@@ -915,7 +917,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         Set |record|.|factors:sequence&lt;ComputePressureFactor&gt;| be |factors|.
       </li>
       <li>
-        Set |record|.|timestamp:DOMHighResTimeStamp| be |timestamp|.
+        Set |record|.|time:DOMHighResTimeStamp| be |timestamp|.
       </li>
       <li>
         Return |record|.
