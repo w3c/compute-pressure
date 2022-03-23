@@ -445,21 +445,13 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The <dfn>constructor()</dfn> method</h3>
     <p>
-      The {{ComputePressureObserver/constructor()}} method, when invoked, MUST run the
-      following step, given the arguments |callback:ComputePressureUpdateCallback|
-      and |options:ComputePressureObserverOptions|:
+      The `new` {{ComputePressureObserver(callback, options)}} constructor steps are:
       <ol class="algorithm">
         <li>
-          Let |this:ComputePressureObserver| be a new the {{ComputePressureObserver}} object.
+          Set |this:ComputePressureObserver|.{{ComputePressureObserver/[[Options]]}} to |options:ComputePressureObserverOptions|.
         </li>
         <li>
-          Set |this|.{{ComputePressureObserver/[[Options]]}} to |options|.
-        </li>
-        <li>
-          Set |this|.{{ComputePressureObserver/[[Callback]]}} to |callback|.
-        </li>
-        <li>
-          Return |this|.
+          Set |this|.{{ComputePressureObserver/[[Callback]]}} to |callback:ComputePressureUpdateCallback|.
         </li>
       </ol>
     </p>
@@ -467,8 +459,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The <dfn>observe()</dfn> method</h3>
     <p>
-      The {{ComputePressureObserver/observe()}} method, when invoked, MUST run the
-      following step, given the arguments |source:ComputePressureSource|:
+      The {{ComputePressureObserver/observe(source)}} method steps are:
       <ol class="algorithm">
         <li>
           Let |permissionState:PermissionState| be the result of
@@ -478,7 +469,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
           If |permissionState| is not [=permission/granted=], throw {{NotAllowedError}}.
         </li>
         <li>
-          If |source| is not a [=supported source type=], throw {{"NotSupportedError"}}.
+          If |source:ComputePressureSource| is not a [=supported source type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
           If [=registered observer list=] for |source| is empty, activate the underlying
@@ -495,11 +486,10 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The <dfn>unobserve()</dfn> method</h3>
     <p>
-      The {{ComputePressureObserver/unobserve()}} method, when invoked, MUST run the
-      following step, given the arguments |source:ComputePressureSource|:
+      The {{ComputePressureObserver/unobserve(source)}} method steps are:
       <ol class="algorithm">
         <li>
-          If |source| is not a [=supported source type=], throw {{"NotSupportedError"}}.
+          If |source:ComputePressureSource| is not a [=supported source type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
           [=list/Remove=] from |this|.{{ComputePressureObserver/[[QueuedRecords]]}} all
@@ -522,8 +512,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The <dfn>disconnect()</dfn> method</h3>
     <p>
-      The {{ComputePressureObserver/disconnect()}} method, when invoked, MUST run the
-      following step:
+      The {{ComputePressureObserver/disconnect()}} method steps are:
       <ol class="algorithm">
         <li>
           [=list/Empty=] |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
@@ -558,8 +547,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
       </p>
     </aside>
     <p>
-      The {{ComputePressureObserver/takeRecords()}} method, when invoked, MUST run the
-      following step:
+      The {{ComputePressureObserver/takeRecords()}} method steps are:
       <ol class="algorithm">
         <li>
           Let |records| be a [=list/clone=] of |observer|.{{ComputePressureObserver/[[QueuedRecords]]}}.
@@ -577,7 +565,9 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     <h3>The <dfn>supportedSources</dfn> attribute</h3>
     <p>
       The {{ComputePressureObserver/supportedSources}} attribute is informing on the [=supported source type=] by the [=platform collector=].
-      When {{ComputePressureObserver/supportedSources}}'s attribute getter is called, MUST run the following steps:
+    </p>
+    <p>
+      The {{ComputePressureObserver/supportedSources}} getter steps are:
       <ol class="algorithm">
         <li>
           Let |sources| be a [=list=] of |source:ComputePressureSource|.
@@ -596,8 +586,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   <section>
     <h3>The static <dfn>requestPermission()</dfn> method</h3>
     <p>
-      The {{ComputePressureObserver/requestPermission()}} method, when invoked, MUST run the
-      following step:
+      The {{ComputePressureObserver/requestPermission()}} static method steps are:
       <ol class="algorithm">
         <li>
           If the [=relevant global object=] of [=this=] does not have [=transient activation=],
