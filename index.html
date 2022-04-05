@@ -48,7 +48,7 @@
 </script>
 <section id="abstract">
   <p>
-    The <cite>Compute Pressure API</cite> provides a way for websites to react to changes
+    The <cite>Compute and System Pressure API</cite> provides a way for websites to react to changes
     in the CPU consumption of the target device, such that websites can trade off
     resources for an improved user experience.
   </p>
@@ -81,8 +81,7 @@
   <p>
     In many cases, a device under high pressure appears to be unresponsive, as the operating
     system may fail to schedule the threads advancing the task that the user is waiting for. See also
-    <a href="https://github.com/wicg/compute-pressure/#goals--motivating-use-cases">Compute Pressure:
-    Use Cases</a>.
+    <a href="https://github.com/wicg/compute-pressure/#goals--motivating-use-cases">Use Cases</a>.
   </p>
 </section>
 <section>
@@ -136,7 +135,7 @@
   <section>
     <h3>Supported sources</h3>
     <p>
-      The Compute Pressure API currently defines the <dfn>supported source types</dfn> as the
+      The specification currently defines the <dfn>supported source types</dfn> as the
       Central [=Processing Unit=], also know  as the CPU, but intents to support other [=source types=]
       such as GPU (Graphical [=Processing Unit=]) in future levels of this specification.
       <aside class="note">
@@ -245,7 +244,7 @@
   </p>
   <p>
     A <a>user agent</a> can per [=origin=] deny observation of a
-    particular compute pressure [=source type=] by any
+    particular pressure [=source type=] by any
     [=implementation-defined=] reason, such as platform setting or user
     preference.
   </p>
@@ -260,7 +259,7 @@
       Permissions integration
     </h3>
     <p>
-      The Compute Pressure API is a [=powerful feature=] which is identified
+      The Compute and System Pressure API is a [=powerful feature=] which is identified
       by the name "`compute-pressure`".
     </p>
   </section>
@@ -313,8 +312,8 @@
 <section> <h2>Pressure States</h2>
   <p>
     <dfn>Pressure states</dfn> represents the minimal set of useful states that allows websites
-    to react to changes in compute pressure with minimal degration in quality or service, or user
-    experience.
+    to react to changes in compute and system pressure with minimal degration in quality or service,
+    or user experience.
   </p>
   <pre class="idl">
     enum ComputePressureState { "nominal", "fair", "serious", "critical" };
@@ -1060,7 +1059,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         <p>
           If the same [=pressure state=] and timestamp is observed by two origins, that
           would be a good indication that the origin is used by the same user on the
-          same machine. For this reason, Compute Pressure API limits reporting [=pressure
+          same machine. For this reason, the API limits reporting [=pressure
           state=] changes to one origin at the time.
         </p>
         <p>
@@ -1080,7 +1079,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
               happening.
             </li>
           </ul>
-          For this reason, the Compute Pressure API considers these two cases to have
+          For this reason, the API considers these two cases to have
           higher priority than whether the site is focused.
         </p>
       </section>
@@ -1104,8 +1103,8 @@ The Compute Pressure Observer API enables developers to understand the utilizati
     Examples
   </h2>
   <p>
-    As Compute Pressure is considered a [=powerful feature=], it requires user permission in
-    order to be used.
+    As the Compute and System Pressure API is considered a [=powerful feature=], it requires
+    user permission in order to be used.
   </p>
   <p>
     You can check whether the user has already granted permission using the [[[Permissions]]]
@@ -1123,7 +1122,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
         showExplanationAndToogleToAllowComputePressure();
         break;
       case "denied":
-        // Do nothing, user prefers not to use compute pressure.
+        // Do nothing, user denies the site access to the feature
         break;
     }
   </pre>
@@ -1150,7 +1149,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </pre>
   <aside class="example" title="How to use it in a worker with permission">
     <p>
-      Compute pressure is handled in a worker `worker.js`:
+      Pressure change is handled in a worker `worker.js`:
     </p>
     <pre class="js">
       const observer = new ComputePressureObserver(records => {
@@ -1208,7 +1207,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </pre>
   <p>
     In the following example we want to lower the number of concurrent video streams when the
-    compute pressure becomes critical. For the sake of simplicity we only consider this one state.
+    pressure becomes critical. For the sake of simplicity we only consider this one state.
   </p>
   <p>
     As lowering the amount of streams might not result in exiting the critical state,
@@ -1283,7 +1282,7 @@ The Compute Pressure Observer API enables developers to understand the utilizati
   </p>
   <aside class="note">
     The example uses 'gpu', which could be a potential future addition to the specification. It aims to show
-    that the API is extentable to support other types of compute pressure in the future
+    that the API is extentable to support other types of pressure in the future
   </aside>
   <pre class="example js" title="How to tell the observer to stop watching for state changes for a specific source">
     const observer = new ComputePressureObserver(records => { // do something with records. }));
