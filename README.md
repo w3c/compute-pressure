@@ -24,12 +24,12 @@
 - [Non-goals](#non-goals)
 - [Current approach - high-level states](#current-approach---high-level-states)
 - [Throttling](#throttling)
-- [Measuring compute pressure is complicated](#measuring-compute-pressure-is-complicated)
+- [Measuring pressure is complicated](#measuring-pressure-is-complicated)
 - [How to properly calculate pressure](#how-to-properly-calculate-pressure)
 - [Design considerations](#design-considerations)
 - [API flow illustrated](#api-flow-illustrated)
 - [Other considerations](#other-considerations)
-- [Compute Pressure Observer](#compute-pressure-observer)
+- [Observer API](#observer-api)
 - [Key scenarios](#key-scenarios)
   - [Adjusting the number of video feeds based on CPU usage](#adjusting-the-number-of-video-feeds-based-on-cpu-usage)
 - [Detailed design discussion](#detailed-design-discussion)
@@ -129,9 +129,9 @@ make the decisions enumerated above:
 
 ## Current approach - high-level states
 
-Compute Pressure defines a set of compute pressure states delivered to a web application to signal when adaptation of the workload is appropriate to ensure consistent quality of service. The signal is proactively delivered when the compute pressure trend is rising to allow timely adaptation. And conversely, when the pressure eases, a signal is provided to allow the web application to adapt accordingly.
+The API defines a set of  pressure states delivered to a web application to signal when adaptation of the workload is appropriate to ensure consistent quality of service. The signal is proactively delivered when the system pressure trend is rising to allow timely adaptation. And conversely, when the pressure eases, a signal is provided to allow the web application to adapt accordingly.
 
-Human-readable compute pressure states with semantics attached to them improve ergonomics for web developers and provide future-proofing against diversity of hardware. Furthermore, the high-level states abstract away complexities of system bottlenecks that cannot be adequately explained with low-level metrics such as processor clock speed and utilization.
+Human-readable pressure states with semantics attached to them improve ergonomics for web developers and provide future-proofing against diversity of hardware. Furthermore, the high-level states abstract away complexities of system bottlenecks that cannot be adequately explained with low-level metrics such as processor clock speed and utilization.
 
 For instance, a processor might have additional cores that work can be distributed to in certain cases, and it might be able to adjust clock speed. The faster clock speed a processor runs at, the more power it consumes which can affect battery and the temperature of the processor. A processor that runs hot may become unstable and crash or even burn.
 
@@ -150,9 +150,9 @@ A processor might be throttled, run slower than usual, resulting in a poorer use
 
 User's preferences affecting throttling may be configured by the user via operating system provided affordances while some may be preconfigured policies set by the hardware vendor. These factor are often dynamically adjusted taking user's preference into consideration.
 
-Measuring compute pressure is complicated
+Measuring pressure is complicated
 ---
-Using utilization as a measurement for compute pressure is suboptimal. What you may think 90% CPU utilization means:
+Using utilization as a measurement for pressure is suboptimal. What you may think 90% CPU utilization means:
 
 ```
  _____________________________________________________________________
@@ -185,7 +185,7 @@ Clock frequency is likewise a misleading measurement as the frequency is impacte
  
 How to properly calculate pressure
 ---
-Properly calculating compute pressure is architecture dependent and as such an implementation must consider multiple input signals that may vary by architecture, form factor, or other system characteristics. Possible signals could be, for example:
+Properly calculating pressure is architecture dependent and as such an implementation must consider multiple input signals that may vary by architecture, form factor, or other system characteristics. Possible signals could be, for example:
 
 * AC or DC power state
 * Thermals
@@ -195,7 +195,7 @@ A better metric than utilization could be CPI (clock ticks per instruction, reta
 
 Design considerations
 ---
-In order to enable web applications to react to changes in compute pressure with minimal degration in quality or service, or user experience, it is important to be notified while you can still adjust your workloads (temporal relevance), and not when the system is already being throttled. It is equally important to not notify too often for both privacy (data minimization) and developer ergonomics (conceptual weight minimization) reasons.
+In order to enable web applications to react to changes in pressure with minimal degration in quality or service, or user experience, it is important to be notified while you can still adjust your workloads (temporal relevance), and not when the system is already being throttled. It is equally important to not notify too often for both privacy (data minimization) and developer ergonomics (conceptual weight minimization) reasons.
 
 In order to expose the minimum data necessary at the highest level of abstraction that satisfy the use cases, we suggest the following buckets:
 
@@ -244,7 +244,7 @@ Another advantage is that this high-level abstraction allows for considering mul
 
 If we'd expose low-level raw values such as clock speed, a developer might hardcode in the application logic that everything above 90% the base clock is considered critical, which could be the case on some systems today, but wouldn't generalize well. For example, on a desktop form factor or on a properly cooled laptop with an advanced CPU, you might go way beyond the base clock with frequency boosting without negative impacting user experience, while a passively-cooled mobile device would likely behave differently.
 
-## Compute Pressure Observer
+## Observer API
 
 We propose a design similar to
 [Intersection Observer](https://w3c.github.io/IntersectionObserver/) to let
@@ -265,7 +265,7 @@ observer.observe();
 ### Adjusting the number of video feeds based on CPU usage
 
 In this more advanced example we lower the number of concurrent video streams
-if compute pressure becomes critical. As lowering the amount of streams might not result
+if pressure becomes critical. As lowering the amount of streams might not result
 in exiting the critical state, or at least not immediately, we use a strategy
 where we lower one stream at the time every 30 seconds while still in the
 critical state.
