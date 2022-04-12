@@ -603,8 +603,8 @@ of system resources such as the CPU.
               [=requesting permission to use=] the [=powerful feature=] named "`pressure`".
             </li>
             <li>
-              [=Queue a global task=] on the [=relevant global object=] of [=this=] using
-              the [=permissions task source=] to [=resolve=] |result| with |permissionState|.
+              [=Queue a global task=] on the [=permissions task source=] with [=this=]'s
+              [=relevant global object=] to [=resolve=] |result| with |permissionState|.
             </li>
           </ol>
         </li>
@@ -917,7 +917,7 @@ of system resources such as the CPU.
         Set |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|] to |record|.
       </li>
       <li>
-        [=Queue a pressure observer task=].
+        [=Queue a pressure observer task=] with |observer|'s [=relevant global object=].
       </li>
     </ol>
   </section>
@@ -955,7 +955,7 @@ of system resources such as the CPU.
       The <dfn>PressureObserver task source</dfn> is a [=task source=] used for scheduling tasks to [[[#notify-observers]]].
     </p>
     <p>
-      To <dfn>queue a pressure observer task</dfn> run these steps:
+      To <dfn>queue a pressure observer task</dfn> given |relevantGlobal| as input, run these steps:
     </p>
     <ol class="algorithm">
       <li>
@@ -965,7 +965,7 @@ of system resources such as the CPU.
         Set the <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>'s [=pressure observer task queued=] to true.
       </li>
       <li>
-        [=Queue=] a [=task=] on the [=PressureObserver task source=] to [[[#notify-observers]]].
+        [=Queue a global task=] on [=PressureObserver task source=] with |relevantGlobal| to [[[#notify-observers]]].
       </li>
     </ol>
   </section>
