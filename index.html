@@ -41,7 +41,7 @@
     xref: {
       profile: "web-platform",
       specs: [
-        "permissions", "hr-time"
+        "permissions", "hr-time", "picture-in-picture"
       ]
     }
   };
@@ -735,7 +735,9 @@ of system resources such as the CPU.
           <li>
             Their [=origin=] is [=same origin-domain=] with the
             <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
-            currently focused area</a> document.
+            currently focused area</a> document, or an
+            <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
+            initiator of an active Picture-in-Picture session</a>.
           </li>
         </ul>
         Reading are available for workers matching the following critetia:
@@ -746,7 +748,9 @@ of system resources such as the CPU.
           <li>
             Their [=origin=] is [=same origin-domain=] with the
             <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
-            currently focused area</a> document.
+            currently focused area</a> document, or an
+            <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
+            initiator of an active Picture-in-Picture session</a>.
           </li>
         </ul>
       </aside>
@@ -775,6 +779,14 @@ of system resources such as the CPU.
           If |o|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with
           <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
             currently focused area</a>'s [=origin=], return true.
+        </li>
+        <li>
+          [=list/For each=] |origin| in
+          <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
+            initiators of active Picture-in-Picture sessions</a>:
+          <ol>
+            If |o|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with |origin|, return true.
+          </ol>
         </li>
         </li>
         <li>
