@@ -472,8 +472,7 @@ of system resources such as the CPU.
           If |source:PressureSource| is not a [=supported source type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
-          If [=registered observer list=] for |source| is empty, activate the underlying
-          [=platform collector=] for |source|.
+          If the underlying [=platform collector=] for |source| is inactive, activate it.
         </li>
         <li>
           [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
@@ -503,8 +502,9 @@ of system resources such as the CPU.
           |source| for which [=this=] is the [=registered observer=].
         </li>
         <li>
-          If the above [=registered observer list=] becomes [=list/empty=], deactivate the
-          underlying [=platform collector=] for the associated |source|.
+          If the above [=registered observer list=] becomes [=list/empty=], consider
+          a potential deactivation of the underlying [=platform collector=] for the
+          associated |source|, in case there are no other consumers.
         </li>
       </ol>
     </p>
@@ -525,8 +525,9 @@ of system resources such as the CPU.
           all supported [=source types=] for which [=this=] is the [=observer=].
         </li>
         <li>
-          If any [=registered observer list=] becomes [=list/empty=], deactivate the
-          underlying [=platform collector=] for the associated |source|.
+          If the above [=registered observer list=] becomes [=list/empty=], consider
+          a potential deactivation of the underlying [=platform collector=] for the
+          associated |source|, in case there are no other consumers.
         </li>
       </ol>
     </p>
@@ -1021,7 +1022,8 @@ of system resources such as the CPU.
         Remove all [=registered observers=] from all [=registered observer lists=].
       </li>
       <li>
-        Deactivate the underlying [=platform collector=] for all [=supported source types=].
+        Consider a potential deactivation of the underlying [=platform collector=]
+        for all [=supported source types=], in case there are no other consumers.
       </li>
     </ol>
   </section>
