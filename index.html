@@ -997,6 +997,34 @@ of system resources such as the CPU.
       </li>
     </ol>
   </section>
+  <section id="unload-observers">
+    <h3>Unload Pressure Observers</h3>
+    As one of the [=unloading document cleanup steps=], run these steps:
+    <ol class="algorithm">
+      <li>
+        Let |unloadSet| be a new [=set=] of all [=observers=] in
+        <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>’s
+        [=registered observer lists=].
+      </li>
+      <li>
+        [=list/For each=] |observer:PressureObserver| of |unloadSet|:
+        <ol>
+          <li>
+            [=list/Empty=] |observer|.{{PressureObserver/[[QueuedRecords]]}}.
+          </li>
+          <li>
+            [=map/Clear=] |this|.{{PressureObserver/[[LastRecordMap]]}}.
+          </li>
+        </ol>
+      </li>
+      <li>
+        Remove all [=registered observers=] from all [=registered observer lists=].
+      </li>
+      <li>
+        Deactivate the underlying [=platform collector=] for all [=supported source types=].
+      </li>
+    </ol>
+  </section>
 </section>
 
 <section>
