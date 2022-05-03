@@ -270,8 +270,7 @@
     Internal Slot Definitions
   </h3>
   <p>
-    Each [=similar-origin window agent=], [=dedicated worker agent=] and [=shared worker agent=]
-    has:
+    Each [=global object=] has:
     <ul>
       <li>
         a <dfn>pressure observer task queued</dfn> (a boolean), which is initially false.
@@ -686,7 +685,7 @@ of system resources such as the CPU.
 <section id="life-cycle">
   <h3>Life-cycle and garbage collection</h3>
   <p>
-    The <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agents</a> have a
+    Each [=global object=] has a
     strong reference to [=registered observers=] in their [=registered observer list=]
     (one per source).
   </p>
@@ -699,8 +698,8 @@ of system resources such as the CPU.
       and {{PressureObserver/disconnect()}}.
     </p>
     <p>
-      This means that {{PressureObserver}} |observer:PressureObserver| will
-      remain alive until both of these conditions hold:
+      This means that a {{PressureObserver}} object |observer:PressureObserver| will
+      remain alive (thus not be garbage collection) until both of these conditions hold:
       <ul>
         <li>
           There are no scripting references to the |observer|.
@@ -960,26 +959,28 @@ of system resources such as the CPU.
     </p>
     <ol class="algorithm">
       <li>
-        If the <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>'s [=pressure observer task queued=] is true, then return.
+        If the |relevantGlobal|'s [=pressure observer task queued=] is true, then return.
       </li>
       <li>
-        Set the <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>'s [=pressure observer task queued=] to true.
+        Set the |relevantGlobal|'s [=pressure observer task queued=] to true.
       </li>
       <li>
-        [=Queue a global task=] on [=PressureObserver task source=] with |relevantGlobal| to [[[#notify-observers]]].
+        [=Queue a global task=] on [=PressureObserver task source=] with |relevantGlobal| to [=notify pressure observers=].
       </li>
     </ol>
   </section>
   <section id="notify-observers">
     <h3>Notify Pressure Observers</h3>
+    <p>
+      To <dfn>notify pressure observers</dfn> given |relevantGlobal| as input, run these steps: 
+    </p>
     <ol class="algorithm">
       <li>
-        Set the <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>'s [=pressure observer task queued=] to false.
+        Set |relevantGlobal|'s [=pressure observer task queued=] to false.
       </li>
       <li>
         Let |notifySet| be a new [=set=] of all [=observers=] in
-        <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>’s
-        [=registered observer lists=].
+        |relevantGlobal|’s [=registered observer lists=].
       </li>
       <li>
         [=list/For each=] |observer:PressureObserver| of |notifySet|:
@@ -999,13 +1000,24 @@ of system resources such as the CPU.
     </ol>
   </section>
   <section id="unload-observers">
-    <h3>Unload Pressure Observers</h3>
-    As one of the [=unloading document cleanup steps=], run these steps:
+    <h3>Handle unloading</h3>
+    <li>
+      Given {{WorkerGlobalScope}} |o|, once |o|'s [=WorkerGlobalScope/closing=]
+      flag is set to true,
+      run the [=unload all pressure observers=] steps with the [=global object=] |o|.
+    </li>
+    <li>
+      As one of the [=unloading document cleanup steps=] given {{Document}} |document|,
+      run the [=unload all pressure observers=] steps with |document|'s [=relevant global object=].
+    </li>
+    <p>
+      To <dfn>unload all pressure observers</dfn> given [=global object=] |relevantGlobal|,
+      run these steps:
+    </p>
     <ol class="algorithm">
       <li>
         Let |unloadSet| be a new [=set=] of all [=observers=] in
-        <a href="https://tc39.es/ecma262/#surrounding-agent">surrounding agent</a>’s
-        [=registered observer lists=].
+        |relevantGlobal|’s [=registered observer lists=].
       </li>
       <li>
         [=list/For each=] |observer:PressureObserver| of |unloadSet|:
