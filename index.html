@@ -365,9 +365,9 @@
   </p>
 </section>
 
-<section> <h2>Pressure Factors</h2>
+<section> <h2>Contributing Factors</h2>
   <p>
-    <dfn>Pressure factors</dfn> represents the factors contributing to the system performance and current [=pressure state=].
+    <dfn>Contributing factors</dfn> represents the factors contributing to the system performance and current [=pressure state=].
     In case the [=pressure state=] is nominal, the {{PressureRecord.factors}} will always an [=list/empty=]
     sequence.
   </p>
@@ -388,7 +388,7 @@
     enum PressureFactor { "thermal", "power-supply" };
   </pre>
   <p>
-    The <dfn>PressureFactor</dfn> enum represents the [=pressure factors=]:
+    The <dfn>PressureFactor</dfn> enum represents the [=contributing factors=]:
   </p>
   <p>
     <ul class="pressure-factors">
@@ -650,7 +650,7 @@ of system resources such as the CPU.
   <section>
     <h3>The <dfn>factors</dfn> attribute</h3>
     <p>
-      The {{PressureRecord/factor}} attribute represents a [=sequence=] of the current [=pressure factors=].
+      The {{PressureRecord/factor}} attribute represents a [=sequence=] of the current [=contributing factors=].
     </p>
   </section>
   <section>
@@ -882,7 +882,7 @@ of system resources such as the CPU.
         </li>
         <aside class="note">
           The |data| sample and mapping between |data| sample, and [=pressure states=]
-          and [=pressure factors=] contributing to the current state,
+          and [=contributing factors=] to the current state,
           is [=implementation-defined=] and may use many different metrics. For instance,
           for CPU, it might consider processor frequency and utilization, as well
           as thermal conditions.
