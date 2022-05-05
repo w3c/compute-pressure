@@ -367,7 +367,7 @@
 
 <section> <h2>Pressure Factors</h2>
   <p>
-    <dfn>Pressure factors</dfn> represents factors affecting system performance and current [=pressure state=].
+    <dfn>Pressure factors</dfn> represents the factors contributing to the system performance and current [=pressure state=].
     In case the [=pressure state=] is nominal, the {{PressureRecord.factors}} will always an [=list/empty=]
     sequence.
   </p>
@@ -837,14 +837,14 @@ of system resources such as the CPU.
           Let |record:PressureRecord| be |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
-          If |record|.{{PressureRecord/state}} is not equal to |state|, return false.
+          If |record|.{{PressureRecord/state}} is not equal to |state|, return true.
         </li>
         <li>
           If |record|.{{PressureRecord/factors}} and |factors| does not [=list/contain=] the same [=list/items=],
-          return false.
+          return true.
         </li>
         <li>
-          Return true.
+          Return false.
         </li>
       </ol>
     </p>
@@ -1033,14 +1033,14 @@ of system resources such as the CPU.
     </p>
     <p>
       When a {{Document}} |document| becomes [=Document/fully active=],
-      for each non-[=list/empty=] [=registered observer list=] associated [=source type=] |source|,
+      for each non-[=list/empty=] [=registered observer list=] associated the [=source type=] |source|,
       activate [=data delivery=] of |source| data to |document|'s [=relevant global object=].
     </p>
     <p>
       When a worker with associated {{WorkerGlobalScope}} |relevantGlobal| becomes
       an <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
       active needed workers</a>,
-      for each non-[=list/empty=] [=registered observer list=] associated [=source type=] |source|,
+      for each non-[=list/empty=] [=registered observer list=] associated the [=source type=] |source|,
       activate [=data delivery=] of |source| data to |document|'s [=relevant global object=].
     </p>
     <aside class="note">
