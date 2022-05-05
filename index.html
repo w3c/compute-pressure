@@ -203,7 +203,7 @@
 
 <section> <h2>Platform primitives</h2>
   <p>
-    The term <dfn>platform collector</dfn> refers to platform interface, with which the [=user agent=] interacts to
+    The [=platform collector=] refers to a platform interface, with which the [=user agent=] interacts to
     obtain the telemetry readings required by this specification.
   </p>
   <p>
@@ -277,6 +277,9 @@
       </li>
       <li>
         a <dfn>registered observer list</dfn> per supported [=source type=], which is initially empty.
+      </li>
+      <li>
+        a reference to an underlying <dfn>platform collector</dfn> as detailed in [[[#platform-primitives]]].
       </li>
     </ul>
     A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{PressureObserver}} object).
@@ -471,12 +474,14 @@ of system resources such as the CPU.
           If |source:PressureSource| is not a [=supported source type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
-          If the underlying [=platform collector=] for |source| is inactive, activate it.
+          Let |relevantGlobal| be [=this=]'s [=relevant global object=].
         </li>
         <li>
           [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
-          to [=registered observer list=] for |source|.
+          to |relevantGlobal|'s [=registered observer list=] for |source|.
         </li>
+        <li>
+          Activate [=data delivery=] of |source| data to |relevantGlobal|.
         </li>
       </ol>
     </p>
@@ -497,13 +502,15 @@ of system resources such as the CPU.
           [=map/Remove=] |this|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
-          Remove any [=registered observer=] from [=registered observer list=] for
+          Let |relevantGlobal| be [=this=]'s [=relevant global object=].
+        </li>
+        <li>
+          Remove any [=registered observer=] from |relevantGlobal|'s [=registered observer list=] for
           |source| for which [=this=] is the [=registered observer=].
         </li>
         <li>
-          If the above [=registered observer list=] becomes [=list/empty=], consider
-          a potential deactivation of the underlying [=platform collector=] for the
-          associated |source|, in case there are no other consumers.
+          If the above [=registered observer list=] is [=list/empty=],
+          deactivate [=data delivery=] of |source| data to |relevantGlobal|.
         </li>
       </ol>
     </p>
@@ -520,13 +527,15 @@ of system resources such as the CPU.
           [=map/Clear=] |this|.{{PressureObserver/[[LastRecordMap]]}}.
         </li>
         <li>
-          Remove any [=registered observer=] from [=registered observer list=] for
+          Let |relevantGlobal| be [=this=]'s [=relevant global object=].
+        </li>
+        <li>
+          Remove any [=registered observer=] from |relevantGlobal|'s' [=registered observer list=] for
           all supported [=source types=] for which [=this=] is the [=observer=].
         </li>
         <li>
-          If the above [=registered observer list=] becomes [=list/empty=], consider
-          a potential deactivation of the underlying [=platform collector=] for the
-          associated |source|, in case there are no other consumers.
+          If the above [=registered observer list=] is [=list/empty=],
+          deactivate [=data delivery=] of |source| data to |relevantGlobal|.
         </li>
       </ol>
     </p>
@@ -757,26 +766,26 @@ of system resources such as the CPU.
       The <dfn>passes privacy test</dfn> steps given the argument |observer:PressureObserver|, are as follows:
       <ol>
         <li>
-          Let |o| be |observer|'s [=relevant global object=].
+          Let |relevantGlobal| be |observer|'s [=relevant global object=].
         </li>
         <li>
-          If |o| is a {{Window}} object:
+          If |relevantGlobal| is a {{Window}} object:
           <ol>
             <li>
-              If |o|'s [=associated document=] is not [=Document/fully active=], return false.
+              If |relevantGlobal|'s [=associated document=] is not [=Document/fully active=], return false.
             </li>
           </ol>
         </li>
         <li>
-          If |o| is a {{WorkerGlobalScope}} object:
+          If |relevantGlobal| is a {{WorkerGlobalScope}} object:
           <ol>
             <li>
-              If |o|'s relevant worker is not a <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
+              If |relevantGlobal|'s relevant worker is not a <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
               active needed worker</a>, return false.
             </li>
           </ol>
         <li>
-          If |o|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with
+          If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with
           <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
             currently focused area</a>'s [=origin=], return true.
         </li>
@@ -785,7 +794,7 @@ of system resources such as the CPU.
           <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
             initiators of active Picture-in-Picture sessions</a>:
           <ol>
-            If |o|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with |origin|, return true.
+            If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with |origin|, return true.
           </ol>
         </li>
         </li>
@@ -841,10 +850,20 @@ of system resources such as the CPU.
     </p>
   </section>
   <section>
-    <h3>Respond to new platform collector readings</h3>
+    <h3>Data delivery</h3>
     <p>
-      When a [=implementation-defined=] |data| sample of [=source type=] |source:PressureSource| is
-      obtained from the [=platform collector=], the [=user agent=] MUST run these steps:
+      [=Data delivery=] from a [=platform collector=] can be activate and deactivated in an
+      [=implementation-defined=] manner per [=source type=] and [=global object=].
+    </p>
+    <aside class="note">
+      It is recommended that the [=platform collector=] suspends low-level data polling
+      when there is no active [=data delivery=] to any {{PressureObserver}} [=relevant global object=].
+    </aside>
+    <p>
+      The <dfn>data delivery</dfn> steps that are run when
+      an [=implementation-defined=] |data| sample of [=source type=] |source:PressureSource| is
+      obtained from [=global object=] |relevantGlobal|'s [=platform collector=],
+      are as follows:
       <ol>
         <li>
           Let |source:PressureSource| be the [=source type=] of the |data| sample.
@@ -859,7 +878,7 @@ of system resources such as the CPU.
         </li>
         <li>
           Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
-          obtained from the [=platform collector=].
+          obtained from the |relevantGlobal|'s [=platform collector=].
         </li>
         <aside class="note">
           The |data| sample and mapping between |data| sample, and [=pressure states=]
@@ -872,7 +891,8 @@ of system resources such as the CPU.
           If |state| has not changed since last sample for |source|, abort these steps.
         </li>
         <li>
-          [=list/For each=] |observer:PressureObserver| in the [=registered observer list=] for |source|:
+          [=list/For each=] |observer:PressureObserver| in |relevantGlobal|'s
+          [=registered observer list=] for |source|:
           <ol>
             <li>
               If running [=passes privacy test=] with |observer|
@@ -950,7 +970,7 @@ of system resources such as the CPU.
     </ol>
   </section>
   <section>
-    <h3>Queue a PressureObserver Task</h3>
+    <h3>Queue a Pressure Observer Task</h3>
     <p>
       The <dfn>PressureObserver task source</dfn> is a [=task source=] used for scheduling tasks to [[[#notify-observers]]].
     </p>
@@ -972,7 +992,7 @@ of system resources such as the CPU.
   <section id="notify-observers">
     <h3>Notify Pressure Observers</h3>
     <p>
-      To <dfn>notify pressure observers</dfn> given |relevantGlobal| as input, run these steps: 
+      To <dfn>notify pressure observers</dfn> given |relevantGlobal| as input, run these steps:
     </p>
     <ol class="algorithm">
       <li>
@@ -999,45 +1019,54 @@ of system resources such as the CPU.
       </li>
     </ol>
   </section>
-  <section id="unload-observers">
-    <h3>Handle unloading</h3>
-    <li>
-      Given {{WorkerGlobalScope}} |o|, once |o|'s [=WorkerGlobalScope/closing=]
-      flag is set to true,
-      run the [=unload all pressure observers=] steps with the [=global object=] |o|.
-    </li>
-    <li>
-      As one of the [=unloading document cleanup steps=] given {{Document}} |document|,
-      run the [=unload all pressure observers=] steps with |document|'s [=relevant global object=].
-    </li>
+  <section>
+    <h3>Handling change of fully active</h3>
     <p>
-      To <dfn>unload all pressure observers</dfn> given [=global object=] |relevantGlobal|,
-      run these steps:
+      When a {{Document}} |document| is no longer [=Document/fully active=],
+      deactivate [=data delivery=] of data of all [=supported source types=] to |document|'s [=relevant global object=].
     </p>
-    <ol class="algorithm">
-      <li>
-        Let |unloadSet| be a new [=set=] of all [=observers=] in
-        |relevantGlobal|’s [=registered observer lists=].
-      </li>
-      <li>
-        [=list/For each=] |observer:PressureObserver| of |unloadSet|:
-        <ol>
-          <li>
-            [=list/Empty=] |observer|.{{PressureObserver/[[QueuedRecords]]}}.
-          </li>
-          <li>
-            [=map/Clear=] |this|.{{PressureObserver/[[LastRecordMap]]}}.
-          </li>
-        </ol>
-      </li>
-      <li>
-        Remove all [=registered observers=] from all [=registered observer lists=].
-      </li>
-      <li>
-        Consider a potential deactivation of the underlying [=platform collector=]
-        for all [=supported source types=], in case there are no other consumers.
-      </li>
-    </ol>
+    <p>
+      When a worker with associated {{WorkerGlobalScope}} |relevantGlobal| is no longer
+      an <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
+      active needed workers</a>,
+      deactivate [=data delivery=] of data of all [=supported source types=] to |relevantGlobal|.
+    </p>
+    <p>
+      When a {{Document}} |document| becomes [=Document/fully active=],
+      for each non-[=list/empty=] [=registered observer list=] associated [=source type=] |source|,
+      activate [=data delivery=] of |source| data to |document|'s [=relevant global object=].
+    </p>
+    <p>
+      When a worker with associated {{WorkerGlobalScope}} |relevantGlobal| becomes
+      an <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
+      active needed workers</a>,
+      for each non-[=list/empty=] [=registered observer list=] associated [=source type=] |source|,
+      activate [=data delivery=] of |source| data to |document|'s [=relevant global object=].
+    </p>
+    <aside class="note">
+      When a document is no longer [=Document/fully active=] (or associated workers no longer
+      <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
+      active needed workers</a>), like when
+      entering the back/forward cache, or "BFCache" for short, then no events are send to the pressure observers
+      (see [=passes privacy test=])
+      in accordance with <a href="https://www.w3.org/TR/design-principles/#listen-fully-active">
+      Web Platform Design Principles: Listen for changes to fully active status</a>. This means that the
+      system can safely deactivate [=data delivery=] from the associated [=platform collector=],
+      but also that it needs to be re-activated when the opposite happens.
+    </aside>
+  </section>
+
+  <section id="unload-observers">
+    <h3>Handle unloading document and closing of workers</h3>
+    <p>
+      When a worker with associated {{WorkerGlobalScope}} |relevantGlobal|,
+      once |relevantGlobal|'s [=WorkerGlobalScope/closing=] flag is set to true,
+      deactivate [=data delivery=] for all [=supported source types=] to |relevantGlobal|.
+    </p>
+    <p>
+      As one of the [=unloading document cleanup steps=] given {{Document}} |document|,
+      deactivate [=data delivery=] for all [=supported source types=] to |document|'s [=relevant global object=].
+    </p>
   </section>
 </section>
 
