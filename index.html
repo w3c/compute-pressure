@@ -163,14 +163,14 @@
       at which the [=user agent=] obtains telemetry readings from the underlying platform.
     </p>
     <p>
-      The [=sampling frequency=] is equal to the [=requested sampling frequency=] if the [=user agent=]
+      The [=sampling frequency=] is equal to the [=requested reporting frequency=] if the [=user agent=]
       can support it.
     </p>
     <p>
-      The [=sampling frequency=] differs from the [=requested sampling frequency=] in the following cases:
+      The [=sampling frequency=] differs from the [=requested reporting frequency=] in the following cases:
       <ul>
         <li>
-          The [=requested sampling frequency=] exceeds upper or lower sampling frequency bounds
+          The [=requested reporting frequency=] exceeds upper or lower sampling frequency bounds
           supported or accepted by the underlying platform and [=user agent=]<sup>†</sup>.
         </li>
       </ul>
@@ -193,10 +193,10 @@
     </p>
     <aside class="note">
       In case there are multiple instances of {{PressureObserver}} active with different
-      [=sampling frequencies=], it is up to the [=user agent=] to set a [=platform collector=]
-      level [=sampling frequency=] that best fulfills these requests, while
-      making sure that the [=reporting frequency=] of all {{PressureObserver}}s does
-      not exceed their respective [=requested sampling frequencies=].
+      [=requested reporting frequencies=], it is up to the [=user agent=] to set a
+      [=platform collector=] level [=sampling frequency=] that best fulfills these requests,
+      while making sure that the [=reporting frequency=] of all {{PressureObserver}}s does
+      not exceed their respective [=requested reporting frequencies=].
     </aside>
   </section>
 </section>
@@ -673,14 +673,14 @@ of system resources such as the CPU.
   <section>
     <h3>The <dfn>frequency</dfn> member</h3>
     <p>
-      The {{PressureObserverOptions/frequency}} member represents the <dfn>requested sampling
+      The {{PressureObserverOptions/frequency}} member represents the <dfn>requested reporting
       frequency</dfn> in hertz.
     </p>
     <aside class="note">
       <p>
         For slow reporting frequency (less than 1hz), it is common to use seconds and talk about
         period instead of frequency. Fortunately, it is easy to convert between the two, as hertz
-        is rotations per second. If you want to request a sampling frequency of 10 seconds, then
+        is rotations per second. If you want to request a reporting frequency of 10 seconds, then
         just use the value of 0.1.
       </p>
       <p>
@@ -803,7 +803,7 @@ of system resources such as the CPU.
         </li>
       </ol>
       <aside class="note">
-        As there might be multiple observers, each with a different [=requested sampling frequency=], the underlying
+        As there might be multiple observers, each with a different [=requested reporting frequency=], the underlying
         [=platform collector=] will need to use a [=sampling frequency=] that fulfills all these requirements. This also
         means that not every data sample from the [=platform collector=] needs to be delivered to each active
         observer.
