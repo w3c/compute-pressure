@@ -798,9 +798,6 @@ of system resources such as the CPU.
       The <dfn>passes privacy test</dfn> steps given the argument |observer:PressureObserver|, are as follows:
       <ol>
         <li>
-          Let |topLevelBC| to the [=browsing context=] with [=top-level browsing context/system focus=] if one exists, or return false.
-        </li>
-        <li>
           Let |relevantGlobal| be |observer|'s [=relevant global object=].
         </li>
         <li>
@@ -821,15 +818,6 @@ of system resources such as the CPU.
           </ol>
         </li>
         <li>
-          Let |focusedDocument| be the |topLevelBC|'s
-          <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
-            currently focused area</a>'s [=Node/node document=].
-        </li>
-        <li>
-          If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with
-          |focusedDocument|'s [=origin=], return true.
-        </li>
-        <li>
           [=list/For each=] |origin| in
           <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
             initiators of active Picture-in-Picture sessions</a>:
@@ -837,6 +825,17 @@ of system resources such as the CPU.
             If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with |origin|, return true.
           </ol>
         </li>
+        <li>
+          Let |topLevelBC| to the [=browsing context=] with [=top-level browsing context/system focus=] if one exists, or return false.
+        </li>
+        <li>
+          Let |focusedDocument| be the |topLevelBC|'s
+          <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
+            currently focused area</a>'s [=Node/node document=].
+        </li>
+        <li>
+          If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with
+          |focusedDocument|'s [=origin=], return true.
         </li>
         <li>
           Otherwise, return false.
