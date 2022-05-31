@@ -41,7 +41,7 @@
     xref: {
       profile: "web-platform",
       specs: [
-        "permissions", "hr-time", "picture-in-picture"
+        "permissions", "permissions-policy", "hr-time", "picture-in-picture"
       ]
     }
   };
@@ -260,9 +260,45 @@
     </h3>
     <p>
       The Compute Pressure API is a [=powerful feature=] which is identified
-      by the name "`pressure`".
+      by the name "`compute-pressure`".
     </p>
   </section>
+</section>
+
+<section>
+  <h3>
+    Policy control
+  </h3>
+  <p>
+    The Compute Pressure API defines a [=policy-controlled feature=]
+    identified by the string `"compute-pressure"`. Its [=default
+    allowlist=] is `["self"]`.
+  </p>
+  <aside class="note">
+    <p>
+      The <a>default allowlist</a> of `["self"]` allows usage in
+      same-origin nested frames but prevents third-party content from using
+      the feature.
+    </p>
+    <p>
+      Third-party usage can be selectively enabled by adding
+      `allow="compute-pressure"` attribute to the frame container element:
+    </p>
+    <pre class="example html" title=
+    "Enabling compute pressure on remote content">
+      &lt;iframe src="https://third-party.com" allow="compute-pressure"/&gt;&lt;/iframe&gt;
+    </pre>
+    <p>
+      Alternatively, the Compute Pressure API can be disabled completely by
+      specifying the permissions policy in a HTTP response header:
+    </p>
+    <pre class="example http" title="Feature Policy over HTTP">
+      Permissions-Policy: {"compute-pressure": []}
+    </pre>
+    <p>
+      See [[[PERMISSIONS-POLICY]]] for more details.
+    </p>
+  </aside>
 </section>
 
 <section>
@@ -464,8 +500,17 @@ of system resources such as the CPU.
       The {{PressureObserver/observe(source)}} method steps are:
       <ol class="algorithm">
         <li>
+          Let |document:Document| be [=this=]'s [=relevant settings
+          object=]'s [=associated Document=].
+        </li>
+        <li>
+          If |document| is not null and is not [=allowed to use=] the [=policy-controlled
+          feature=] named "`compute-pressure`", throw {{NotAllowedError}}.
+        </li>
+        <aside class="issue" data-number="110"></aside>
+        <li>
           Let |permissionState:PermissionState| be the result of
-          [=getting the current permission state=] with "`pressure`".
+          [=getting the current permission state=] with "`compute-pressure`".
         </li>
         <li>
           If |permissionState| is not [=permission/granted=], throw {{NotAllowedError}}.
@@ -609,7 +654,7 @@ of system resources such as the CPU.
           <ol>
             <li>
               Let |permissionState:PermissionState| be the result of
-              [=requesting permission to use=] the [=powerful feature=] named "`pressure`".
+              [=requesting permission to use=] the [=powerful feature=] named "`compute-pressure`".
             </li>
             <li>
               [=Queue a global task=] on the [=permissions task source=] with [=this=]'s
@@ -735,29 +780,16 @@ of system resources such as the CPU.
     <h3>Supporting algorithms</h3>
     <p>
       <aside class="note">
-        Readings are available for [=documents=] (incl. [=iframes=] and popup windows),
+        Readings are available for [=documents=] (incl. [=iframes=] and popup windows) and workers,
         matching the following criteria:
         <ul>
           <li>
-            They are [=Document/fully active=] [=documents=].
+            They are [=Document/fully active=] [=documents=], or
+            they are <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">active needed workers</a>.
           </li>
           <li>
-            Their [=origin=] is [=same origin-domain=] with the
-            <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
-            currently focused area</a> document, or an
-            <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
-            initiator of an active Picture-in-Picture session</a>.
-          </li>
-        </ul>
-        Reading are available for workers matching the following critetia:
-        <ul>
-          <li>
-            They are <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">active needed workers</a>.
-          </li>
-          <li>
-            Their [=origin=] is [=same origin-domain=] with the
-            <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
-            currently focused area</a> document, or an
+            Their [=origin=] is [=same origin-domain=] with the [=Node/node document|document=] containing the
+            <a href="https://html.spec.whatwg.org/multipage/interaction.html#focused">focused</a> [=node=], or an
             <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
             initiator of an active Picture-in-Picture session</a>.
           </li>
@@ -765,6 +797,9 @@ of system resources such as the CPU.
       </aside>
       The <dfn>passes privacy test</dfn> steps given the argument |observer:PressureObserver|, are as follows:
       <ol>
+        <li>
+          Let |topLevelBC| to the [=browsing context=] with [=top-level browsing context/system focus=] if one exists, or return false.
+        </li>
         <li>
           Let |relevantGlobal| be |observer|'s [=relevant global object=].
         </li>
@@ -784,10 +819,15 @@ of system resources such as the CPU.
               active needed worker</a>, return false.
             </li>
           </ol>
+        </li>
+        <li>
+          Let |focusedDocument| be the |topLevelBC|'s
+          <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
+            currently focused area</a>'s [=Node/node document=].
+        </li>
         <li>
           If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with
-          <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
-            currently focused area</a>'s [=origin=], return true.
+          |focusedDocument|'s [=origin=], return true.
         </li>
         <li>
           [=list/For each=] |origin| in
@@ -1193,7 +1233,7 @@ of system resources such as the CPU.
   </p>
   <pre class="example js" title="How to check whether user has granted permission">
     const { state } = await navigator.permissions.query({
-      name: "pressure"
+      name: "compute-pressure"
     });
     switch (state) {
       case "granted":
