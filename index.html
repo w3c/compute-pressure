@@ -41,7 +41,7 @@
     xref: {
       profile: "web-platform",
       specs: [
-        "permissions", "permissions-policy", "hr-time", "picture-in-picture"
+        "permissions", "permissions-policy", "hr-time", "picture-in-picture", "mediacapture-streams"
       ]
     }
   };
@@ -781,7 +781,8 @@ of system resources such as the CPU.
             Their [=origin=] is [=same origin-domain=] with the [=Node/node document|document=] containing the
             <a href="https://html.spec.whatwg.org/multipage/interaction.html#focused">focused</a> [=node=], or an
             <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
-            initiator of an active Picture-in-Picture session</a>.
+            initiator of an active Picture-in-Picture session</a>, or the browsing [=context is capturing=],
+            including microphone, camera and display.
           </li>
         </ul>
       </aside>
@@ -816,7 +817,13 @@ of system resources such as the CPU.
           </ol>
         </li>
         <li>
-          Let |topLevelBC| to the [=browsing context=] with [=top-level browsing context/system focus=] if one exists, or return false.
+          If |relevantGlobal|'s [=browsing context=] is [=context is capturing|capturing=], return true.
+        </li>
+        <li>
+          Let |topLevelBC| be |relevantGlobal|'s [=browsing context=]'s [=top-level browsing context=].
+        </li>
+        <li>
+          If |topLevelBC| does not have [=top-level browsing context/system focus=], return false.
         </li>
         <li>
           Let |focusedDocument| be the |topLevelBC|'s
