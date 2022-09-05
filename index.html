@@ -863,7 +863,7 @@ of system resources such as the CPU.
           If |timeDelta| &gt; (1 / |samplerate|), return true, otherwise return false.
         </li>
       </ol>
-      The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|,
+      The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
       |state:PressureState| and |factors:sequence&lt;PressureFactor&gt;|, are as follows:
       <ol>
         <li>
@@ -936,7 +936,7 @@ of system resources such as the CPU.
               returns false, [=iteration/continue=].
             </li>
             <li>
-              If running [=has change in data=] with |observer|, |state| and |factors|
+              If running [=has change in data=] with |observer|, |source|, |state| and |factors|
               returns false, [=iteration/continue=].
             </li>
             <li>
