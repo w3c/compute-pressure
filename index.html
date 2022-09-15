@@ -701,13 +701,13 @@ of system resources such as the CPU.
   <h3>The <dfn>PressureObserverOptions</dfn> dictionary</h3>
   <pre class="idl">
     dictionary PressureObserverOptions {
-      double samplerate;
+      double sampleRate;
     };
   </pre>
   <section>
-    <h3>The <dfn>samplerate</dfn> member</h3>
+    <h3>The <dfn>sampleRate</dfn> member</h3>
     <p>
-      The {{PressureObserverOptions/samplerate}} member represents the <dfn>requested sampling
+      The {{PressureObserverOptions/sampleRate}} member represents the <dfn>requested sampling
       rate</dfn> expressed in Hz, ie. it represents the number of samples requested to be obtained
       from the hardware per second. The [=reporting rate=] will never exceed the [=requested sampling rate=].
     </p>
@@ -854,13 +854,13 @@ of system resources such as the CPU.
           Let |record:PressureRecord| be |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
-          Let |samplerate| be |observer|.{{PressureObserver/[[Options]]}}.{{PressureObserverOptions/samplerate}}.
+          Let |sampleRate| be |observer|.{{PressureObserver/[[Options]]}}.{{PressureObserverOptions/sampleRate}}.
         </li>
         <li>
           Let |timeDelta:DOMHighResTimeStamp| = |record|.{{PressureRecord/time}} - |timestamp|.
         </li>
         <li>
-          If |timeDelta| &gt; (1 / |samplerate|), return true, otherwise return false.
+          If |timeDelta| &gt; (1 / |sampleRate|), return true, otherwise return false.
         </li>
       </ol>
       The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
