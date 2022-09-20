@@ -317,7 +317,7 @@
       a <dfn>[[\Callback]]</dfn> of type {{PressureUpdateCallback}} set on creation.
     </li>
     <li>
-      a <dfn>[[\Options]]</dfn> of type {{PressureObserverOptions}} set on creation.
+      a <dfn>[[\SampleRate]]</dfn> number set on creation.
     </li>
     <li>
       a <dfn>[[\QueuedRecords]]</dfn> [=queue=] of zero or more {{PressureRecord}}
@@ -475,10 +475,14 @@ of system resources such as the CPU.
       The `new` {{PressureObserver(callback, options)}} constructor steps are:
       <ol class="algorithm">
         <li>
-          Set |this:PressureObserver|.{{PressureObserver/[[Options]]}} to |options:PressureObserverOptions|.
+          Set |this|.{{PressureObserver/[[Callback]]}} to |callback:PressureUpdateCallback|.
         </li>
         <li>
-          Set |this|.{{PressureObserver/[[Callback]]}} to |callback:PressureUpdateCallback|.
+          If |options:PressureObserverOptions| is a [=dictionary=] and |options|["sampleRate"] [=map/exists=],
+          set |this:PressureObserver|.{{PressureObserver/[[SampleRate]]}} to it.
+        </li>
+        <li>
+          Otherwise, set |this:PressureObserver|.{{PressureObserver/[[SampleRate]]}} to 1.
         </li>
       </ol>
     </p>
@@ -854,7 +858,7 @@ of system resources such as the CPU.
           Let |record:PressureRecord| be |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
-          Let |sampleRate| be |observer|.{{PressureObserver/[[Options]]}}.{{PressureObserverOptions/sampleRate}}.
+          Let |sampleRate| be |observer|.{{PressureObserver/[[SampleRate]]}}.
         </li>
         <li>
           Let |timeDelta:DOMHighResTimeStamp| = |record|.{{PressureRecord/time}} - |timestamp|.
