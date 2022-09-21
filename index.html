@@ -317,7 +317,7 @@
       a <dfn>[[\Callback]]</dfn> of type {{PressureUpdateCallback}} set on creation.
     </li>
     <li>
-      a <dfn>[[\SampleRate]]</dfn> number set on creation.
+      a <dfn>[[\SampleRate]]</dfn> double set on creation.
     </li>
     <li>
       a <dfn>[[\QueuedRecords]]</dfn> [=queue=] of zero or more {{PressureRecord}}
@@ -478,11 +478,10 @@ of system resources such as the CPU.
           Set |this|.{{PressureObserver/[[Callback]]}} to |callback:PressureUpdateCallback|.
         </li>
         <li>
-          If |options:PressureObserverOptions| is a [=dictionary=] and |options|["sampleRate"] [=map/exists=],
-          set |this:PressureObserver|.{{PressureObserver/[[SampleRate]]}} to it.
+          If |options|["sampleRate"] is less than or equal to 0, throw a {{RangeError}}.
         </li>
         <li>
-          Otherwise, set |this:PressureObserver|.{{PressureObserver/[[SampleRate]]}} to 1.
+          Set |this:PressureObserver|.{{PressureObserver/[[SampleRate]]}} to |options|["sampleRate"].
         </li>
       </ol>
     </p>
@@ -705,7 +704,7 @@ of system resources such as the CPU.
   <h3>The <dfn>PressureObserverOptions</dfn> dictionary</h3>
   <pre class="idl">
     dictionary PressureObserverOptions {
-      double sampleRate;
+      double sampleRate = 1.0;
     };
   </pre>
   <section>
