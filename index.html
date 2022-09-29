@@ -673,27 +673,27 @@ of system resources such as the CPU.
     };
   </pre>
   <section>
-    <h3>The <dfn>source</dfn> attribute</h3>
+    <h3>The <dfn>source</dfn> member</h3>
     <p>
-      The {{PressureRecord/source}} attribute represents the current [=source type=].
+      The {{PressureRecord/source}} member represents the current [=source type=].
     </p>
   </section>
   <section>
-    <h3>The <dfn>state</dfn> attribute</h3>
+    <h3>The <dfn>state</dfn> member</h3>
     <p>
-      The {{PressureRecord/state}} attribute represents the current [=pressure state=].
+      The {{PressureRecord/state}} member represents the current [=pressure state=].
     </p>
   </section>
   <section>
-    <h3>The <dfn>factors</dfn> attribute</h3>
+    <h3>The <dfn>factors</dfn> member</h3>
     <p>
-      The {{PressureRecord/factor}} attribute represents a [=sequence=] of the current [=contributing factors=].
+      The {{PressureRecord/factor}} member represents a [=sequence=] of the current [=contributing factors=].
     </p>
   </section>
   <section>
-    <h3>The <dfn>time</dfn> attribute</h3>
+    <h3>The <dfn>time</dfn> member</h3>
     <p>
-      The {{PressureRecord/time}} attribute represents a {{DOMHighResTimeStamp}} that corresponds to the
+      The {{PressureRecord/time}} member represents a {{DOMHighResTimeStamp}} that corresponds to the
       time the data was obtained from the system, relative to the [=time origin=] of the global object associated with
       the {{PressureObserver}} instance that generated the notification.
     </p>
@@ -860,7 +860,7 @@ of system resources such as the CPU.
           Let |sampleRate| be |observer|.{{PressureObserver/[[SampleRate]]}}.
         </li>
         <li>
-          Let |timeDelta:DOMHighResTimeStamp| = |record|.{{PressureRecord/time}} - |timestamp|.
+          Let |timeDelta:DOMHighResTimeStamp| = |record|["{{PressureRecord/time}}"] - |timestamp|.
         </li>
         <li>
           If |timeDelta| &gt; (1 / |sampleRate|), return true, otherwise return false.
@@ -876,10 +876,10 @@ of system resources such as the CPU.
           Let |record:PressureRecord| be |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
-          If |record|.{{PressureRecord/state}} is not equal to |state|, return true.
+          If |record|["{{PressureRecord/state}}"] is not equal to |state|, return true.
         </li>
         <li>
-          If |record|.{{PressureRecord/factors}} and |factors| does not [=list/contain=] the same [=list/items=],
+          If |record|["{{PressureRecord/factors}}"] and |factors| does not [=list/contain=] the same [=list/items=],
           return true.
         </li>
         <li>
@@ -989,16 +989,16 @@ of system resources such as the CPU.
         Let |record:PressureRecord| be a new {{PressureRecord}} instance.
       </li>
       <li>
-        Set |record|.|source:PressureSource| to |source|.
+        Set |record|["{{PressureRecord/source}}"] to |source|.
       </li>
       <li>
-        Set |record|.|state:PressureState| be |state|.
+        Set |record|["{{PressureRecord/state}}"] to |state|.
       </li>
       <li>
-        Set |record|.|factors:sequence&lt;PressureFactor&gt;| be |factors|.
+        Set |record|["{{PressureRecord/factors}}"] to |factors|.
       </li>
       <li>
-        Set |record|.|time:DOMHighResTimeStamp| be |timestamp|.
+        Set |record|["{{PressureRecord/time}}"] to |timestamp|.
       </li>
       <li>
         Return |record|.
