@@ -310,7 +310,7 @@
     A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{PressureObserver}} object).
   </p>
   <p>
-    A constructed  {{PressureObserver}} object has the following internal slots:
+    A constructed {{PressureObserver}} object has the following internal slots:
   </p>
   <ul data-dfn-for="PressureObserver">
     <li>
@@ -393,9 +393,8 @@
 <section> <h2>Contributing Factors</h2>
   <p>
     <dfn>Contributing factors</dfn> represents the factors contributing to the system performance and current [=pressure state=].
-    In case the [=pressure state=] is nominal or fair, the {{PressureRecord}} instance member {{PressureRecord/factors}}
-    will always be an [=list/empty=]
-    list.
+    In case the [=pressure state=] is nominal or fair, the {{PressureRecord}} internal slot {{PressureRecord/[[Factors]]}}
+    will always be [=list/empty=].
   </p>
   <aside class="note">
     The [=user agent=] might not be able to expose the factors for all systems or for all [=pressure states=].
@@ -664,39 +663,59 @@ of system resources such as the CPU.
 </section>
 
 <section data-dfn-for="PressureRecord">
-  <h3>The <dfn>PressureRecord</dfn> dictionary</h3>
+  <h3>The <dfn>PressureRecord</dfn> interface</h3>
   <pre class="idl">
-    dictionary PressureRecord {
-      PressureSource source;
-      PressureState state;
-      sequence&lt;PressureFactor&gt; factors;
-      DOMHighResTimeStamp time;
+    [Exposed=(DedicatedWorker,SharedWorker,Window), SecureContext]
+    interface PressureRecord {
+      readonly attribute PressureSource source;
+      readonly attribute PressureState state;
+      readonly attribute FrozenArray&lt;PressureFactor&gt; factors;
+      readonly attribute DOMHighResTimeStamp time;
     };
   </pre>
-  <section>
-    <h3>The <dfn>source</dfn> member</h3>
-    <p>
-      The {{PressureRecord/source}} member represents the current [=source type=].
-    </p>
-  </section>
-  <section>
-    <h3>The <dfn>state</dfn> member</h3>
-    <p>
-      The {{PressureRecord/state}} member represents the current [=pressure state=].
-    </p>
-  </section>
-  <section>
-    <h3>The <dfn>factors</dfn> member</h3>
-    <p>
-      The {{PressureRecord/factor}} member represents a [=sequence=] of the current [=contributing factors=].
-    </p>
-  </section>
-  <section>
-    <h3>The <dfn>time</dfn> member</h3>
-    <p>
-      The {{PressureRecord/time}} member represents a {{DOMHighResTimeStamp}} that corresponds to the
+  <p>
+    A constructed  {{PressureRecord}} object has the following internal slots:
+  </p>
+  <ul data-dfn-for="PressureRecord">
+    <li>
+      a <dfn>[[\Source]]</dfn> value of type {{PressureSource}}, which represents the current [=source type=].
+    </li>
+    <li>
+      a <dfn>[[\State]]</dfn> value of type {{PressureState}}, which represents the current [=pressure state=].
+    </li>
+    <li>
+      a <dfn>[[\Factors]]</dfn>, which is [=ordered set=] of {{PressureFactor}} values,
+      which represents the current [=contributing factors=].
+    </li>
+    <li>
+      a <dfn>[[\Time]]</dfn> value of type {{DOMHighResTimeStamp}},
+      which corresponds to the
       time the data was obtained from the system, relative to the [=time origin=] of the global object associated with
       the {{PressureObserver}} instance that generated the notification.
+    </li>
+  </ul>
+  <section>
+    <h3>The <dfn>source</dfn> attribute</h3>
+    <p>
+      The {{PressureRecord/source}} [=getter steps=] are to return its {{PressureRecord/[[Source]]}} internal slot.
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>state</dfn> attribute</h3>
+    <p>
+      The {{PressureRecord/state}} [=getter steps=] are to return its {{PressureRecord/[[State]]}} internal slot.
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>factor</dfn>  attribute</h3>
+    <p>
+      The {{PressureRecord/factor}} [=getter steps=] are to return its {{PressureRecord/[[Factors]]}} internal slot.
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>time</dfn> attribute</h3>
+    <p>
+      The {{PressureRecord/time}} [=getter steps=] are to return its {{PressureRecord/[[Time]]}} internal slot.
     </p>
   </section>
 </section>
@@ -861,14 +880,14 @@ of system resources such as the CPU.
           Let |sampleRate| be |observer|.{{PressureObserver/[[SampleRate]]}}.
         </li>
         <li>
-          Let |timeDelta:DOMHighResTimeStamp| = |record|["{{PressureRecord/time}}"] - |timestamp|.
+          Let |timeDelta:DOMHighResTimeStamp| = |record|.{{PressureRecord/[[Time]]}} - |timestamp|.
         </li>
         <li>
           If |timeDelta| &gt; (1 / |sampleRate|), return true, otherwise return false.
         </li>
       </ol>
       The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
-      |state:PressureState| and |factors:sequence&lt;PressureFactor&gt;|, are as follows:
+      |state:PressureState| and |factors:ordered set of PressureFactor|, are as follows:
       <ol>
         <li>
           If |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|] does not [=map/exist=], return true.
@@ -877,11 +896,10 @@ of system resources such as the CPU.
           Let |record:PressureRecord| be |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
-          If |record|["{{PressureRecord/state}}"] is not equal to |state|, return true.
+          If |record|.{{PressureRecord/[[State]]}} is not equal to |state|, return true.
         </li>
         <li>
-          If |record|["{{PressureRecord/factors}}"] and |factors| does not [=list/contain=] the same [=list/items=],
-          return true.
+          If |record|.{{PressureRecord/[[Factors]]}} and |factors| are not [=set/supersets=] of each other, return true.
         </li>
         <li>
           Return false.
@@ -913,8 +931,8 @@ of system resources such as the CPU.
           |data| and |source|.
         </li>
         <li>
-          Let |factors:sequence&lt;PressureFactor&gt;| be an [=implementation-defined=]
-          [=sequence=] given |data| and |source|, potentially [=list/empty=].
+          Let |factors:ordered set of PressureFactor| be an [=implementation-defined=]
+          [=ordered set=] given |data| and |source|, potentially [=list/empty=].
         </li>
         <li>
           Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
@@ -956,13 +974,16 @@ of system resources such as the CPU.
     <p>
       To <dfn>queue a record</dfn> given the arguments |observer:PressureObserver|,
       |source:PressureSource|, |state:PressureState|,
-      |factors:sequence&lt;PressureFactor&gt;| and |timestamp:DOMHighResTimeStamp|,
+      |factors:ordered set of PressureFactor| and |timestamp:DOMHighResTimeStamp|,
       run these steps:
     </p>
     <ol class="algorithm">
       <li>
-        Let |record:PressureRecord| be the result of running [=create a record=] with
-        |source|, |state|, |factors| and |timestamp|.
+        Let |record:PressureRecord| be a new {{PressureRecord}} object with its
+        {{PressureRecord/[[Source]]}} set to |source|,
+        {{PressureRecord/[[State]]}} set to |state|,
+        {{PressureRecord/[[Factors]]}} set to  |factors|
+        and {{PressureRecord/[[Time]]}} set to |timestamp|.
       </li>
       <li>
         If [=list/size=] of |observer|.{{PressureObserver/[[QueuedRecords]]}} is greater than
@@ -975,34 +996,6 @@ of system resources such as the CPU.
       </li>
       <li>
         [=Queue a pressure observer task=] with |observer|'s [=relevant global object=].
-      </li>
-    </ol>
-  </section>
-  <section id="create-record">
-    <h3>Create and populate a PressureRecord</h3>
-    <p>
-      To <dfn>create a record</dfn> given the arguments |source:PressureSource|,
-      |state:PressureState|, |factors:sequence&lt;PressureFactor&gt;|
-      and |timestamp:DOMHighResTimeStamp|, run these steps:
-    </p>
-    <ol class="algorithm">
-      <li>
-        Let |record:PressureRecord| be a new {{PressureRecord}} instance.
-      </li>
-      <li>
-        Set |record|["{{PressureRecord/source}}"] to |source|.
-      </li>
-      <li>
-        Set |record|["{{PressureRecord/state}}"] to |state|.
-      </li>
-      <li>
-        Set |record|["{{PressureRecord/factors}}"] to |factors|.
-      </li>
-      <li>
-        Set |record|["{{PressureRecord/time}}"] to |timestamp|.
-      </li>
-      <li>
-        Return |record|.
       </li>
     </ol>
   </section>
