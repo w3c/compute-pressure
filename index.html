@@ -880,10 +880,13 @@ of system resources such as the CPU.
           Let |sampleRate| be |observer|.{{PressureObserver/[[SampleRate]]}}.
         </li>
         <li>
-          Let |timeDelta:DOMHighResTimeStamp| = |record|.{{PressureRecord/[[Time]]}} - |timestamp|.
+          Let |timeDeltaMilliseconds:DOMHighResTimeStamp| = |timestamp| - |record|.{{PressureRecord/[[Time]]}}.
         </li>
         <li>
-          If |timeDelta| &gt; (1 / |sampleRate|), return true, otherwise return false.
+          Let |interval| = 1 / |sampleRate|.
+        </li>
+        <li>
+          If (|timeDeltaMilliseconds| / 1000) &gt; |interval|, return true, otherwise return false.
         </li>
       </ol>
       The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
