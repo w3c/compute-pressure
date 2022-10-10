@@ -886,7 +886,7 @@ of system resources such as the CPU.
           Let |intervalSeconds| = 1 / |sampleRate|.
         </li>
         <li>
-          If (|timeDeltaMilliseconds| / 1000) &gt; |intervalSeconds|, return true, otherwise return false.
+          If (|timeDeltaMilliseconds| / 1000) &ge; |intervalSeconds|, return true, otherwise return false.
         </li>
       </ol>
       The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
