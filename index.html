@@ -249,7 +249,8 @@
     </h3>
     <p>
       The Compute Pressure API is a [=powerful feature=] which is identified
-      by the name "`compute-pressure`".
+      by the [=powerful feature/name=] "<dfn class="export">compute-pressure</dfn>",
+      which is also a [=policy-controlled feature=].
     </p>
   </section>
 </section>
@@ -260,8 +261,8 @@
   </h3>
   <p>
     The Compute Pressure API defines a [=policy-controlled feature=]
-    identified by the string `"compute-pressure"`. Its [=default
-    allowlist=] is `["self"]`.
+    identified by [=powerful feature/name=] "<a>compute-pressure</a>".
+    Its [=default allowlist=] is `["self"]`.
   </p>
   <aside class="note">
     <p>
@@ -497,18 +498,18 @@ of system resources such as the CPU.
         </li>
         <li>
           If |document| is not null and is not [=allowed to use=] the [=policy-controlled
-          feature=] named "`compute-pressure`", throw {{NotAllowedError}}.
+          feature=] named "<a>compute-pressure</a>", throw {{NotAllowedError}}.
         </li>
         <aside class="issue" data-number="110"></aside>
         <li>
           Let |permissionState:PermissionState| be the result of
-          [=getting the current permission state=] with "`compute-pressure`".
+          [=getting the current permission state=] with "<a>compute-pressure</a>".
         </li>
         <li>
           If |permissionState| is not [=permission/granted=], throw {{NotAllowedError}}.
         </li>
         <li>
-          If |source:PressureSource| is not a [=supported source type=], throw {{"NotSupportedError"}}.
+          If |source:PressureSource| is not a [=supported source type=], throw {{NotSupportedError}}.
         </li>
         <li>
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
@@ -646,7 +647,7 @@ of system resources such as the CPU.
           <ol>
             <li>
               Let |permissionState:PermissionState| be the result of
-              [=requesting permission to use=] the [=powerful feature=] named "`compute-pressure`".
+              [=requesting permission to use=] the [=powerful feature=] [=powerful feature/named=] "<a>compute-pressure</a>".
             </li>
             <li>
               [=Queue a global task=] on the [=permissions task source=] with [=this=]'s
