@@ -261,7 +261,7 @@
   </h3>
   <p>
     The Compute Pressure API defines a [=policy-controlled feature=]
-    identified by [=powerful feature/name=] "<a>compute-pressure</a>".
+    identified by the token "<a>compute-pressure</a>".
     Its [=default allowlist=] is `["self"]`.
   </p>
   <aside class="note">
@@ -498,7 +498,7 @@ of system resources such as the CPU.
         </li>
         <li>
           If |document| is not null and is not [=allowed to use=] the [=policy-controlled
-          feature=] named "<a>compute-pressure</a>", throw {{NotAllowedError}}.
+          feature=] token "compute-pressure", throw {{NotAllowedError}}.
         </li>
         <aside class="issue" data-number="110"></aside>
         <li>
