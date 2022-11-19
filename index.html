@@ -457,7 +457,7 @@ of system resources such as the CPU.
     interface PressureObserver {
       constructor(PressureUpdateCallback callback, optional PressureObserverOptions options = {});
 
-      undefined observe(PressureSource source);
+      Promise&lt;undefined&gt; observe(PressureSource source);
       undefined unobserve(PressureSource source);
       undefined disconnect();
       sequence&lt;PressureRecord&gt; takeRecords();
@@ -493,33 +493,47 @@ of system resources such as the CPU.
       The {{PressureObserver/observe(source)}} method steps are:
       <ol class="algorithm">
         <li>
-          Let |document:Document| be [=this=]'s [=relevant settings
-          object=]'s [=associated Document=].
+          Let |promise:Promise| be [=a new promise=].
         </li>
         <li>
-          If |document| is not null and is not [=allowed to use=] the [=policy-controlled
-          feature=] token "compute-pressure", throw {{NotAllowedError}}.
-        </li>
-        <aside class="issue" data-number="110"></aside>
-        <li>
-          Let |permissionState:PermissionState| be the result of
-          [=getting the current permission state=] with "<a>compute-pressure</a>".
-        </li>
-        <li>
-          If |permissionState| is not [=permission/granted=], throw {{NotAllowedError}}.
-        </li>
-        <li>
-          If |source:PressureSource| is not a [=supported source type=], throw {{NotSupportedError}}.
-        </li>
-        <li>
-          Let |relevantGlobal| be [=this=]'s [=relevant global object=].
-        </li>
-        <li>
-          [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
-          to |relevantGlobal|'s [=registered observer list=] for |source|.
-        </li>
-        <li>
-          Activate [=data delivery=] of |source| data to |relevantGlobal|.
+          Run the following steps [=in parallel=]:
+          <ol>
+            <li>
+              Let |document:Document| be [=this=]'s [=relevant settings
+              object=]'s [=associated Document=].
+            </li>
+            <li>
+              If |document| is not null and is not [=allowed to use=] the [=policy-controlled
+              feature=] token "compute-pressure", reject |promise| with {{NotAllowedError}}.
+            </li>
+            <aside class="issue" data-number="110"></aside>
+            <li>
+              Let |permissionState:PermissionState| be the result of
+              [=getting the current permission state=] with "<a>compute-pressure</a>".
+            </li>
+            <li>
+              If |permissionState| is not [=permission/granted=], reject |promise| with {{NotAllowedError}}.
+            </li>
+            <li>
+              If |source:PressureSource| is not a [=supported source type=], reject |promise| with {{NotSupportedError}}.
+            </li>
+            <li>
+              Let |relevantGlobal| be [=this=]'s [=relevant global object=].
+            </li>
+            <li>
+              [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
+              to |relevantGlobal|'s [=registered observer list=] for |source|.
+            </li>
+            <li>
+              Activate [=data delivery=] of |source| data to |relevantGlobal|.
+            </li>
+            <li>
+              Resolve |promise|.
+            </li>
+          </ol>
+          <li>
+            Return |promise|.
+          </li>
         </li>
       </ol>
     </p>
