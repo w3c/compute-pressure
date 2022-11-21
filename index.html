@@ -457,7 +457,7 @@ of system resources such as the CPU.
     interface PressureObserver {
       constructor(PressureUpdateCallback callback, optional PressureObserverOptions options = {});
 
-      undefined observe(PressureSource source);
+      Promise&lt;undefined&gt; observe(PressureSource source);
       undefined unobserve(PressureSource source);
       undefined disconnect();
       sequence&lt;PressureRecord&gt; takeRecords();
