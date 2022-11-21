@@ -249,7 +249,7 @@
     </h3>
     <p>
       The Compute Pressure API is a [=powerful feature=] which is identified
-      by the [=powerful feature/name=] "<dfn class="permission export">compute-pressure</dfn>",
+      by the [=powerful feature/name=] "<dfn class='permission export'>compute-pressure</dfn>",
       which is also a [=policy-controlled feature=].
     </p>
   </section>
@@ -861,7 +861,7 @@ of system resources such as the CPU.
           Let |topLevelBC| be |relevantGlobal|'s [=browsing context=]'s [=top-level browsing context=].
         </li>
         <li>
-          If |topLevelBC| does not have [=top-level browsing context/system focus=], return false.
+          If |topLevelBC| does not have [=top-level traversable/system focus=], return false.
         </li>
         <li>
           Let |focusedDocument| be the |topLevelBC|'s
@@ -1240,7 +1240,7 @@ of system resources such as the CPU.
   </p>
   <p>
     You can check whether the user has already granted permission using the [[[Permissions]]]
-    API, both from the [=browsing context/active window=] or from a worker.
+    API, both from the [=navigable/active window=] or from a worker.
   </p>
   <pre class="example js" title="How to check whether user has granted permission">
     const { state } = await navigator.permissions.query({
@@ -1259,7 +1259,7 @@ of system resources such as the CPU.
     }
   </pre>
   <p>
-    Asking for permission has to happen in the [=browsing context/active window=] and
+    Asking for permission has to happen in the [=navigable/active window=] and
     can not be done from a worker, but the permission state is per [=origin=] and thus
     shared across [=browsing contexts=] and workers which are [=same origin=].
   </p>
