@@ -506,7 +506,11 @@ of system resources such as the CPU.
         <li>
           Run the following steps [=in parallel=]:
           <ol>
-            <aside class="issue" data-number="110"></aside>
+            <aside class="issue">
+              <a href="https://github.com/wicg/compute-pressure/issues/110">
+                Permission policy doesn't support workers yet #110
+              </a>
+            </aside>
             <li>
               Let |permissionState:PermissionState| be the result of
               [=getting the current permission state=] with <a>"compute-pressure"</a>.
@@ -671,7 +675,7 @@ of system resources such as the CPU.
               [=requesting permission to use=] the [=powerful feature=] [=powerful feature/named=] <a>"compute-pressure"</a>.
             </li>
             <li>
-              [=Queue a global task=] on the [=permissions task source=] with [=this=]'s
+              [=Queue a global task=] on the [=user interaction task source=] with [=this=]'s
               [=relevant global object=] to [=resolve=] |result| with |permissionState|.
             </li>
           </ol>
