@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+  <head>
+    <title>Compute Pressure Demo</title>      
+  </head>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0 10em;
+    }
+    #status {
+      margin-bottom: 1em;
+    }
+    .enabled {
+      color: green;
+    }
+    .disabled {
+      color: red;
+    }
+
+    #emoji {
+      font-size: 10em;
+    }
+  </style>
+  <body>
+    <h1>Compute Pressure demo</h1>
+    <div id="status">
+      <label>API Status:</label> <span id="status-text">not available</span>
+    </div>
+    <input type=button id="switch" value="Start"></input>
+    <div></div>
+      <span id="emoji">
+        😴
+      </span>
+      <span id="label">Not observing</span>
+    </div>
+
+    <br><br>
+    <h1>Mandelbrot simulation</h1>
+    <div>Start to create artificial pressure, add workers to increase further.</div>
+    <br>
+    <canvas id="mandel" width="600" height="400"></canvas><br>
+    <button id="start">Start simulation</button>
+    <button id="stop">Stop simulation</button>
+    <button id="ww_add">Add worker</button>
+    <button id="ww_sub">Remove worker</button>
+  </body>
+  <script src="mandelbrot.js"></script>
+  <script type="module">
+    const elem = document.querySelector("#status-text");
+    if (!("PressureObserver" in window)) {
+      elem.innerText = "not available";
+      elem.classList.add("disabled");
+    } else {
+      elem.innerText = "enabled";
+      elem.classList.add("enabled");
+      run();
+    }
+
+    const emoji = document.getElementById("emoji");
+    const label = document.getElementById("label");
+
+    function run() {
+      const observer = new PressureObserver(changes => {
+        console.log(changes);
+        switch(changes[0].state) {
+          case "nominal":
+            emoji.innerText = "😌";
+            label.innerText = "Nominal pressure";
+            break;
+          case "fair":
+            emoji.innerText = "😄";
+            label.innerText = "Fair pressure";
+            break;
+          case "serious":
+            emoji.innerText = "😖";
+            label.innerText = "Serious pressure";
+            break;
+          case "critical":
+            emoji.innerText = "🥵";
+            label.innerText = "Critical pressure";
+            break;
+          default:
+            emoji.innerText = "😴";
+            label.innerText = "Not observing";
+        }
+      });
+
+      const btn = document.getElementById("switch");
+      btn.onclick = async ev => {
+        if (ev.target.value == "Start") {
+          ev.target.disabled = true;
+          await observer.observe("cpu");
+          ev.target.value = "Stop";
+          ev.target.disabled = false;
+        } else {
+          observer.unobserve("cpu");
+          ev.target.value = "Start";
+        }
+      };
+
+    }
+  </script>
+</html>
