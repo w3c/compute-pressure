@@ -19,3 +19,39 @@ The ComputePressure API is currently available in Chrome Canary and Edge Canary 
 6) Navigate to `about://flags` and enable `Experimental Web Platform features`.
 7) Navigate to the demo page, https://wicg.github.io/compute-pressure/demo/.
 8) Play with the demo.
+
+## Code Examples:
+
+```javascript
+// Observer Callback.
+function PressureObserverCallback(update) {
+  console.log("cpu pressure state = " + update[0].state);
+  console.log("timestamp = " + update[0].time);
+};
+
+// Create observer with 1s sample rate.
+observer = new PressureObserver(PressureObserverCallback, 
+                                { sampleRate: 1});
+// Start observer.
+observer.observe('cpu');
+```
+You should see, everytime the state changes, the following:
+
+```
+cpu pressure state = nominal
+timestamp = 1671114838027.834
+
+cpu pressure state = serious
+timestamp = 1671114914289.584
+
+cpu pressure state = critical
+timestamp = 1671114926328.48
+```
+
+Stopping observer:
+```
+// Stop observer.
+observer.unobserve('cpu');
+```
+
+Other API calls and examples can be found in the specification.
