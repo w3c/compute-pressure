@@ -303,31 +303,25 @@ function animateMandelbrot () {
 
 function start() {
   if (animate) {
-    // Do not start if it's already running
     return;
   }
-  //var $ww_count = $("#ww_count");
   animate = true;
   worker_count = 1;  // always start with one worker
-  //$ww_count.text (worker_count);
   animateMandelbrot ();
 }
 
 function stop() {
+  worker_count = 1;
   animate = false;
 }
 
 function ww_add() {
-  //var $ww_count = $("#ww_count");
   worker_count++;
-  //$ww_count.text (worker_count);
 }
 
 function ww_sub() {
-  //var $ww_count = $("#ww_count");
   if (worker_count > 1) {
     worker_count--;
-    //$ww_count.text (worker_count);
   }
 }
 

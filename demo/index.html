@@ -22,6 +22,21 @@
     #emoji {
       font-size: 10em;
     }
+
+    #wrapper {
+      width: 600px;
+      height: 400px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #wrapper > div {
+      position: absolute;
+      color: white;
+      font-size: 8em;
+    }
   </style>
   <body>
     <h1>Compute Pressure demo</h1>
@@ -40,7 +55,11 @@
     <h1>Mandelbrot simulation</h1>
     <div>Start to create artificial pressure, add workers to increase further.</div>
     <br>
-    <canvas id="mandel" width="600" height="400"></canvas><br>
+    <div id="wrapper" width="600" height="400">
+      <canvas id="mandel" width="600" height="400"></canvas>
+      <div id="counter">1</div>
+    </div>
+    <br>
     <button id="start">Start simulation</button>
     <button id="stop">Stop simulation</button>
     <button id="ww_add">Add worker</button>
@@ -60,6 +79,28 @@
 
     const emoji = document.getElementById("emoji");
     const label = document.getElementById("label");
+    const canvas = document.getElementById("mandel");
+    const counter = document.getElementById("counter");
+
+    for (let btn of Array.from(document.getElementsByTagName("button"))) {
+      btn.addEventListener("click", () => {
+        const el = document.createElement("div");
+        counter.innerText = worker_count;
+        el.innerText = worker_count;
+        canvas.insertAdjacentElement("afterend", el);
+
+        const animation = [
+          { opacity: 1, transform: 'translateY(0px) translateX(0px) scale(1)' },
+          { opacity: 0, transform: `translateY(-200px) translateX(${Math.random() * 300 -150}px) scale(0.4)` }
+        ];
+
+        const timing = {
+          duration: 600,
+          iterations: 1,
+        }
+        el.animate(animation, timing).finished.then(() => el.remove());
+      });
+    }
 
     function run() {
       const observer = new PressureObserver(changes => {
