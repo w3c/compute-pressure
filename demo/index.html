@@ -138,6 +138,8 @@
         } else {
           observer.unobserve("cpu");
           ev.target.value = "Start";
+          emoji.innerText = "😴";
+          label.innerText = "Not observing";
         }
       };
 
