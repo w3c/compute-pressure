@@ -1,10 +1,21 @@
 # How to experiment ComputePressure API with Chrome
 
-The ComputePressure API is currently available only in Chrome Canary behind a flag.
+The ComputePressure API is currently available in Chrome Canary and Edge Canary behind a flag.
 
-1) Download a version of Chrome with ComputePressure implemented ([Desktop](https://www.google.com/intl/en_ie/chrome/canary/)).
+
+## Own local Chromium repository (Linux):
+1) Rebase to latest HEAD and compile the chromium project.
 2) Launch Chrome with the command line flag --enable-features=ComputePressure.
-2) Navigate to `chrome://flags` and enable `Experimental Web Platform features`.
-3) Navigate to a test page, e.g. https://wicg.github.io/compute-pressure/demo/.
-4) Play with the demo.
+3) Navigate to `about://flags` and enable `Experimental Web Platform features`.
+4) Navigate to the demo page, https://wicg.github.io/compute-pressure/demo/.
+5) Play with the demo.
 
+## Chrome/Edge Canary (Windows Only):
+1) Download a version of Chrome with ComputePressure implemented ([Chrome Canary](https://www.google.com/intl/en_ie/chrome/canary/)) ([Edge Canary](https://www.microsoftedgeinsider.com/en-us/download/canary)).
+2) Find your Canary browser in the menu. <br /> <img src="pictures/win_menu_1.png" /> <br />
+3) Click right and select "properties". <br /> <img src="pictures/win_menu_2.png" /> <br />
+4) Add to the command line flags --enable-features=ComputePressure. (after the last ") <br /> <img src="pictures/win_menu_3.png" /> <br />
+5) Start your browser.
+6) Navigate to `about://flags` and enable `Experimental Web Platform features`.
+7) Navigate to the demo page, https://wicg.github.io/compute-pressure/demo/.
+8) Play with the demo.
