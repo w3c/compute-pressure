@@ -6,7 +6,7 @@ const $ = id => document.getElementById(id);
 // global variables
 var animate        = false;
 var max_iterations = 100;
-var worker_count   = 1;
+var worker_count   = 0;
 
 // Basic canvas operations
 var canvas = function () {
@@ -311,7 +311,7 @@ function start() {
 }
 
 function stop() {
-  worker_count = 1;
+  worker_count = 0;
   animate = false;
 }
 
