@@ -538,6 +538,10 @@ of system resources such as the CPU.
                   Resolve |promise|.
                 </li>
               </ol>
+              <li>
+                 If the {{PressureObserver/unobserve(source)}} or {{PressureObserver/disconnect()}}
+                 methods are called before the |promise| is resolved. Return [=a promise rejected with=] {{NotAllowedError}}.
+              </li>
             </li>
           </ol>
           <li>
