@@ -321,8 +321,6 @@
     <li>
       a <dfn>[[\PendingObservePromises]]</dfn> [=list=] of zero or more source-promise [=tuples=], initially empty,
       where source holds a {{PressureSource}} string and promise holds a {{Promise}} object.
-      When a {{Promise}} object contained in a [=tuple=] settles (resolve or rejects), the
-      associated [=tuple=] is removed.
     </li>
     <li>
       a <dfn>[[\QueuedRecords]]</dfn> [=queue=] of zero or more {{PressureRecord}}
@@ -491,7 +489,19 @@ of system resources such as the CPU.
           Let |promise:Promise| be [=a new promise=].
         </li>
         <li>
-          [=list/Append=] (|source|, |promise|) to [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
+          Let |pendingPromiseTuple| be (|source|, |promise|).
+        </li>
+        <li>
+          [=list/Append=] |pendingPromiseTuple| to [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
+        </li>
+        <li>
+          [=promise/React=] to |promise|:
+          <ul>
+            If |promise| was [=resolved|fulfilled=] or [=rejected=], then:
+              <ol>
+                [=list/Remove=] |tuple| from [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
+              </ol>
+          </ul>
         </li>
         <li>
           Run the following steps [=in parallel=]:
