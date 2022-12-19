@@ -243,34 +243,14 @@
 
 <section>
   <h3>
-    Permissions and user prompts
+    User notifications
   </h3>
-  <p>
-    The [[[PERMISSIONS]]] API provides a uniform way for websites to request
-    permissions from users and query which permissions they have.
-  </p>
-  <p>
-    A <a>user agent</a> can per [=origin=] deny observation of a
-    particular pressure [=source type=] by any
-    [=implementation-defined=] reason, such as platform setting or user
-    preference.
-  </p>
   <p>
     It is RECOMMENDED that a [=user agent=] show some form of unobtrusive
     notification that informs the user when a pressure observer is active,
     as well as provides the user with the means to block the ongoing operation,
     or simply dismiss the notification.
   </p>
-  <section>
-    <h3>
-      Permissions integration
-    </h3>
-    <p>
-      The Compute Pressure API is a [=powerful feature=] which is identified
-      by the [=powerful feature/name=] <dfn class='permission export'>"compute-pressure"</dfn>,
-      which is also a [=policy-controlled feature=].
-    </p>
-  </section>
 </section>
 
 <section>
@@ -461,8 +441,6 @@ of system resources such as the CPU.
       sequence&lt;PressureRecord&gt; takeRecords();
 
       [SameObject] static readonly attribute FrozenArray&lt;PressureSource&gt; supportedSources;
-
-      [Exposed=Window] static Promise&lt;PermissionState&gt; requestPermission();
     };
   </pre>
 
@@ -498,30 +476,25 @@ of system resources such as the CPU.
           If |document| is not null and is not [=allowed to use=] the [=policy-controlled
           feature=] token "compute-pressure", return [=a promise rejected with=] {{NotAllowedError}}.
         </li>
+        <aside class="issue">
+          <a href="https://github.com/wicg/compute-pressure/issues/110">
+            Permission policy doesn't support workers yet #110
+          </a>
+        </aside>
         <li>
           Let |promise:Promise| be [=a new promise=].
         </li>
         <li>
           Run the following steps [=in parallel=]:
-          <aside class="issue">
-            <a href="https://github.com/wicg/compute-pressure/issues/110">
-              Permission policy doesn't support workers yet #110
-            </a>
-          </aside>
           <ol>
             <li>
-              Let |permissionState:PermissionState| be the result of
-              [=getting the current permission state=] with <a>"compute-pressure"</a>.
-            </li>
-            <li>
-              If |permissionState| is not [=permission/granted=], [=queue a global task=] on
-              the [=PressureObserver task source=] given |document|'s [=relevant global object=]
-              to reject |promise| {{NotAllowedError}} and abort these steps.
-            </li>
-            <li>
-              If |source:PressureSource| is not a [=supported source type=], [=queue a global task=] on
-              the [=PressureObserver task source=] given |document|'s [=relevant global object=]
+              If |source:PressureSource| is not a [=supported source type=],
+              [=queue a global task=] on the [=PressureObserver task source=]
+              given |document|'s [=relevant global object=] |relevantGlobal|
               to reject |promise| {{NotSupportedError}} and abort these steps.
+            </li>
+            <li>
+              Activate [=data delivery=] of |source| data to |relevantGlobal|.
             </li>
             <li>
               [=Queue a global task=] on the [=PressureObserver task source=] given |document|'s
@@ -532,17 +505,14 @@ of system resources such as the CPU.
                   to |relevantGlobal|'s [=registered observer list=] for |source|.
                 </li>
                 <li>
-                  Activate [=data delivery=] of |source| data to |relevantGlobal|.
-                </li>
-                <li>
                   Resolve |promise|.
                 </li>
               </ol>
             </li>
           </ol>
-          <li>
-            Return |promise|.
-          </li>
+        </li>
+        <li>
+          Return |promise|.
         </li>
       </ol>
     </p>
@@ -652,37 +622,6 @@ of system resources such as the CPU.
         This attribute allows web developers to easily know which [=source types=] are supported by the user agent.
       </p>
     </aside>
-  </section>
-  <section>
-    <h3>The static <dfn>requestPermission()</dfn> method</h3>
-    <p>
-      The {{PressureObserver/requestPermission()}} static method steps are:
-      <ol class="algorithm">
-        <li>
-          If the [=relevant global object=] of [=this=] does not have [=transient activation=],
-          return [=a new promise=] [=rejected=] with a {{NotAllowedError}}.
-        </li>
-        <li>
-          Let |result:Promise| be [=a new promise=].
-        </li>
-        <li>
-          Run these steps [=in parallel=]:
-          <ol>
-            <li>
-              Let |permissionState:PermissionState| be the result of
-              [=requesting permission to use=] the [=powerful feature=] [=powerful feature/named=] <a>"compute-pressure"</a>.
-            </li>
-            <li>
-              [=Queue a global task=] on the [=user interaction task source=] with [=this=]'s
-              [=relevant global object=] to [=resolve=] |result| with |permissionState|.
-            </li>
-          </ol>
-        </li>
-        <li>
-          Return |result|.
-        </li>
-      </ol>
-    </p>
   </section>
 </section>
 
@@ -1245,91 +1184,6 @@ of system resources such as the CPU.
   <h2>
     Examples
   </h2>
-  <p>
-    As the Compute Pressure API is considered a [=powerful feature=], it requires
-    user permission in order to be used.
-  </p>
-  <p>
-    You can check whether the user has already granted permission using the [[[Permissions]]]
-    API, both from the [=navigable/active window=] or from a worker.
-  </p>
-  <pre class="example js" title="How to check whether user has granted permission">
-    const { state } = await navigator.permissions.query({
-      name: "compute-pressure"
-    });
-    switch (state) {
-      case "granted":
-        startUsingFeature();
-        break;
-      case "prompt":
-        showExplanationAndToogleToAllowFeature();
-        break;
-      case "denied":
-        // Do nothing, user denies the site access to the feature
-        break;
-    }
-  </pre>
-  <p>
-    Asking for permission has to happen in the [=navigable/active window=] and
-    can not be done from a worker, but the permission state is per [=origin=] and thus
-    shared across [=browsing contexts=] and workers which are [=same origin=].
-  </p>
-  <p>
-    The below examples shows you how to ask for permission before using the feature.
-  </p>
-  <pre class="example js" title="How to ask for permission before use">
-    function handlePressureChange(records) {
-      // do something with records.
-    }
-
-    button.onclick = async () => {
-      const state = await PressureObserver.requestPermission();
-      if (state === "granted") {
-        const observer = new PressureObserver(handlePressureChange);
-        observer.observe("cpu");
-      }
-    }
-  </pre>
-  <aside class="example" title="How to use it in a worker with permission">
-    <p>
-      Pressure change is handled in a worker `worker.js`:
-    </p>
-    <pre class="js">
-      const observer = new PressureObserver(records => {
-        // do something with records.
-      });
-
-      self.onmessage = event => {
-        let { command } = event.data;
-
-        if (command === "observe") {
-          observer.observe("cpu");
-        }
-        if (command === "unobserve") {
-          observer.unobserve("cpu");
-        }
-      }
-    </pre>
-    <p>
-      And permission and worker instantiation is handled from the main [=browsing context=]:
-    </p>
-    <pre class="js">
-      let worker;
-      checkbox.onchange = event => {
-        if (event.target.checked) {
-          worker ??= new Worker('/worker.js'); // Create worker if it doesn't exist.
-          worker.postMessage('observe');
-        } else if (worker) {
-          worker.postMessage('unobserve');
-        }
-      }
-    </pre>
-  </aside>
-  <p>
-    The callback is called with the observer it is invoked from. That allows to unobserve when
-    certain conditions are met, or even to differenciate depending on who invoked it, if invoked
-    by multiple observers or externally, say by `setTimeout()`.
-  </p>
   <pre class="example js" title="How to access observer from callback" id="cb-observer-example">
     const samples = [];
 
