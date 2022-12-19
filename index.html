@@ -319,6 +319,12 @@
       a <dfn>[[\SampleRate]]</dfn> double set on creation.
     </li>
     <li>
+      a <dfn>[[\PendingObservePromises]]</dfn> [=list=] of zero or more source-promise [=tuples=], initially empty,
+      where source holds a {{PressureSource}} string and promise holds a {{Promise}} object.
+      When a {{Promise}} object contained in a [=tuple=] settles (resolve or rejects), the
+      associated [=tuple=] is removed.
+    </li>
+    <li>
       a <dfn>[[\QueuedRecords]]</dfn> [=queue=] of zero or more {{PressureRecord}}
       objects, which is initially empty.
     </li>
@@ -485,6 +491,9 @@ of system resources such as the CPU.
           Let |promise:Promise| be [=a new promise=].
         </li>
         <li>
+          [=list/Append=] (|source|, |promise|) to [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
+        </li>
+        <li>
           Run the following steps [=in parallel=]:
           <ol>
             <li>
@@ -500,6 +509,18 @@ of system resources such as the CPU.
               [=Queue a global task=] on the [=PressureObserver task source=] given |document|'s
               [=relevant global object=] |relevantGlobal| to run these steps:
               <ol>
+                <li>
+                  If |promise| was rejected, run the following substeps:
+                  <ol>
+                    <li>
+                      If |relevantGlobal|'s [=registered observer list=] for |source| is [=list/empty=],
+                      deactivate [=data delivery=] of |source| data to |relevantGlobal|.
+                    </li>
+                    <li>
+                      Return.
+                    </li>
+                  </ol>
+                </li>
                 <li>
                   [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
                   to |relevantGlobal|'s [=registered observer list=] for |source|.
@@ -533,6 +554,10 @@ of system resources such as the CPU.
           [=map/Remove=] |this|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
+          [=list/For each=] (|promiseSource|, |pendingPromise|) of [=this=].{{PressureObserver/[[PendingObservePromises]]}},
+          if |source| is equal to |promiseSource|, [=reject=] |pendingPromise| with an {{AbortError}}.
+        </li>
+        <li>
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
         </li>
         <li>
@@ -556,6 +581,10 @@ of system resources such as the CPU.
         </li>
         <li>
           [=map/Clear=] |this|.{{PressureObserver/[[LastRecordMap]]}}.
+        </li>
+        <li>
+          [=list/For each=] (|promiseSource|, |pendingPromise|) of [=this=].{{PressureObserver/[[PendingObservePromises]]}},
+          [=reject=] |pendingPromise| with an {{AbortError}}.
         </li>
         <li>
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
