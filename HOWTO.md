@@ -24,17 +24,18 @@ The ComputePressure API is currently available in Chrome Canary and Edge Canary 
 
 ```javascript
 // Observer Callback.
-function PressureObserverCallback(update) {
-  console.log("cpu pressure state = " + update[0].state);
-  console.log("timestamp = " + update[0].time);
-};
+function pressureObserverCallback(updates) {
+  console.log("cpu pressure state = " + updates[0].state);
+  console.log("timestamp = " + updates[0].time);
+}
 
 // Create observer with 1s sample rate.
-observer = new PressureObserver(PressureObserverCallback, 
-                                { sampleRate: 1});
+observer = new PressureObserver(pressureObserverCallback, { sampleRate: 1 });
+
 // Start observer.
-observer.observe('cpu');
+await observer.observe("cpu");
 ```
+
 You should see, everytime the state changes, the following:
 
 ```
