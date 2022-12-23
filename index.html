@@ -481,12 +481,12 @@ of system resources such as the CPU.
         <li>
           If |document| is not null and is not [=allowed to use=] the [=policy-controlled
           feature=] token "compute-pressure", return [=a promise rejected with=] {{NotAllowedError}}.
-        </li>
         <aside class="issue">
           <a href="https://github.com/wicg/compute-pressure/issues/110">
             Permission policy doesn't support workers yet #110
           </a>
         </aside>
+        </li>
         <li>
           Let |promise:Promise| be [=a new promise=].
         </li>
@@ -499,10 +499,14 @@ of system resources such as the CPU.
         <li>
           [=promise/React=] to |promise|:
           <ul>
-            If |promise| was [=resolved|fulfilled=] or [=rejected=], then:
+            <li>
+              If |promise| was [=resolved|fulfilled=] or [=rejected=], then:
               <ol>
-                [=list/Remove=] |tuple| from [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
+                <li>
+                  [=list/Remove=] |tuple| from [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
+                </li>
               </ol>
+            </li>
           </ul>
         </li>
         <li>
