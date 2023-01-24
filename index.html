@@ -41,7 +41,7 @@
     xref: {
       profile: "web-platform",
       specs: [
-        "permissions", "permissions-policy", "hr-time", "picture-in-picture", "mediacapture-streams"
+        "permissions-policy", "hr-time", "picture-in-picture", "mediacapture-streams"
       ]
     }
   };
@@ -260,11 +260,11 @@
   <p>
     The Compute Pressure API defines a [=policy-controlled feature=]
     identified by the token "compute-pressure".
-    Its [=default allowlist=] is `["self"]`.
+    Its [=policy-controlled feature/default allowlist=] is `["self"]`.
   </p>
   <aside class="note">
     <p>
-      The <a>default allowlist</a> of `["self"]` allows usage in
+      The [=policy-controlled feature/default allowlist=] of `["self"]` allows usage in
       same-origin nested frames but prevents third-party content from using
       the feature.
     </p>
@@ -673,6 +673,7 @@ of system resources such as the CPU.
       readonly attribute PressureState state;
       readonly attribute FrozenArray&lt;PressureFactor&gt; factors;
       readonly attribute DOMHighResTimeStamp time;
+      [Default] object toJSON();
     };
   </pre>
   <p>
@@ -692,7 +693,7 @@ of system resources such as the CPU.
     <li>
       a <dfn>[[\Time]]</dfn> value of type {{DOMHighResTimeStamp}},
       which corresponds to the
-      time the data was obtained from the system, relative to the [=time origin=] of the global object associated with
+      time the data was obtained from the system, relative to the [=environment settings object/time origin=] of the global object associated with
       the {{PressureObserver}} instance that generated the notification.
     </li>
   </ul>
@@ -718,6 +719,12 @@ of system resources such as the CPU.
     <h3>The <dfn>time</dfn> attribute</h3>
     <p>
       The {{PressureRecord/time}} [=getter steps=] are to return its {{PressureRecord/[[Time]]}} internal slot.
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>toJSON</dfn> member</h3>
+    <p>
+      When {{PressureRecord.toJSON}} is called, run [[[WebIDL]]]'s [=default toJSON steps=].
     </p>
   </section>
 </section>
