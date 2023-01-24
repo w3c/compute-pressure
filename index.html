@@ -16,11 +16,13 @@
         name: "Olivier Yiptong",
         company: "Google Inc.",
         companyURL: "https://google.com",
+        w3cid: 81110,
       },
       {
         name: "Victor Costan",
         company: "Google Inc.",
         companyURL: "https://google.com",
+        w3cid: 72312,
       }
     ],
     editors: [
@@ -49,7 +51,7 @@
 <style>
   @counter-style pressure-states-emoji {
     system: cyclic;
-    symbols: "⚪" "🟢" "🟡" "🔴";
+    symbols: "\026AA" "\01F7E2" "\01F7E1" "\01F534";
     suffix: " ";
   }
   .pressure-states {
@@ -57,7 +59,7 @@
   }
   @counter-style pressure-factors-emoji {
     system: cyclic;
-    symbols: "🌡" "🔌";
+    symbols: "\01F321" "\01F50C";
     suffix: " ";
   }
   .pressure-factors {
@@ -479,12 +481,12 @@ of system resources such as the CPU.
         <li>
           If |document| is not null and is not [=allowed to use=] the [=policy-controlled
           feature=] token "compute-pressure", return [=a promise rejected with=] {{NotAllowedError}}.
-        </li>
         <aside class="issue">
           <a href="https://github.com/wicg/compute-pressure/issues/110">
             Permission policy doesn't support workers yet #110
           </a>
         </aside>
+        </li>
         <li>
           Let |promise:Promise| be [=a new promise=].
         </li>
@@ -497,10 +499,14 @@ of system resources such as the CPU.
         <li>
           [=promise/React=] to |promise|:
           <ul>
-            If |promise| was [=resolved|fulfilled=] or [=rejected=], then:
+            <li>
+              If |promise| was [=resolved|fulfilled=] or [=rejected=], then:
               <ol>
-                [=list/Remove=] |tuple| from [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
+                <li>
+                  [=list/Remove=] |tuple| from [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
+                </li>
               </ol>
+            </li>
           </ul>
         </li>
         <li>
