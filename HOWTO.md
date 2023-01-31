@@ -1,6 +1,6 @@
 # How to experiment ComputePressure API with Chrome
 
-The ComputePressure API is currently available in Chrome Canary and Edge Canary behind a flag.
+The [Compute Pressure API](https://www.w3.org/TR/compute-pressure/) is currently available in Chrome Canary and Edge Canary behind a flag.
 
 
 ## Own local Chromium repository (Linux):
