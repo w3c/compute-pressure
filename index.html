@@ -417,7 +417,9 @@
     The <dfn>contributing factors change threshold exceeded</dfn> steps given |factors| and |state|, are as follows:
     <ol>
       <li>
-        If |factors| exceed an [=implementation-defined=] threshold for |state|, return true.
+        If changes in [=contributing factors=] represented by |factors|
+        exceed an [=implementation-defined=] threshold for |state|,
+        return true.
       </li>
       <li>
         Return false.
@@ -425,7 +427,9 @@
     </ol>
     <aside class="note">
       The [=contributing factors change threshold exceeded=] algorithm allows user agents to avoid
-      flip-flopping between two states in certain circumstances. This specification does not define
+      flip-flopping between two states in certain circumstances. For example, a state might otherwise
+      change too rapidly in response to a certain system metric that fluctuates around a boundary
+      condition that triggers a state change. This specification does not define
       the precise algorithm to allow implementations optimize this algorithm to meet their specific needs.
       One possible implementation of this algorithm is to use a
       <a href="https://en.wikipedia.org/wiki/Preisach_model_of_hysteresis#Nonideal_relay">nonideal relay</a>
