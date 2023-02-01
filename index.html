@@ -413,6 +413,26 @@
       </li>
     </ul>
   </p>
+  <p>
+    The <dfn>contributing factors change threshold exceeded</dfn> steps given |factors| and |state|, are as follows:
+    <ol>
+      <li>
+        If |factors| exceed an [=implementation-defined=] threshold for |state|, return true.
+      </li>
+      <li>
+        Return false.
+      </li>
+    </ol>
+    <aside class="note">
+      The [=contributing factors change threshold exceeded=] algorithm allows user agents to avoid
+      flip-flopping between two states in certain circumstances. This specification does not define
+      the precise algorithm to allow implementations optimize this algorithm to meet their specific needs.
+      One possible implementation of this algorithm is to use a
+      <a href="https://en.wikipedia.org/wiki/Preisach_model_of_hysteresis#Nonideal_relay">nonideal relay</a>
+      as a model and identify appropriate lower threshold &#945; and upper threshold &#946; for each
+      [=pressure state=] taking special characteristics of each [=contributing factor=] into consideration.
+    </aside>
+  </p>
 </section>
 
 <section> <h2>Pressure Observer</h2>
@@ -916,7 +936,9 @@ of system resources such as the CPU.
           Let |record:PressureRecord| be |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
-          If |record|.{{PressureRecord/[[State]]}} is not equal to |state|, return true.
+          If |record|.{{PressureRecord/[[State]]}} is not equal to |state| and [=contributing factors change threshold exceeded=]
+          given |factors| and |record|.{{PressureRecord/[[State]]}} returns true,
+          return true.
         </li>
         <li>
           If |record|.{{PressureRecord/[[Factors]]}} and |factors| are not [=set/supersets=] of each other, return true.
