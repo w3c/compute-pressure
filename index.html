@@ -299,6 +299,9 @@
     Each [=global object=] has:
     <ul>
       <li>
+        a <dfn>current pressure state</dfn> (a string), initialized to the empty string.
+      </li>
+      <li>
         a <dfn>pressure observer task queued</dfn> (a boolean), which is initially false.
       </li>
       <li>
@@ -387,7 +390,7 @@
 
 <section> <h2>Contributing Factors</h2>
   <p>
-    <dfn>Contributing factors</dfn> represents the factors contributing to the system performance and current [=pressure state=].
+    <dfn>Contributing factors</dfn> represents the factors contributing to the system performance and [=current pressure state=].
     In case the [=pressure state=] is nominal or fair, the {{PressureRecord}} internal slot {{PressureRecord/[[Factors]]}}
     will always be [=list/empty=].
   </p>
@@ -418,8 +421,8 @@
     <ol>
       <li>
         If [=implementation-defined=] low-level hardware metrics that contribute to the
-        system performance and current [=pressure state=] drop below or exceed an
-        [=implementation-defined=] threshold for the current [=pressure state=], return true.
+        system performance and [=current pressure state=] drop below or exceed an
+        [=implementation-defined=] threshold for the [=current pressure state=], return true.
       </li>
       <li>
         Return false.
@@ -714,7 +717,7 @@ of system resources such as the CPU.
       a <dfn>[[\Source]]</dfn> value of type {{PressureSource}}, which represents the current [=source type=].
     </li>
     <li>
-      a <dfn>[[\State]]</dfn> value of type {{PressureState}}, which represents the current [=pressure state=].
+      a <dfn>[[\State]]</dfn> value of type {{PressureState}}, which represents the [=current pressure state=].
     </li>
     <li>
       a <dfn>[[\Factors]]</dfn>, which is [=ordered set=] of {{PressureFactor}} values,
