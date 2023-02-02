@@ -414,19 +414,19 @@
     </ul>
   </p>
   <p>
-    The <dfn>contributing factors change threshold exceeded</dfn> steps given |factors| and |state|, are as follows:
+    The <dfn>change in contributing factors is substantial</dfn> steps are as follows:
     <ol>
       <li>
-        If changes in [=contributing factors=] represented by |factors|
-        exceed an [=implementation-defined=] threshold for |state|,
-        return true.
+        If [=implementation-defined=] low-level hardware metrics that contribute to the
+        system performance and current [=pressure state=] drop below or exceed an
+        [=implementation-defined=] threshold for the current [=pressure state=], return true.
       </li>
       <li>
         Return false.
       </li>
     </ol>
     <aside class="note">
-      The [=contributing factors change threshold exceeded=] algorithm allows user agents to avoid
+      The [=change in contributing factors is substantial=] algorithm allows user agents to avoid
       flip-flopping between two states in certain circumstances. For example, a state might otherwise
       change too rapidly in response to a certain system metric that fluctuates around a boundary
       condition that triggers a state change. This specification does not define
@@ -940,9 +940,8 @@ of system resources such as the CPU.
           Let |record:PressureRecord| be |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
-          If |record|.{{PressureRecord/[[State]]}} is not equal to |state| and [=contributing factors change threshold exceeded=]
-          given |factors| and |record|.{{PressureRecord/[[State]]}} returns true,
-          return true.
+          If |record|.{{PressureRecord/[[State]]}} is not equal to |state| and [=change in contributing factors is substantial=]
+          returns true, return true.
         </li>
         <li>
           If |record|.{{PressureRecord/[[Factors]]}} and |factors| are not [=set/supersets=] of each other, return true.
