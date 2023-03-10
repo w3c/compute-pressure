@@ -1,7 +1,7 @@
 Support for Power Pressure
 ===
 
-This we need to do to create a Power Pressure Observer POC.
+This is what we need to do in order to create a Power Pressure Observer POC.
 
 The high level states map well to power pressure, though the contributing factors don’t. We could initially leave the factors array empty until we find some factors that would be useful to developers.
 
