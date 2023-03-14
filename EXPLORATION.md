@@ -50,3 +50,14 @@ readonly attribute PressureState? average10s;
 readonly attribute PressureState? average30s;
 readonly attribute PressureState? average300s;
 ```
+
+A step back
+===
+
+In reality there seems to be different kinds of use-cases for the CPU telemetry which can affect how we expose the data. One of our biggest issues has been that the data is high-level due to privacy considerations that makes it less useful for AB-testing of new code paths in live deployments.
+
+But a site interested in doing AB-testing is mostly interested in knowing the "utilization" of CPU resources (possible in addition with core type, boost modes, stalls etc.) in threads it's using (main thread, workers, camera thread etc) as well as a rough estimate of the global pressure on the system.
+
+Given it applies to it's own threads, there shouldn't actually be privacy issues in exposing low level data if it is done in a platform abstracted manner, and the global pressure can still be consulted via the existing API.
+
+If we take this a step further, the use-cases for global CPU pressure really revolves around avoiding throttling and noisy fans, but there is only so much a site can do, as it might not be caused by the site itself. It is really mostly related to high thermals and consistent high global utilization. You could argue that setting frequency actually matters the most when looking at detailed data like low level utilization (as in percentage) and we could ignore frequency for the high-level states. Additionally, global CPU pressure is an important additional data point when looking at local thread utilization, as in the AB-testing case.

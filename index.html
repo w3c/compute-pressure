@@ -359,30 +359,21 @@
   <p>
     <ul class="pressure-states">
       <li>
-        <b>Nominal</b>: Current workloads are causing minimal pressure, allowing the system to run
-        at a lower clock frequency to preserve power.
+        <b>Nominal</b>: The conditions of the target device are at an acceptable level with no noticeable
+        adverse effects on the user.
       </li>
       <li>
-        <b>Fair</b>: The system is doing fine, everything is smooth and it can take on additional work without issues.
+        <b>Fair</b>: Target device pressure, temperature and/or energy usage are slightly elevated, potentially
+        resulting in reduced battery-life, as well as fans (or systems with fans) becoming active and audible.
+        Apart from that the target device is running flawlessly and can take on additional work.
       </li>
       <li>
-        <b>Serious</b>: There is some serious pressure on the system, but it is sustainable and the system
-        is doing well, but it is getting close to its limits:
-        <ul>
-          <li>
-            Clock speed (depending on AC or DC power) is consistently high
-          </li>
-          <li>
-            Thermals are high but system can handle it
-          </li>
-        </ul>
-        At this point, if you add more work the system may move into critical.
+        <b>Serious</b>: Target device pressure, temperature and/or energy usage is consistently highly elevated.
+        The system may be throttling as a countermeasure to reduce thermals.
       </li>
       <li>
-        <b>Critical</b>: The system is now about to reach its limits, but it hasn’t reached <em>the</em> limit yet.
-        Critical doesn’t mean that the system is being actively throttled, but this state is not sustainable for
-        the long run and might result in throttling if the workload remains the same. This signal is the last call
-        for the web application to lighten its workload.
+        <b>Critical</b>: The temperature of the target device or system is significantly elevated and it requires
+        cooling down to avoid any potential issues.
       </li>
     </ul>
   </p>
