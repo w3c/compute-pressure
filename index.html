@@ -852,59 +852,61 @@ of system resources such as the CPU.
         </ul>
       </aside>
       The <dfn>passes privacy test</dfn> steps given the argument |observer:PressureObserver|, are as follows:
-      <ul>
+      <ol>
         <li>
           Let |relevantGlobal| be |observer|'s [=relevant global object=].
         </li>
-        <li>
-          If |relevantGlobal| is a {{WorkerGlobalScope}} object:
-          <ol>
-            <li>
-              If |relevantGlobal|'s relevant worker is not a <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
-              active needed worker</a>, return false.
-            </li>
-          </ol>
-        </li>
-        <li>
-          If |relevantGlobal| is a {{Window}} object:
-          <ol>
-            <li>
-              If |relevantGlobal|'s [=associated document=] is not [=Document/fully active=], return false.
-            </li>
-            <li>
-              [=list/For each=] |origin| in
-              <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
-                initiators of active Picture-in-Picture sessions</a>:
-              <ol>
-                <li>
-                  If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with |origin|, return true.
-                </li>
-              </ol>
-            </li>
-            <li>
-              If |relevantGlobal|'s [=browsing context=] is [=context is capturing|capturing=], return true.
-            </li>
-            <li>
-              Let |topLevelBC| be |relevantGlobal|'s [=browsing context=]'s [=top-level browsing context=].
-            </li>
-            <li>
-              If |topLevelBC| does not have [=top-level traversable/system focus=], return false.
-            </li>
-            <li>
-              Let |focusedDocument| be the |topLevelBC|'s
-              <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
-                currently focused area</a>'s [=Node/node document=].
-            </li>
-            <li>
-              If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with
-              |focusedDocument|'s [=origin=], return true.
-            </li>
-            <li>
-              Otherwise, return false.
-            </li>
-          </ol>
-        </li>
-      </ul>
+        <ul>
+          <li>
+            If |relevantGlobal| is a {{WorkerGlobalScope}} object:
+            <ol>
+              <li>
+                If |relevantGlobal|'s relevant worker is not a <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
+                active needed worker</a>, return false.
+              </li>
+            </ol>
+          </li>
+          <li>
+            If |relevantGlobal| is a {{Window}} object:
+            <ol>
+              <li>
+                If |relevantGlobal|'s [=associated document=] is not [=Document/fully active=], return false.
+              </li>
+              <li>
+                [=list/For each=] |origin| in
+                <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
+                  initiators of active Picture-in-Picture sessions</a>:
+                <ol>
+                  <li>
+                    If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with |origin|, return true.
+                  </li>
+                </ol>
+              </li>
+              <li>
+                If |relevantGlobal|'s [=browsing context=] is [=context is capturing|capturing=], return true.
+              </li>
+              <li>
+                Let |topLevelBC| be |relevantGlobal|'s [=browsing context=]'s [=top-level browsing context=].
+              </li>
+              <li>
+                If |topLevelBC| does not have [=top-level traversable/system focus=], return false.
+              </li>
+              <li>
+                Let |focusedDocument| be the |topLevelBC|'s
+                <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
+                  currently focused area</a>'s [=Node/node document=].
+              </li>
+              <li>
+                If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin-domain=] with
+                |focusedDocument|'s [=origin=], return true.
+              </li>
+              <li>
+                Otherwise, return false.
+              </li>
+            </ol>
+          </li>
+        </ul>
+      </ol>
       <aside class="note">
         As there might be multiple observers, each with a different [=requested sampling rate=], the underlying
         [=platform collector=] will need to use a [=sampling rate=] that fulfills all these requirements. This also
