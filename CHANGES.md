@@ -6,6 +6,7 @@ No real feedback was shared by Google with other parties, incl. Intel.
 At the beginning of 2022, the ownership of the Compute Pressure API was transferred to Intel.
 
 ## Changes since last Origin Trial
+
 After research and discussions with interested parties (e.g., Google, Zoom and others), we
 decided to make the following major changes to the API shape:
 
