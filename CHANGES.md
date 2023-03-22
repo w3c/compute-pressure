@@ -68,10 +68,10 @@ implemented in later experimentation.
 ```js
 const observer = new PressureObserver(pressureCallback, { sampleRate : 1 });
 
-observer.observer('cpu');
+observer.observer("cpu");
 
 function pressureCallback(update) {
-  if (update.status == critical) {
+  if (update.status == "critical") {
     // Dramatically cut down compute requirements to avoid overheating.
     return;
   }
