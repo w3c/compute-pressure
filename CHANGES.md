@@ -1,7 +1,7 @@
 # API Surface Changes
 
 This file describes API surface changes made during experimentation.
-A first Origin Trial was carried out between [M92-M94](https://chromestatus.com/feature/5597608644968448).
+A first Origin Trial was carried out between [M92–M94](https://chromestatus.com/feature/5597608644968448).
 No real feedback was shared by Google with other parties, incl. Intel.
 At the beginning of 2022, the ownership of the Compute Pressure API was transferred to Intel.
 
