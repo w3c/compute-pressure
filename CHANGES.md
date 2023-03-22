@@ -14,7 +14,7 @@ decided to make the following major changes to the API shape:
 
 - Alignment with existing APIs: The Observer pattern used by the specification now more closely [follows](https://github.com/w3c/compute-pressure/issues/21) existing Observer based APIs on the web platform.
 
-- Partner requests: The APIs now works in iframes as well as [workers](https://github.com/w3c/compute-pressure/issues/15) (shared and dedicated) with proper security and privacy mitigations in place.
+- Partner requests: The APIs now work in iframes as well as [workers](https://github.com/w3c/compute-pressure/issues/15) (shared and dedicated) with proper security and privacy mitigations in place.
 
 In a few words, the Compute Pressure API proposed for the new OT is more mature, stable and has been re-designed to address security and fingerprinting concerns.
 
