@@ -10,7 +10,7 @@ At the beginning of 2022, the ownership of the Compute Pressure API was transfer
 After research and discussions with interested parties (e.g., Google, Zoom and others), we
 decided to make the following major changes to the API shape:
 
-- For better ergonomics, and due to security and fingerprinting [concerns](https://github.com/w3c/compute-pressure/issues/24), the API [interfaces](https://www.w3.org/TR/compute-pressure/#the-pressurerecord-interface) has been redesigned.
+- For better ergonomics, and due to security and fingerprinting [concerns](https://github.com/w3c/compute-pressure/issues/24), the API [interfaces](https://www.w3.org/TR/compute-pressure/#the-pressurerecord-interface) has been redesigned to not use developer-configurable buckets but instead output pressure changes as [high level states](https://github.com/w3c/compute-pressure/blob/main/high-level-states.md).
 
 - Alignment with existing APIs: The Observer pattern used by the specification now more closely [follows](https://github.com/w3c/compute-pressure/issues/21) existing Observer based APIs on the web platform.
 
