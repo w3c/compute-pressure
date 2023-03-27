@@ -65,6 +65,17 @@
   .pressure-factors {
     list-style-type: pressure-factors-emoji;
   }
+  @counter-style pressure-source-emoji {
+    system: cyclic;
+    symbols: "\1F321" "\1F4A1";
+    suffix: " ";
+  }
+  .pressure-source {
+    list-style-type: pressure-source-emoji;
+  }
+  ul li::marker {
+    font-family: "Segoe UI Emoji", "Noto Color Emoji";
+  }
 </style>
 <section id="abstract">
   <p>
@@ -155,26 +166,43 @@
   <section>
     <h3>Supported sources</h3>
     <p>
-      The specification currently defines the <dfn>supported source types</dfn> as the
-      Central [=Processing Unit=], also know  as the CPU, but intents to support other [=source types=]
-      such as GPU (Graphical [=Processing Unit=]) in future levels of this specification.
-      <aside class="note">
-        <p>
-          If a user calls {{PressureObserver/observe()}} with a [=source type=] not part of
-          {{PressureSource}}, at the level of this specification the [=user agent=] supports,
-          the method will throw a {{TypeError}}.
-        </p>
-        <p>
-          If the [=source type=] is part of {{PressureSource}}, but not supported by the
-          [=user agent=], host OS or underlying hardware, the method will instead throw
-          {{NotSupportedError}}.
-        </p>
-        <p>
-          To check what [=source types=] are supported, a user can call the static method
-          {{PressureObserver/supportedSources()}}.
-        </p>
-      </aside>
+      The specification currently defines the <dfn>supported source types</dfn> as 
+      <em>global system thermals</em> and the <em>central [=processing unit=]</em>, also know as the CPU.
+      Future levels of this specification MAY introduce additional [=source types=].
     </p>
+    <pre class="idl">
+      enum PressureSource { "thermals", "cpu" };
+    </pre>
+    <p>
+      The <dfn>PressureSource</dfn> enum represents the [=supported source types=]:
+    </p>
+    <p>
+      <ul class="pressure-source">
+        <li>
+          {{PressureSource/"thermals"}} represents the global thermal state of the system.
+        </li>
+        <li>
+          {{PressureSource/"cpu"}} represents the average pressure of the central [=processing unit=]
+          across all its cores.
+        </li>
+      </ul>
+    </p>
+    <aside class="note">
+      <p>
+        If a user calls {{PressureObserver/observe()}} with a [=source type=] not part of
+        {{PressureSource}}, at the level of this specification the [=user agent=] supports,
+        the method will throw a {{TypeError}}.
+      </p>
+      <p>
+        If the [=source type=] is part of {{PressureSource}}, but not supported by the
+        [=user agent=], host OS or underlying hardware, the method will instead throw
+        {{NotSupportedError}}.
+      </p>
+      <p>
+        To check what [=source types=] are supported, a user can call the static method
+        {{PressureObserver/supportedSources()}}.
+      </p>
+    </aside>
   </section>
   <section>
     <h3>Sampling and Reporting Rate</h3>
@@ -359,20 +387,20 @@
   <p>
     <ul class="pressure-states">
       <li>
-        <b>Nominal</b>: The conditions of the target device are at an acceptable level with no noticeable
+        {{PressureState/"nominal"}}: The conditions of the target device are at an acceptable level with no noticeable
         adverse effects on the user.
       </li>
       <li>
-        <b>Fair</b>: Target device pressure, temperature and/or energy usage are slightly elevated, potentially
+        {{PressureState/"fair"}}: Target device pressure, temperature and/or energy usage are slightly elevated, potentially
         resulting in reduced battery-life, as well as fans (or systems with fans) becoming active and audible.
         Apart from that the target device is running flawlessly and can take on additional work.
       </li>
       <li>
-        <b>Serious</b>: Target device pressure, temperature and/or energy usage is consistently highly elevated.
+        {{PressureState/"serious"}}: Target device pressure, temperature and/or energy usage is consistently highly elevated.
         The system may be throttling as a countermeasure to reduce thermals.
       </li>
       <li>
-        <b>Critical</b>: The temperature of the target device or system is significantly elevated and it requires
+        {{PressureState/"critical"}}: The temperature of the target device or system is significantly elevated and it requires
         cooling down to avoid any potential issues.
       </li>
     </ul>
@@ -397,11 +425,11 @@
   <p>
     <ul class="pressure-factors">
       <li>
-        <b>Thermal</b>: The source is under elevated thermal conditions and the system is
+        {{PressureFactor/"thermal"}}: The source is under elevated thermal conditions and the system is
         unable to keep temperature below safe limits at peak power.
       </li>
       <li>
-        <b>Power</b>: The power supply (incl. battery capacity) is too weak to run at peak power,
+        {{PressureFactor/"power-supply"}}: The power supply (incl. battery capacity) is too weak to run at peak power,
         or artificially limited by a system or user initiated power mode to conserve power or
         avoid fan noise.
       </li>
@@ -453,8 +481,6 @@ of system resources such as the CPU.
     The {{PressureObserver}} can be used to observe changes in the [=pressure states=].
   </p>
   <pre class="idl">
-    enum PressureSource { "cpu" };
-
     [Exposed=(DedicatedWorker,SharedWorker,Window), SecureContext]
     interface PressureObserver {
       constructor(PressureUpdateCallback callback, optional PressureObserverOptions options = {});
