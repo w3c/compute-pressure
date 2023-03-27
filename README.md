@@ -59,9 +59,11 @@ the resource pressure of the end-user device.
 
 ## Goals / Motivating Use Cases
 
-Two primary use cases enhanced by v1 are video conferencing and video games. These  popular
-[real-time applications](https://en.wikipedia.org/wiki/Real-time_computing#Criteria_for_real-time_computing) are classified as _soft_. That is, the quality of service degrades if the system is exercised beyond critical, but does not lead to a total system failure.
-These _soft_ real-time application greatly benefit from being able to adapt their workloads based on CPU consumption. Specifically, v1 aims to facilitate the following adaptation decisions for these use cases:
+The primary use cases enhanced by v1 are video conferencing and video games. These  popular
+[real-time applications](https://en.wikipedia.org/wiki/Real-time_computing#Criteria_for_real-time_computing) are classified as _soft_. That is, the quality of service degrades if the system is exercised beyond certain states, but does not lead to a total system failure.
+These _soft_ real-time application greatly benefit from being able to adapt their workloads based on CPU consumption/pressure.
+
+Specifically, v1 aims to facilitate the following adaptation decisions for these use cases:
 
 * Video conferencing
   * Adjust the number of video feeds shown simultaneously during calls with
@@ -82,6 +84,8 @@ These _soft_ real-time application greatly benefit from being able to adapt thei
     simulations that don’t impact gameplay)
   * Tweak quality-vs-speed knobs in the game’s rendering engine (shadows
     quality, texture filtering, view distance)
+
+Technically these can be accomplished by knowing thermal states (e.g., is the system being passively cooled - throttled) as well as CPU pressure states for the threads the site is using such as main thread and workers. System thermals is a global state and can be affected by other apps and sites than the observing site.
 
 ### Future Goals
 
