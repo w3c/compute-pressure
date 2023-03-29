@@ -158,7 +158,7 @@
   <section>
     <h3>Supported sources</h3>
     <p>
-      The specification currently defines the <dfn>supported source types</dfn> as 
+      The specification currently defines the <dfn>supported source types</dfn> as
       <em>global system thermals</em> and the <em>central [=processing unit=]</em>, also know as the CPU.
       Future levels of this specification MAY introduce additional [=source types=].
     </p>
@@ -419,9 +419,9 @@
     </ol>
     <aside class="note">
       <p>
-        The [=change in contributing factors is substantial=] algorithm allows [=user agents=] to avoid flip- 
-        flopping between states in certain circumstances. For example, a state might otherwise change too rapidly 
-        in response to a certain system metric that fluctuates around a boundary condition that triggers a state 
+        The [=change in contributing factors is substantial=] algorithm allows [=user agents=] to avoid flip-
+        flopping between states in certain circumstances. For example, a state might otherwise change too rapidly
+        in response to a certain system metric that fluctuates around a boundary condition that triggers a state
         change.
      </p>
       <p>
@@ -1149,8 +1149,8 @@ of system resources such as the CPU.
           the information it can learn. Change notifications are rate-limited.
         </li>
         <li>
-          <b>first-party context</b> - The feature is only available in first-party
-          contexts by default.
+          <b>Same-origin context</b> - The feature is only available in same-origin contexts by default,
+          but can be extended to third-party contexts such as iframes via a permission policy.
         </li>
       </ol>
       <section>
@@ -1219,15 +1219,16 @@ of system resources such as the CPU.
         </p>
       </section>
       <section>
-        <h4>First-party contexts</h4>
+        <h4>Same-origin contexts</h4>
         <p>
-          This API will only be available in frames served from the same origin as the
-          top-level frame. This requirement is necessary for preserving the privacy
-          benefits of the API's quantizing scheme.
+          By <em>default</em> data delivery is restricted to documents served from the same-origin as an
+          <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
+          initiator of an active picture-in-picture-session</a>,
+          documents [=context is capturing|capturing=]
+          or the document with [=top-level traversable/system focus=], if any.
         </p>
         <p>
-          The same-origin requirement above implies that the API is only available in
-          first-party contexts by default.
+          The documents qualifying for data delivery, under the above rules, can delegate it to documents in [=child navigables=].
         </p>
       </section>
     </p>
