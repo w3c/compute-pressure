@@ -57,14 +57,6 @@
   .pressure-states {
     list-style-type: pressure-states-emoji;
   }
-  @counter-style pressure-factors-emoji {
-    system: cyclic;
-    symbols: "\01F321" "\01F50C";
-    suffix: " ";
-  }
-  .pressure-factors {
-    list-style-type: pressure-factors-emoji;
-  }
   @counter-style pressure-source-emoji {
     system: cyclic;
     symbols: "\1F321" "\1F4A1";
@@ -409,54 +401,37 @@
 
 <section> <h2>Contributing Factors</h2>
   <p>
-    <dfn>Contributing factors</dfn> represents the factors contributing to the system performance and [=current pressure state=].
-    In case the [=pressure state=] is nominal or fair, the {{PressureRecord}} internal slot {{PressureRecord/[[Factors]]}}
-    will always be [=list/empty=].
-  </p>
-  <aside class="note">
-    The [=user agent=] might not be able to expose the factors for all systems or for all [=pressure states=].
-  </aside>
-  <pre class="idl">
-    enum PressureFactor { "thermal", "power-supply" };
-  </pre>
-  <p>
-    The <dfn>PressureFactor</dfn> enum represents the [=contributing factors=]:
-  </p>
-  <p>
-    <ul class="pressure-factors">
-      <li>
-        {{PressureFactor/"thermal"}}: The source is under elevated thermal conditions and the system is
-        unable to keep temperature below safe limits at peak power.
-      </li>
-      <li>
-        {{PressureFactor/"power-supply"}}: The power supply (incl. battery capacity) is too weak to run at peak power,
-        or artificially limited by a system or user initiated power mode to conserve power or
-        avoid fan noise.
-      </li>
-    </ul>
+    Contributing factors represents the underlying hardware metrics contributing to the [=current pressure state=]
+    and can be [=implementation-defined=].
   </p>
   <p>
     The <dfn>change in contributing factors is substantial</dfn> steps are as follows:
     <ol>
       <li>
         If [=implementation-defined=] low-level hardware metrics that contribute to the
-        system performance and [=current pressure state=] drop below or exceed an
-        [=implementation-defined=] threshold for the [=current pressure state=], return true.
+        [=current pressure state=] drop below or exceed an, per metric,
+        [=implementation-defined=] threshold
+        for the [=current pressure state=], return true.
       </li>
       <li>
         Return false.
       </li>
     </ol>
     <aside class="note">
-      The [=change in contributing factors is substantial=] algorithm allows user agents to avoid
-      flip-flopping between two states in certain circumstances. For example, a state might otherwise
-      change too rapidly in response to a certain system metric that fluctuates around a boundary
-      condition that triggers a state change. This specification does not define the precise algorithm
-      to allow implementations optimize this algorithm to match the underlying hardware platform's behavior.
-      One possible implementation of this algorithm is to use a
-      <a href="https://en.wikipedia.org/wiki/Preisach_model_of_hysteresis#Nonideal_relay">nonideal relay</a>
-      as a model and identify appropriate lower threshold &#945; and upper threshold &#946; for each
-      [=pressure state=] taking special characteristics of each [=contributing factor=] into consideration.
+      <p>
+        The [=change in contributing factors is substantial=] algorithm allows [=user agents=] to avoid flip- 
+        flopping between states in certain circumstances. For example, a state might otherwise change too rapidly 
+        in response to a certain system metric that fluctuates around a boundary condition that triggers a state 
+        change.
+     </p>
+      <p>
+        This specification does not define the precise algorithm
+        to allow implementations optimize this algorithm to match the underlying hardware platform's behavior.
+        One possible implementation of this algorithm is to use a
+        <a href="https://en.wikipedia.org/wiki/Preisach_model_of_hysteresis#Nonideal_relay">nonideal relay</a>
+        as a model and identify appropriate lower threshold &#945; and upper threshold &#946; for each
+        [=pressure state=] taking special characteristics of each contributing factors into consideration.
+      </p>
     </aside>
   </p>
 </section>
@@ -721,7 +696,6 @@ of system resources such as the CPU.
     interface PressureRecord {
       readonly attribute PressureSource source;
       readonly attribute PressureState state;
-      readonly attribute FrozenArray&lt;PressureFactor&gt; factors;
       readonly attribute DOMHighResTimeStamp time;
       [Default] object toJSON();
     };
@@ -735,10 +709,6 @@ of system resources such as the CPU.
     </li>
     <li>
       a <dfn>[[\State]]</dfn> value of type {{PressureState}}, which represents the [=current pressure state=].
-    </li>
-    <li>
-      a <dfn>[[\Factors]]</dfn>, which is [=ordered set=] of {{PressureFactor}} values,
-      which represents the current [=contributing factors=].
     </li>
     <li>
       a <dfn>[[\Time]]</dfn> value of type {{DOMHighResTimeStamp}},
@@ -757,12 +727,6 @@ of system resources such as the CPU.
     <h3>The <dfn>state</dfn> attribute</h3>
     <p>
       The {{PressureRecord/state}} [=getter steps=] are to return its {{PressureRecord/[[State]]}} internal slot.
-    </p>
-  </section>
-  <section>
-    <h3>The <dfn>factors</dfn>  attribute</h3>
-    <p>
-      The {{PressureRecord/factors}} [=getter steps=] are to return its {{PressureRecord/[[Factors]]}} internal slot.
     </p>
   </section>
   <section>
@@ -952,7 +916,7 @@ of system resources such as the CPU.
         </li>
       </ol>
       The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
-      |state:PressureState| and |factors:ordered set of PressureFactor|, are as follows:
+      |state:PressureState|, are as follows:
       <ol>
         <li>
           If |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|] does not [=map/exist=], return true.
@@ -963,9 +927,6 @@ of system resources such as the CPU.
         <li>
           If |record|.{{PressureRecord/[[State]]}} is not equal to |state| and [=change in contributing factors is substantial=]
           returns true, return true.
-        </li>
-        <li>
-          If |record|.{{PressureRecord/[[Factors]]}} and |factors| are not [=set/supersets=] of each other, return true.
         </li>
         <li>
           Return false.
@@ -997,15 +958,10 @@ of system resources such as the CPU.
           |data| and |source|.
         </li>
         <li>
-          Let |factors:ordered set of PressureFactor| be an [=implementation-defined=]
-          [=ordered set=] given |data| and |source|, potentially [=list/empty=].
-        </li>
-        <li>
           Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
           obtained from the |relevantGlobal|'s [=platform collector=].
         <aside class="note">
-          The |data| sample and mapping between |data| sample, and [=pressure states=]
-          and [=contributing factors=] to the current state,
+          The |data| sample and mapping between |data| sample, and [=pressure states=],
           is [=implementation-defined=] and may use many different metrics. For instance,
           for CPU, it might consider processor frequency and utilization, as well
           as thermal conditions.
@@ -1024,11 +980,11 @@ of system resources such as the CPU.
               returns false, [=iteration/continue=].
             </li>
             <li>
-              If running [=has change in data=] with |observer|, |source|, |state| and |factors|
+              If running [=has change in data=] with |observer|, |source| and |state|
               returns false, [=iteration/continue=].
             </li>
             <li>
-              Run [=queue a record=] with |observer|, |source|, |state|, |factors| and |timestamp|.
+              Run [=queue a record=] with |observer|, |source|, |state| and |timestamp|.
             </li>
           </ol>
         </li>
@@ -1039,16 +995,14 @@ of system resources such as the CPU.
     <h3>Queue a PressureRecord</h3>
     <p>
       To <dfn>queue a record</dfn> given the arguments |observer:PressureObserver|,
-      |source:PressureSource|, |state:PressureState|,
-      |factors:ordered set of PressureFactor| and |timestamp:DOMHighResTimeStamp|,
+      |source:PressureSource|, |state:PressureState| and |timestamp:DOMHighResTimeStamp|,
       run these steps:
     </p>
     <ol class="algorithm">
       <li>
         Let |record:PressureRecord| be a new {{PressureRecord}} object with its
         {{PressureRecord/[[Source]]}} set to |source|,
-        {{PressureRecord/[[State]]}} set to |state|,
-        {{PressureRecord/[[Factors]]}} set to  |factors|
+        {{PressureRecord/[[State]]}} set to |state|
         and {{PressureRecord/[[Time]]}} set to |timestamp|.
       </li>
       <li>
