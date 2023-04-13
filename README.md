@@ -407,19 +407,21 @@ Many thanks for valuable feedback and advice from:
 * Asaf Yaffe
 * Chen Xing
 * Evan Shrubsole
-* Jesse Barnes
-* Kamila Hasanbega
 * Jan Gora
+* Jesse Barnes
 * Joshua Bell
+* Kamila Hasanbega
 * Matt Menke
 * Moh Haghighat
 * Nicolás Peña Moreno
 * Opal Voravootivat
 * Paul Jensen
 * Peter Djeu
+* Raphael Kubo Da Costa
 * Reilly Grant
 * Ulan Degenbaev
 * Victor Miura
+* Wei Wang
 * Zhenyao Mo
 
 Exposing CPU utilization information has been explored in the following places.
