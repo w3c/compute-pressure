@@ -2,7 +2,7 @@
 <meta charset="UTF-8">
 <html>
   <head>
-    <title>Compute Pressure Demo</title>     
+    <title>Compute Pressure Demo</title>
     <!-- Chrome origin trial token -->
     <meta http-equiv="origin-trial" content="AkQevalWmBczMoMwX9h5kb7teecrlJpkjDvGRQTgVVSmmHdTTHVcwYT42CUi6Z31ejoxx30kaRxVE0vzhcMURQ0AAABZeyJvcmlnaW4iOiJodHRwczovL3czYy5naXRodWIuaW86NDQzIiwiZmVhdHVyZSI6IkNvbXB1dGVQcmVzc3VyZV92MiIsImV4cGlyeSI6MTcwNDQxMjc5OX0=">
   </head>
@@ -10,142 +10,258 @@
     body {
         font-family: Arial, sans-serif;
         margin: 3em 3em;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
     }
+
 
     #status {
       margin-bottom: 1em;
     }
-    .enabled {
-      color: green;
-    }
-    .disabled {
-      color: red;
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      flex: 0 0 640px;
+      box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+      transition: 0.3s;
+      padding: 16px;
     }
 
-    #emoji {
-      font-size: 10em;
+    .card:hover {
+      box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
     }
 
-    #wrapper {
-      width: 600px;
-      height: 400px;
-      position: relative;
+    .card > * {
+      padding: 2px 16px;
+    }
+
+    .card > .content {
+      flex-grow: 1;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    #wrapper > div {
-      position: absolute;
-      color: white;
-      font-size: 8em;
+    summary {
+      user-select: none;
+      font-size: 2em;
+      margin-block-start: 0.67__qem;
+      margin-block-end: 0.67em;
+      margin-inline-start: 0;
+      margin-inline-end: 0;
+      font-weight: bold;
+    }
+
+    #card-list {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .invisible {
+      opacity: 0;
+    }
+
+    .disabled {
+      color: red;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #manual {
+      border: 2px solid #ccc;
+      padding: 6px;
+      display: grid;
+      grid-template-columns: 0.4fr 1fr;
+      grid-template-rows: repeat(4, 1fr);
+      grid-column-gap: 16px;
+      grid-row-gap: 0px;
     }
   </style>
+  <script src="pressure-emoji.js" type="module"></script>
+  <script src="mandelbrot-player.js" type="module"></script>
   <body>
-    <h1>Compute Pressure demo</h1>
-    <div id="status">
-      <label>API Status:</label> <span id="status-text">not available</span>
-    </div>
-    <input type=button id="switch" value="Start"></input>
-    <div></div>
-      <span id="emoji">
-        😴
-      </span>
-      <span id="label">Not observing</span>
-    </div>
+    <div id="status-text" class="disabled hidden">This browser doesn't support the Compute Pressure API</div>
+    <div id="card-list" class="invisible">
+      <details open class="card" draggable="true" data-key="0">
+        <summary>Compute Pressure demo</summary>
+        <div>Press play to have the emoji react to the pressure.</div><br><br>
+        <div class="content">
+          <pressure-emoji></pressure-emoji>
+        </div>
+      </details>
 
-    <br><br>
-    <h1>Mandelbrot simulation</h1>
-    <div>Start to create artificial pressure, add workers to increase further.</div>
-    <br>
-    <div id="wrapper" width="600" height="400">
-      <canvas id="mandel" width="600" height="400"></canvas>
-      <div id="counter">0</div>
+      <details open class="card" draggable="true" data-key="1">
+        <summary>Artificial pressure</summary>
+        <div>Add pressure in parallel, by adding workers.</div><br><br>
+        <div class="content">
+          <mandelbrot-player id="player"></mandelbrot-player>
+        </div>
+      </details>
+
+      <details open class="card" draggable="true" data-key="2">
+        <summary>Side-Channel attack test</summary>
+        <div class="">
+          <div>
+            <input type=button id="calibrate" value="Broadcast"></input> <input id="skip-calibration" type="checkbox">Use manual calibration</input>
+          </div>
+          <br><br>
+          <div id="manual">
+            Delay (milliseconds): <input id="manual-delay" type="number" placeholder="4000">
+            0-value (#workers): <input id="manual-zero" type="number" placeholder="0">
+            reset-value (#workers): <input id="manual-reset" type="number" placeholder="4">
+            1-value (#workers): <input id="manual-one" type="number" placeholder="6">
+          </div>
+          <br><br>
+          <span id="what">Unknown</span>
+          <input id="sent" type="text"><input id="received" type="text">
+          <input id="message" type="text">
+        </div>
+      </details>
     </div>
-    <br>
-    <button id="start">Start simulation</button>
-    <button id="stop">Stop simulation</button>
-    <button id="ww_add">Add worker</button>
-    <button id="ww_sub">Remove worker</button>
   </body>
-  <script src="mandelbrot.js"></script>
   <script type="module">
-    const elem = document.querySelector("#status-text");
-    if (!("PressureObserver" in window)) {
-      elem.innerText = "not available";
-      elem.classList.add("disabled");
-    } else {
-      elem.innerText = "enabled";
-      elem.classList.add("enabled");
-      run();
+    import { BitDataView, MessageEncoder, MessageDecoder, toBinaryString, reverseByte } from "./binutils.js";
+    import { PressureCalibrator } from "./pressure-calibrator.js";
+    import { BitChannelObserver } from "./bit-channel-observer.js";
+    import { BitChannelBroadcaster } from "./bit-channel-broadcaster.js";
+
+    const items = document.querySelectorAll(".card");
+    const parent = document.querySelector("#card-list");
+
+    const order = sessionStorage.getItem("order");
+    if (order) {
+      const copy = [];
+
+      document.querySelectorAll(".card").forEach(item => {
+        copy.push(parent.removeChild(item));
+      })
+
+      for (let index of order.split(",")) {
+        parent.appendChild(copy[index]);
+      }
+    }
+    parent.classList.remove("invisible");
+
+    items.forEach(item => {
+      item.addEventListener("dragstart", () => item.classList.add("dragging"));
+      item.addEventListener("dragend", () => {
+        item.classList.remove("dragging")
+        const str = Array.from(document.querySelectorAll(".card")).map(item => item.dataset.key).join(",");
+        sessionStorage.setItem("order", str);
+      });
+    });
+
+    function calcDistance(elem, mouseX, mouseY) {
+      return Math.floor(Math.sqrt(
+        Math.pow(mouseX - (elem.offsetLeft+(elem.clientWidth / 2)), 2)
+        + Math.pow(mouseY - (elem.offsetTop+(elem.clientHeight / 2)), 2)));
     }
 
-    const emoji = document.getElementById("emoji");
-    const label = document.getElementById("label");
-    const canvas = document.getElementById("mandel");
-    const counter = document.getElementById("counter");
+    parent.addEventListener("dragenter", e => e.preventDefault());
+    parent.addEventListener("dragover", e => {
+      e.preventDefault();
 
-    for (let btn of Array.from(document.getElementsByTagName("button"))) {
-      btn.addEventListener("click", () => {
-        const el = document.createElement("div");
-        counter.innerText = worker_count;
-        el.innerText = worker_count;
-        canvas.insertAdjacentElement("afterend", el);
+      const items = document.querySelectorAll(".card");
+      const draggingItem = document.querySelector(".dragging");
+      const dists = Array.from(items).map(item => calcDistance(item, e.clientX, e.clientY));
+      const targetIndex = dists.indexOf(Math.min(...dists));
+      const draggingIndex = Array.from(items).indexOf(draggingItem);
+      const targetItem = items[targetIndex];
 
-        const animation = [
-          { opacity: 1, transform: 'translateY(0px) translateX(0px) scale(1)' },
-          { opacity: 0, transform: `translateY(-200px) translateX(${Math.random() * 300 -150}px) scale(0.4)` }
-        ];
+      if (draggingIndex > targetIndex) {
+        targetItem.before(draggingItem);
+      } else if (draggingIndex < targetIndex) {
+        targetItem.after(draggingItem);
+      }
+    });
 
-        const timing = {
-          duration: 600,
-          iterations: 1,
-        }
-        el.animate(animation, timing).finished.then(() => el.remove());
-      });
-    }
+    const delay = 4_000;
 
-    function run() {
-      const observer = new PressureObserver(changes => {
-        console.log(changes);
-        switch(changes[0].state) {
-          case "nominal":
-            emoji.innerText = "😌";
-            label.innerText = "Nominal pressure";
-            break;
-          case "fair":
-            emoji.innerText = "😄";
-            label.innerText = "Fair pressure";
-            break;
-          case "serious":
-            emoji.innerText = "😖";
-            label.innerText = "Serious pressure";
-            break;
-          case "critical":
-            emoji.innerText = "🥵";
-            label.innerText = "Critical pressure";
-            break;
-          default:
-            emoji.innerText = "😴";
-            label.innerText = "Not observing";
-        }
-      });
+    const elements = [
+      document.querySelector("#manual-zero"),
+      document.querySelector("#manual-reset"),
+      document.querySelector("#manual-one"),
+      document.querySelector("#manual-delay")
+    ];
 
-      const btn = document.getElementById("switch");
-      btn.onclick = async ev => {
-        if (ev.target.value == "Start") {
-          ev.target.disabled = true;
-          await observer.observe("cpu");
-          ev.target.value = "Stop";
-          ev.target.disabled = false;
+    elements.forEach(el => {
+      console.log(el.id);
+      const value = sessionStorage.getItem(el.id);
+      el.value = value ? value : el.placeholder;
+      el.onchange = () => sessionStorage.setItem(el.id, el.value);
+    });
+
+    const broadcaster = new BitChannelBroadcaster(player.setWorkerCount.bind(player));
+    broadcaster.addEventListener("bitsent", ev => {
+      const bit = ev.detail.value;
+      document.getElementById("sent").value += `${bit}`;
+    });
+    broadcaster.addEventListener("datachange", ev => {
+      const type = ev.detail.type;
+      const value = ev.detail.value;
+      const data = ev.detail.data;
+
+      if (type === "position") {
+        document.getElementById("what").innerText = `position: ${value} (${toBinaryString(data[0])}) + checksum (${toBinaryString(data[1])})`;
+      } else if (type === "character") {
+        document.getElementById("what").innerText = `character: '${value}' (${toBinaryString(data[0])}) + checksum (${toBinaryString(data[1])})`;
+      }
+    });
+
+    const receiver = new BitChannelObserver;
+    receiver.addEventListener("bitreceived", ev => {
+      const bit = ev.detail.value;
+      console.log("Received", bit);
+      document.getElementById("received").value += `${bit}`;
+    });
+    receiver.addEventListener("messagechange", ev => {
+      const msg = ev.detail.value;
+      document.getElementById("received").value = "";
+      document.getElementById("message").value = msg;
+    });
+
+    const run = () => {
+      const skipCalibrationBtn = document.getElementById("skip-calibration");
+      skipCalibrationBtn.checked = sessionStorage.getItem("skip-calibration") ?? false;
+      skipCalibrationBtn.onclick = ev => {
+        sessionStorage.setItem("skip-calibration", ev.target.checked);
+      }
+
+      const calibrateBtn = document.getElementById("calibrate");
+      calibrateBtn.onclick = async ev => {
+        calibrateBtn.disabled = true;
+        const wakeLock = await navigator.wakeLock.request("screen");
+
+        const calibrator = new PressureCalibrator(player.setWorkerCount.bind(player));
+
+        let calibration;
+        if (!skipCalibrationBtn.checked) {
+          calibration = await calibrator.calibrate()
         } else {
-          observer.unobserve("cpu");
-          ev.target.value = "Start";
-          emoji.innerText = "😴";
-          label.innerText = "Not observing";
+          calibration = {
+            zero: document.querySelector("#manual-zero"),
+            reset: document.querySelector("#manual-reset"),
+            one: document.querySelector("#manual-one"),
+            delay: document.querySelector("#manual-delay"),
+          };
         }
-      };
+        console.log(JSON.stringify(calibration));
 
+        const runTest = new URLSearchParams(document.location.search).has("test");
+        if (!runTest) {
+          broadcaster.sendMessage("hello world", calibration);
+        }
+        receiver.observe(runTest);
+      }
+    }
+
+    if ("PressureObserver" in window) {
+      document.querySelector("#status-text").classList.add("hidden");
+      run();
     }
   </script>
 </html>
