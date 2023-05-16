@@ -1,334 +1,252 @@
-// Mandelbrot using Webworkers
+// Mandelbrot using Workers
 // Author: Peter Jensen, Intel Corporation
+//         Kenneth Christiansen, Intel Corporation
 
-const $ = id => document.getElementById(id);
+const MAX_ITERATIONS = 100;
 
-// global variables
-var animate        = false;
-var max_iterations = 100;
-var worker_count   = 0;
+export class Mandelbrot {
+  #context;
+  #canvas;
+  #imageData;
 
-// Basic canvas operations
-var canvas = function () {
-  var _ctx;
-  var _width;
-  var _height;
+  width;
+  height;
+  scale = 1;
 
-  var _image_data;
-
-  function init(canvas_id) {
-    console.log(canvas_id)
-    const $canvas = $(canvas_id);
-    _ctx = $canvas.getContext("2d");
-    _width = $canvas.width;
-    _height = $canvas.height;
-    _image_data = _ctx.getImageData(0, 0, _width, _height);
+  constructor(canvasEl, scale = 1) {
+    this.#canvas = canvasEl;
+    this.#context = this.#canvas.getContext("2d");
+    this.width = this.#canvas.width * scale;
+    this.height = this.#canvas.height * scale;
+    this.#imageData = this.#context.createImageData(this.width, this.height);
   }
 
-  function clear() {
-    for (var i = 0; i < _image_data.data.length; i = i + 4) {
-      _image_data.data[i] = 0;
-      _image_data.data[i + 1] = 0;
-      _image_data.data[i + 2] = 0;
-      _image_data.data[i + 3] = 255;
+  setScale(scale = 1) {
+    this.scale = scale;
+    this.width = this.#canvas.width * scale;
+    this.height = this.#canvas.height * scale;
+    this.#imageData = this.#context.createImageData(this.width, this.height);
+  }
+
+  async drawImageFrame(data) {
+    if (data) {
+      this.#imageData.data.set(data);
+    } else {
+      this.#context.rect(0, 0, this.#canvas.width, this.#canvas.height);
+      this.#context.fillStyle = "black";
+      this.#context.fill();
+      return;
+    }
+    const image = await createImageBitmap(this.#imageData);
+
+    let x = (this.#canvas.width - this.width) / 2;
+    let y = (this.#canvas.height - this.height) / 2;
+    this.#context.drawImage(image, x, y);
+  }
+};
+
+class MandelbrotWorker extends Worker {
+  constructor(bufferSize) {
+    super("mandelbrot-worker-asm.js");
+    this.buffer = new ArrayBuffer(bufferSize);
+  }
+};
+
+const mandelbrotWorkers = new class {
+  #workers = [];
+  bufferByteLength = 0;
+
+  addWorker(handler) {
+    const worker = new MandelbrotWorker(this.bufferByteLength);
+    this.#workers.push(worker);
+
+    worker.addEventListener('message', handler, false);
+
+    return this.#workers.length - 1;
+  }
+
+  sendRequest(index, message) {
+    const worker = this.#workers[index];
+    const buffer = this.#workers[index].buffer;
+
+    worker.postMessage ({ message, worker_index: index, buffer }, [buffer]);
+  }
+
+  restoreBuffer(index, buffer) {
+    if (buffer.byteLength != this.bufferByteLength) {
+      buffer = new ArrayBuffer(this.bufferByteLength);
+    }
+    this.#workers[index].buffer = buffer;
+  }
+
+  terminateLastWorker() {
+    const lastWorker = this.#workers.pop();
+    lastWorker?.postMessage({ terminate: true });
+  }
+
+  terminateAllWorkers() {
+    while (this.#workers.length) {
+      this.terminateLastWorker();
     }
   }
 
-  function update() {
-    _ctx.putImageData(_image_data, 0, 0);
+  workerCount() {
+    return this.#workers.length;
   }
 
-  function updateFromImageData(image_data) {
-    _image_data.data.set(image_data);
-    _ctx.putImageData(_image_data, 0, 0);
+  bufferOf(index) {
+    return this.#workers[index]?.buffer;
   }
 
-  function setPixel(x, y, rgb) {
-    var index = 4 * (x + _width * y);
-    _image_data.data[index] = rgb[0];
-    _image_data.data[index + 1] = rgb[1];
-    _image_data.data[index + 2] = rgb[2];
-    _image_data.data[index + 3] = 255;
+  workerIsActive(index) {
+    return index < this.#workers.length;
   }
+};
 
-  function colorMap(value) {
-    if (value === max_iterations) {
-      return [0, 0, 0];
-    }
-    var rgb = (value * 0xffff / max) * 0xff;
-    var red = rgb & 0xff;
-    var green = (rgb >> 8) & 0xff;
-    var blue = (rgb >> 16) & 0xff;
-    return [red, green, blue];
+export class Animator {
+  scale_start = 1.0;
+  scale_end   = 0.0005;
+  xc_start    = -0.5;
+  yc_start    = 0.0;
+  xc_end      = 0.0;
+  yc_end      = 0.75;
+  steps       = 200.0;
+
+  frame_count   = 0;  // number of frames painted to the canvas
+  request_count = 0;  // number of frames requested from workers
+  pending_frames = [];
+
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.canvas.drawImageFrame(null);
+
+    mandelbrotWorkers.bufferByteLength = canvas.width * canvas.height * 4;
+
+    this.scale_step  = (this.scale_end - this.scale_start) / this.steps;
+    this.xc_step     = (this.xc_end - this.xc_start) / this.steps;
+    this.yc_step     = (this.yc_end - this.yc_start) / this.steps;
+    this.scale       = this.scale_start;
+    this.xc          = this.xc_start;
+    this.yc          = this.yc_start;
   }
-
-  function mapColorAndSetPixel(x, y, value) {
-    var rgb, r, g, b;
-    var index = 4 * (x + _width * y);
-    if (value === max_iterations) {
-      r = 0;
-      g = 0;
-      b = 0;
-    }
-    else {
-      rgb = (value * 0xffff / max_iterations) * 0xff;
-      r = rgb & 0xff;
-      g = (rgb >> 8) & 0xff;
-      b = (rgb >> 16) & 0xff;
-    }
-    _image_data.data[index] = r;
-    _image_data.data[index + 1] = g;
-    _image_data.data[index + 2] = b;
-    _image_data.data[index + 3] = 255;
-  }
-
-  function getWidth() {
-    return _width;
-  }
-
-  function getHeight() {
-    return _height;
-  }
-
-  return {
-    init:                init,
-    clear:               clear,
-    update:              update,
-    updateFromImageData: updateFromImageData,
-    setPixel:            setPixel,
-    getWidth:            getWidth,
-    getHeight:           getHeight,
-    colorMap:            colorMap,
-    mapColorAndSetPixel: mapColorAndSetPixel
-  }
-
-}();
-
-// Web Worker management
-var mandelbrotWorkers = function () {
-
-  // private
-
-  var mWorkers     = [];
-  var mWorkerCode  = "mandelbrot-worker-asm.js";
-  var mWorkerCount = 0;
-
-  function mWorker (wworker, handler, bufferSize) {
-    this.wworker = wworker;
-    this.buffer  = new ArrayBuffer (bufferSize);
-    this.handler = handler;
-  }
-
-  // public
-
-  function addWorker(handler, bufferSize) {
-    var wworker = new Worker (mWorkerCode);
-    var worker  = new mWorker (wworker, handler, bufferSize);
-    mWorkers [mWorkerCount] = worker;
-    wworker.addEventListener('message', handler, false);
-    mWorkerCount++;
-    return mWorkerCount - 1;
-  }
-
-  function sendRequest(worker_index, message) {
-    var w = mWorkers [worker_index].wworker;
-    var b = mWorkers [worker_index].buffer;
-    w.postMessage ({message: message, worker_index: worker_index, buffer: b}, [b]);
-  }
-
-  function restoreBuffer(worker_index, buffer) {
-    mWorkers[worker_index].buffer = buffer;
-  }
-
-  function terminateLastWorker() {
-    var mw = mWorkers [mWorkerCount-1];
-    mw.wworker.postMessage({terminate:true});
-    mWorkerCount--;
-  }
-
-  function terminateAllWorkers() {
-    while (mWorkerCount > 0) {
-      terminateLastWorker ();
-    }
-  }
-
-  function numberOfWorkers() {
-    return mWorkerCount;
-  }
-
-  function bufferOf(worker_index) {
-    return mWorkers[worker_index].buffer;
-  }
-
-  function workerIsActive(worker_index) {
-    return worker_index < mWorkerCount;
-  }
-
-  return {
-    addWorker:           addWorker,
-    sendRequest:         sendRequest,
-    restoreBuffer:       restoreBuffer,
-    terminateLastWorker: terminateLastWorker,
-    terminateAllWorkers: terminateAllWorkers,
-    numberOfWorkers:     numberOfWorkers,
-    bufferOf:            bufferOf,
-    workerIsActive:      workerIsActive
-  };
-
-}();
-
-// The main animation function
-function animateMandelbrot () {
-  var scale_start = 1.0;
-  var scale_end   = 0.0005;
-  var xc_start    = -0.5;
-  var yc_start    = 0.0;
-  var xc_end      = 0.0;
-  var yc_end      = 0.75;
-  var steps       = 200.0;
-  var scale_step  = (scale_end - scale_start)/steps;
-  var xc_step     = (xc_end - xc_start)/steps;
-  var yc_step     = (yc_end - yc_start)/steps;
-  var scale       = scale_start;
-  var xc          = xc_start;
-  var yc          = yc_start;
-  var frame_count   = 0;  // number of frames painted to the canvas
-  var request_count = 0;  // number of frames requested from workers
-  var now         = performance.now();
-  var width       = canvas.getWidth();
-  var height      = canvas.getHeight();
-  var bufferSize  = width*height*4;
-  var pending_frames = [];
 
   // Look for a frame with 'frame_index' in the pending frames
-  function findFrame(frame_index) {
-    for (var i = 0, n = pending_frames.length; i < n; ++i) {
-      if (pending_frames[i].frame_index === frame_index) {
+  findFrame(frame_index) {
+    for (var i = 0, n = this.pending_frames.length; i < n; ++i) {
+      if (this.pending_frames[i].frame_index === frame_index) {
         return i;
       }
     }
     return false;
   }
 
+  advanceFrame() {
+    if (this.scale < this.scale_end || this.scale > this.scale_start) {
+      this.scale_step = -this.scale_step;
+      this.xc_step = -this.xc_step;
+      this.yc_step = -this.yc_step;
+    }
+    this.scale += this.scale_step;
+    this.xc += this.xc_step;
+    this.yc += this.yc_step;
+  }
+
   // Send a request to a worker to compute a frame
-  function requestFrame(worker_index) {
-    mandelbrotWorkers.sendRequest(
-      worker_index,
-      { request_count:  request_count,
-        width:          width,
-        height:         height,
-        xc:             xc,
-        yc:             yc,
-        scale:          scale,
-        max_iterations: max_iterations});
-    request_count++;
+  requestFrame(worker_index) {
+    mandelbrotWorkers.sendRequest(worker_index, {
+      request_count:  this.request_count,
+      width:          this.canvas.width,
+      height:         this.canvas.height,
+      xc:             this.xc,
+      yc:             this.yc,
+      scale:          this.scale,
+      max_iterations: MAX_ITERATIONS
+    });
+    this.request_count++;
+    this.advanceFrame();
   }
 
-  // Send the pixels to the canvas
-  function paintFrame(buffer) {
-    canvas.updateFromImageData(buffer);
+  paintFrame(buffer) {
+    this.canvas.drawImageFrame(buffer);
   }
 
-  // Called when a worker has computed a frame
-  function updateFrame(e) {
-    var worker_index  = e.data.worker_index;
-    var request_count = e.data.message.request_count;
-    mandelbrotWorkers.restoreBuffer (worker_index, e.data.buffer);
+  workerCount() {
+    return mandelbrotWorkers.workerCount();
+  }
 
-    if (!animate) {
-      mandelbrotWorkers.terminateAllWorkers ();
-      return;
+  setWorkerCount(count) {
+    while (mandelbrotWorkers.workerCount() < count) {
+      this.addWorker();
     }
 
-    if (mandelbrotWorkers.numberOfWorkers() < worker_count) {
-      // add another worker
-      var new_worker = mandelbrotWorkers.addWorker (updateFrame, bufferSize);
-      requestFrame (new_worker);
-      advanceFrame ();
+    while (mandelbrotWorkers.workerCount() > count) {
+      this.removeWorker();
     }
-    if (mandelbrotWorkers.numberOfWorkers() > worker_count) {
-      // terminate a worker
-      mandelbrotWorkers.terminateLastWorker ();
-    }
+  }
 
-    if (request_count !== frame_count) {
-      // frame came early, save it for later and do nothing now
-      pending_frames.push ({worker_index: worker_index, frame_index: request_count});
-      return;
-    }
+  setScale(scale = 1) {
+    this.canvas.drawImageFrame(null);
+    this.canvas.setScale(scale);
+    mandelbrotWorkers.bufferByteLength = this.canvas.width * this.canvas.height * 4;
+  }
 
-    var buffer = new Uint8ClampedArray (e.data.buffer);
-    paintFrame (buffer);
-    frame_count++
+  currentScale() {
+    return this.canvas.scale;
+  }
 
-    if (pending_frames.length > 0) {
-      // there are delayed frames queued up.  Process them
-      var frame;
-      while ((frame = findFrame (frame_count)) !== false) {
-        var windex = pending_frames[frame].worker_index;
-        pending_frames.splice (frame, 1); // remove the frame from the pending_frames
-        var buffer = new Uint8ClampedArray (mandelbrotWorkers.bufferOf (windex));
-        paintFrame(buffer);
-        frame_count++;
-        if (mandelbrotWorkers.workerIsActive(windex)) {
-          requestFrame(windex);
-          advanceFrame();
+  addWorker() {
+    // Called when a worker has computed a frame
+    const updateFrame = e => {
+      const worker_index  = e.data.worker_index;
+      const request_count = e.data.message.request_count;
+
+      // If not terminated in the meanwhile.
+      if (worker_index < mandelbrotWorkers.workerCount()) {
+        mandelbrotWorkers.restoreBuffer(worker_index, e.data.buffer);
+      }
+
+      if (request_count !== this.frame_count) {
+        // frame came early, save it for later and do nothing now
+        this.pending_frames.push({worker_index: worker_index, frame_index: request_count});
+        return;
+      }
+
+      // We might have rescaled.
+      if (e.data.buffer.byteLength === mandelbrotWorkers.bufferByteLength) {
+        this.paintFrame(new Uint8ClampedArray(e.data.buffer));
+      }
+      this.frame_count++
+
+      if (this.pending_frames.length > 0) {
+        // there are delayed frames queued up.  Process them
+        let frame;
+        while ((frame = this.findFrame(this.frame_count)) !== false) {
+          var windex = this.pending_frames[frame].worker_index;
+          this.pending_frames.splice(frame, 1); // remove the frame from the pending_frames
+          var buffer = mandelbrotWorkers.bufferOf(windex);
+          if (buffer && buffer.byteLength) { // detached buffers have zero length
+            this.paintFrame(new Uint8ClampedArray(buffer));
+          }
+          this.frame_count++;
+          if (mandelbrotWorkers.workerIsActive(windex)) {
+            this.requestFrame(windex);
+            this.advanceFrame();
+          }
         }
+      }
+
+      if (mandelbrotWorkers.workerIsActive(e.data.worker_index)) {
+        this.requestFrame(e.data.worker_index);
+        this.advanceFrame();
       }
     }
 
-    if (mandelbrotWorkers.workerIsActive (e.data.worker_index)) {
-      requestFrame (e.data.worker_index);
-      advanceFrame ();
-    }
+    const workerIndex = mandelbrotWorkers.addWorker(updateFrame);
+    this.requestFrame(workerIndex);
+    this.advanceFrame();
   }
 
-  function advanceFrame () {
-    if (scale < scale_end || scale > scale_start) {
-      scale_step = -scale_step;
-      xc_step = -xc_step;
-      yc_step = -yc_step;
-    }
-    scale += scale_step;
-    xc += xc_step;
-    yc += yc_step;
-  }
-
-  mandelbrotWorkers.addWorker (updateFrame, bufferSize);
-  requestFrame(0);
-  advanceFrame();
-}
-
-// input click handlers
-
-function start() {
-  if (animate) {
-    return;
-  }
-  animate = true;
-  worker_count = 1;  // always start with one worker
-  animateMandelbrot ();
-}
-
-function stop() {
-  worker_count = 0;
-  animate = false;
-}
-
-function ww_add() {
-  worker_count++;
-}
-
-function ww_sub() {
-  if (worker_count > 1) {
-    worker_count--;
+  removeWorker() {
+    mandelbrotWorkers.terminateLastWorker();
   }
 }
-
-canvas.init ("mandel");
-canvas.clear ();
-canvas.update ();
-$("start").onclick = start;
-$("stop").onclick = stop;
-$("ww_add").onclick = ww_add;
-$("ww_sub").onclick = ww_sub;

@@ -11,18 +11,18 @@ if (typeof Math.fround == 'undefined') {
   var buffer = new ArrayBuffer(16 * 1024 * 1024);
   var image = new Uint32Array(buffer);
   
-  function computeFrame (e) {
+  function computeFrame(e) {
     if (typeof e.data.terminate !== "undefined") {
-      self.close ();
+      self.close();
       return;
     }
     var message = e.data.message;
   
     // Draw the image to the local asm.js buffer.
-    drawMandelbrot (message);
+    drawMandelbrot(message);
   
     // Copy the image for return.
-    var msg_image = new Uint32Array (e.data.buffer);
+    var msg_image = new Uint32Array(e.data.buffer);
     var width     = message.width;
     var height    = message.height;
     for (var i = 0; i < (width * height); i++)
