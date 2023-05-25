@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <meta charset="utf-8" />
 <title>Compute Pressure Level 1</title>
@@ -1125,44 +1124,52 @@ of system resources such as the CPU.
   <h2>
     Security and privacy considerations
   </h2>
-  <p>
-    Please consult the <a href="security-privacy-self-assessment.html">Security and Privacy Self-Assessment</a>
-    based upon the [[security-privacy-questionnaire]].
-  </p>
+
   <section>
-    <h3>Minimizing information exposure</h3>
+    <h3>Types of privacy and security threats</h3>
+    <div class="note">
+      The Working Group will list any known attack vectors, both theoretical and real-world,
+      in this section.
+    </div>
+    <h4>Timing attacks</h4>
     <p>
-      Exposing hardware related events related to low -level details such as exact CPU
-      utilization or frequency
-      <a href="https://w3ctag.github.io/design-principles/#device-ids">
-      increases the risk of harming the user's privacy</a>.
+      It may be possible to identify users across non-[=same origin=] sites if unique
+      or very precise values can be accessed at the same time by sites not sharing
+      origin.
+
+      This attack is mitigated by [[[#data-minimization]]], [[[#rate-limiting-change-notifications]]],
+      and [[[#same-origin-restriction]]].
+    </p>
+  </section>
+
+  <section>
+    <h3>Mitigation strategies</h3>
+
+    <div class="note">
+      This section gives a high-level view into mitigation strategies applicable to this specification.
+      The normative definitions of these mitigations are integrated into the respective algorithms of this specification.
+    </div>
+
+    <h4>Data minimization</h4>
+    <p>
+      This specification adheres to the generic
+      <a href="https://www.w3.org/TR/privacy-principles/#data-minimization">data minimization</a> principles
+      to limit exposure of data related to low-level details of the underlying platform to the minimum required to
+      address its high-value use cases. This includes consideration for limiting exposure of
+      <a href="https://w3ctag.github.io/design-principles/#device-ids">identifying information about devices</a>.
     </p>
     <p>
-      To mitigate this risk, no such low level details are exposed.
-    </p>
-    <p>
-      The subsections below describe the processing model. At a high level, the
-      information exposed is reduced by the following steps:
-      <ol>
-        <li>
-          <b>Rate-limiting</b> - The user agent notifies the application of changes in
-          the information it can learn. Change notifications are rate-limited.
-        </li>
-        <li>
-          <b>Same-origin context</b> - The feature is only available in same-origin contexts by default,
-          but can be extended to third-party contexts such as iframes via a permission policy.
-        </li>
-      </ol>
+      The specific application of data minimization principles in the context of this specification
+      are discussed in [[[#rate-limiting-change-notifications]]] and [[[#same-origin-restriction]]].
       <section>
         <h4>Rate-limiting change notifications</h4>
         <p>
-          We propose exposing the pressure state via
-          rate-limited change notifications. This aims to remove the ability to observe
-          the precise time when a value transitions between two states.
+          By rate-limited the delivery of the pressure state information we remove the
+          attacker's ability to observe the precise time when a value transitions between two states.
         </p>
         <p>
           More precisely, once the pressure observer is activated, it will be
-          called once with initial values, and then be called when the values change.
+          called once with initial values, and then is called when the values change.
           The subsequent calls will be rate-limited. When the callback is
           called, the most recent value is reported.
         </p>
@@ -1185,41 +1192,7 @@ of system resources such as the CPU.
         </p>
       </section>
       <section>
-        <h4>No side-channels</h4>
-        <p>
-          It is possible to identify users across non-[=same origin=] sites if unique
-          or very precise values can be accessed at the same time by sites not sharing
-          origin.
-        </p>
-        <p>
-          If the same [=pressure state=] and timestamp is observed by two origins, that
-          would be a good indication that the origin is used by the same user on the
-          same machine. For this reason, the API limits reporting [=pressure
-          state=] changes to one origin at the time.
-        </p>
-        <p>
-          A common way to do this, is only to report changes to the focused page, but
-          one of the main users of this API are video conferencing sites. These sites
-          want to make sure that the video streams and effects doesn't negatively affect
-          the system and thus the conferencing experience - but there are two common
-          cases where the site will usually not be focused:
-          <ul>
-            <li>
-              The user is taking meeting notes and the site is in the background. Commonly
-              the video stream is only visible via a picture-in-picture window.
-            </li>
-            <li>
-              The user is sharing an external application window such as a presentation,
-              or sharing the whole screen, unusually with some UI indicating sharing is
-              happening.
-            </li>
-          </ul>
-          For this reason, the API considers these two cases to have
-          higher priority than whether the site is focused.
-        </p>
-      </section>
-      <section>
-        <h4>Same-origin contexts</h4>
+        <h4>Same-origin restriction</h4>
         <p>
           By <em>default</em> data delivery is restricted to documents served from the same-origin as an
           <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
@@ -1229,6 +1202,10 @@ of system resources such as the CPU.
         </p>
         <p>
           The documents qualifying for data delivery, under the above rules, can delegate it to documents in [=child navigables=].
+        </p>
+        <p>
+          The feature can be extended to third-party contexts such as iframes only by a
+          <a href="declared policy">declared policy</a>.
         </p>
       </section>
     </p>
