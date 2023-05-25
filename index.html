@@ -1336,7 +1336,7 @@ of system resources such as the CPU.
     that the API is extentable to support other types of pressure in the future
   </aside>
   <pre class="example js" title="How to tell the observer to stop watching for state changes for a specific source">
-    const observer = new PressureObserver(records => { // do something with records. }));
+    const observer = new PressureObserver(records => { /* do something with records. */ });
 
     observer.observe("cpu");
     observer.observe("gpu");
