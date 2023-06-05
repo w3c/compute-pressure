@@ -1140,6 +1140,27 @@ of system resources such as the CPU.
       This attack is mitigated by [[[#data-minimization]]], [[[#rate-limiting-change-notifications]]],
       and [[[#same-origin-restriction]]].
     </p>
+    <h4>Cross-site covert channel</h4>
+    <p>
+      In computer security a covert channel creates a capability to transfer information between processes
+      that are not supposed to be allowed to communicate. In modern multi-process web engines in the generic
+      case each window or tab resides in its own process (documents that have the [=same origin=] or sites that
+      have the [=same site=] typically share the same process). Using this API it may be possible to create a
+      cross-site covert channel C where a site A on one tab first writes to the channel C after having
+      manipulated the state of the CPU. Next a site B (that is not same site with site A) on another tab reads
+      from the channel C by using this API to learn when the state of the CPU has changed. This process is
+      repeated as long as the scripts run on both the sites A and B.
+    </p>
+    <p>
+      This attack is in part mitigated by [[[#rate-limiting-change-notifications]]].
+      Implementers are advised to consider additional mitigations for long-running scripts.
+    </p>
+    <div class="note">
+      The longer the scripts run the more information can be transmitted using the proposed cross-site covert channel.
+      For example, if a user is on a video conferencing site and another long-running site that allows for more
+      information to be transferred compared to regular browsing scenario.
+    </div>
+
   </section>
 
   <section>
@@ -1380,7 +1401,8 @@ of system resources such as the CPU.
   </p>
   <p>
     Thanks to the W3C Privacy Interest Group (PING) and especially Peter Snyder
-    for the privacy review and feedback.
+    for the privacy review, feedback and the proposed cross-site covert channel
+    attack and its mitigations.
   </p>
   <p>
     Special thanks to
