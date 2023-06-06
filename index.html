@@ -1152,8 +1152,8 @@ of system resources such as the CPU.
       This process is repeated as long as the scripts run on both the sites A and B.
     </p>
     <p>
-      This attack is in part mitigated by [[[#rate-limiting-change-notifications]]].
-      Implementers are advised to consider additional mitigations for long-running scripts.
+      This attack is mitigated by [[[#rate-limiting-change-notifications]]], [[[#rate-obfuscation]]] and
+      [[[#break-calibration]]]. Implementers are advised to consider all these mitigations for long-running scripts.
     </p>
     <div class="note">
       The longer the scripts run the more information can be transmitted using the proposed cross-site covert channel.
@@ -1212,6 +1212,37 @@ of system resources such as the CPU.
           Rate limiting can be implemented in the user agent, but it might also be
           possible to simply change the polling/sampling rate of the underlying hardware
           counters, if not accessed via a higher level framework.
+        </p>
+      </section>
+      <section>
+        <h4>Rate obfuscation</h4>
+        <p>
+          The specification will recommend the implementation to keep track of the number of
+          pressure changes over an implementation-specific sliding observation window and
+          set a flag if an implementation-specific threshold for the number of pressure
+          changes is exceeded. Similarly, it is also recommended for the implementation to
+          observe any abnormal activity such as a high number of pressure state changes
+          spanning across multiple states, and set this flag similarly.
+        </p>
+        <p>
+          If this flag is set, the implementation is recommended to give the pressure observer
+          a penalty during which it will not be able to inform scripts of changes in its
+          pressure state as it normally would. The duration of this penalty is
+          implementation-defined and it is recommended to be randomized.
+          When [=notify pressure observers=] resumes operation after the penalty, it only
+          reports the latest pressure state and disregards any interim state information
+          received from the platform collector during this penalty.
+        </p>
+      </section>
+      <section>
+        <h4>Break calibration</h4>
+        <p>
+          In a calibration process an attacker tries to manipulate the CPU so that this
+          API would report a transition into a certain pressure state in response to the
+          pressure exerted by the fabricated workload. By slightly changing at runtime
+          the implementation-defined low-level hardware metrics that contribute to these
+          pressure state transitions this mitigation will slow down or prevent this
+          calibration process from succeeding.
         </p>
       </section>
       <section>
