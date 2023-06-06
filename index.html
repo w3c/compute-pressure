@@ -1146,10 +1146,10 @@ of system resources such as the CPU.
       that are not supposed to be allowed to communicate. In modern multi-process web engines in the generic
       case each window or tab resides in its own process (documents that have the [=same origin=] or sites that
       have the [=same site=] typically share the same process). Using this API it may be possible to create a
-      cross-site covert channel C where a site A on one tab first writes to the channel C after having
+      cross-site covert channel C where a site A on one tab first broadcasts to the channel C after having
       manipulated the state of the CPU. Next a site B (that is not same site with site A) on another tab reads
-      from the channel C by using this API to learn when the state of the CPU has changed. This process is
-      repeated as long as the scripts run on both the sites A and B.
+      the broadcasted data from the channel C by using this API to learn when the state of the CPU has changed.
+      This process is repeated as long as the scripts run on both the sites A and B.
     </p>
     <p>
       This attack is in part mitigated by [[[#rate-limiting-change-notifications]]].
@@ -1158,7 +1158,9 @@ of system resources such as the CPU.
     <div class="note">
       The longer the scripts run the more information can be transmitted using the proposed cross-site covert channel.
       For example, if a user is on a video conferencing site and another long-running site that allows for more
-      information to be transferred compared to regular browsing scenario.
+      information to be transferred compared to a regular browsing scenario. On the other hand, a workload such as
+      a video conferencing session will typically exert sustained pressure on the CPU that makes it harder to
+      manipulate the pressure state in a predictive manner.
     </div>
 
   </section>
