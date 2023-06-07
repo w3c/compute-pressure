@@ -1247,6 +1247,14 @@ of system resources such as the CPU.
           when this mitigation is running continuously. Any attempts to recalibrate will
           similarly be mitigated against.
         </p>
+        <div class="note">
+          Modern browsers throttle background tabs using implementation-specific
+          heuristics in order to reduce resource usage. For example, after a period of
+          no user interaction a background tab can be throttled that will influence
+          the global pressure state of the system. This built-in feature of modern
+          browsers further improves the effectiveness of the break calibration
+          mitigation.
+        </div>
       </section>
       <section>
         <h4>Same-origin restriction</h4>
