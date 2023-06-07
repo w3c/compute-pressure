@@ -1218,8 +1218,8 @@ of system resources such as the CPU.
         <h4>Rate obfuscation</h4>
         <p>
           The specification will recommend the implementation to keep track of the number of
-          pressure changes over an implementation-specific sliding observation window and
-          set a flag if an implementation-specific threshold for the number of pressure
+          pressure changes over an [=implementation-defined=] sliding observation window and
+          set a flag if an [=implementation-defined=] threshold for the number of pressure
           changes is exceeded. Similarly, it is also recommended for the implementation to
           observe any abnormal activity such as a high number of pressure state changes
           spanning across multiple states, and set this flag similarly.
@@ -1228,7 +1228,7 @@ of system resources such as the CPU.
           If this flag is set, the implementation is recommended to give the pressure observer
           a penalty during which it will not be able to inform scripts of changes in its
           pressure state as it normally would. The duration of this penalty is
-          implementation-defined and it is recommended to be randomized.
+          [=implementation-defined=] and it is recommended to be randomized.
           When [=notify pressure observers=] resumes operation after the penalty, it only
           reports the latest pressure state and disregards any interim state information
           received from the platform collector during this penalty.
@@ -1240,7 +1240,7 @@ of system resources such as the CPU.
           In a calibration process an attacker tries to manipulate the CPU so that this
           API would report a transition into a certain pressure state with the highest
           probability in response to the pressure exerted by the fabricated workload.
-          By slightly changing at runtime the implementation-defined low-level hardware
+          By slightly changing at runtime the [=implementation-defined=] low-level hardware
           metrics that contribute to these pressure state transitions this mitigation will
           slow down or prevent this calibration process from succeeding. Even if the
           initial calibration would succeed its results will be invalidated at runtime
@@ -1248,7 +1248,7 @@ of system resources such as the CPU.
           similarly be mitigated against.
         </p>
         <div class="note">
-          Modern browsers throttle background tabs using implementation-specific
+          Modern browsers throttle background tabs using [=implementation-defined=]
           heuristics in order to reduce resource usage. For example, after a period of
           no user interaction a background tab can be throttled that will influence
           the global pressure state of the system. This built-in feature of modern
