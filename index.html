@@ -1238,11 +1238,14 @@ of system resources such as the CPU.
         <h4>Break calibration</h4>
         <p>
           In a calibration process an attacker tries to manipulate the CPU so that this
-          API would report a transition into a certain pressure state in response to the
-          pressure exerted by the fabricated workload. By slightly changing at runtime
-          the implementation-defined low-level hardware metrics that contribute to these
-          pressure state transitions this mitigation will slow down or prevent this
-          calibration process from succeeding.
+          API would report a transition into a certain pressure state with the highest
+          probability in response to the pressure exerted by the fabricated workload.
+          By slightly changing at runtime the implementation-defined low-level hardware
+          metrics that contribute to these pressure state transitions this mitigation will
+          slow down or prevent this calibration process from succeeding. Even if the
+          initial calibration would succeed its results will be invalidated at runtime
+          when this mitigation is running continuously. Any attempts to recalibrate will
+          similarly be mitigated against.
         </p>
       </section>
       <section>
