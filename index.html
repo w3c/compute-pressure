@@ -333,6 +333,10 @@
     A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{PressureObserver}} object).
   </p>
   <p>
+    The [=user agent=] additionally has a <dfn>max queued records</dfn> integer, which
+    is set to an [=implementation-defined=] value, greater than 0.
+  </p>
+  <p>
     A constructed {{PressureObserver}} object has the following internal slots:
   </p>
   <ul data-dfn-for="PressureObserver">
@@ -357,10 +361,28 @@
     </li>
   </ul>
   <p>
-    The [=user agent=] additionally has a <dfn>max queued records</dfn> integer, which
-    is set to an [=implementation-defined=] value, greater than 0.
-    </li>
+    For the [=rate obfuscation=] mitigation the constructed {{PressureObserver}} object additionally
+    has the following internal slots:
   </p>
+  <ul data-dfn-for="PressureObserver">
+    <li>
+      an <dfn>[[\ObservationWindow]]</dfn> integer set as part of the [=reset observation window=] steps.
+    </li>
+    <li>
+      a <dfn>[[\MaxChangesThreshold]]</dfn> integer set as part of the [=reset observation window=] steps.
+    </li>
+    <li>
+      a <dfn>[[\PenaltyDuration]]</dfn> integer set as part of the [=reset observation window=] steps.
+    </li>
+    <li>
+      a <dfn>[[\ChangesCountMap]]</dfn> integer set as part of the [=reset observation window=] steps.
+    </li>
+    <li>
+      a <dfn>[[\AfterPenantyRecordMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{PressureSource}},
+      representing the [=source type=] to which the last record belongs.
+      The [=ordered map=]'s [=map/value=] is a {{PressureRecord}}.
+    </li>
+  </ul>
 </section>
 
 <section> <h2>Pressure States</h2>
@@ -814,6 +836,26 @@ of system resources such as the CPU.
   <section>
     <h3>Supporting algorithms</h3>
     <p>
+      The <dfn>reset observation window</dfn> steps given the argument |observer:PressureObserver|, are as follows:
+      <ul>
+        <li>
+          set |observer|.{{PressureObserver/[[ObservationWindow]]}} to an [=implementation-defined=] somewhat randomized integer value in
+          milliseconds, e.g., random between 300000 and 600000 (5 and 10 minutes).
+        </li>
+        <li>
+          set |observer|.{{PressureObserver/[[MaxChangesThreshold]]}} to an [=implementation-defined=] somewhat randomized integer
+          value of maximum allowed changes within the |observationWindow|.
+        </li>
+        <li>
+          set |observer|.{{PressureObserver/[[PenaltyDuration]]}} to an [=implementation-defined=] somewhat randomized integer value in milliseconds.
+        </li>
+        <li>
+          [=list/Empty=] the observer.{{PressureObserver/[[ChangesCountMap]]}} map.
+        </li>
+      </ul>
+      Run the [=reset observation window=] steps and start a timer to re-run the steps when the observer.{{PressureObserver/[[ObservationWindow]]}} time has passed.
+    </p>
+    <p>
       <aside class="note">
         Readings are available for [=documents=] (incl. [=iframes=] and popup windows) and workers,
         matching the following criteria:
@@ -931,6 +973,19 @@ of system resources such as the CPU.
           Return false.
         </li>
       </ol>
+      The <dfn>passes rate obfuscation test</dfn> steps given the argument |observer:PressureObserver|,
+      |source:PressureSource|, are as follows:
+      <ol>
+        <li>
+          Increment observer.{{PressureObserver/[[ChangesCountMap]]}}[|source|].
+        </li>
+        <li>
+          Return observer.{{PressureObserver/[[ChangesCountMap]]}}[|source|]
+          &le; observer.{{PressureObserver/[[MaxChangesThreshold]]}}.
+        </li>
+
+
+      </ol>
     </p>
   </section>
   <section>
@@ -983,7 +1038,40 @@ of system resources such as the CPU.
               returns false, [=iteration/continue=].
             </li>
             <li>
-              Run [=queue a record=] with |observer|, |source|, |state| and |timestamp|.
+              Let |record:PressureRecord| be a new {{PressureRecord}} object with its
+              {{PressureRecord/[[Source]]}} set to |source|,
+              {{PressureRecord/[[State]]}} set to |state|
+              and {{PressureRecord/[[Time]]}} set to |timestamp|.
+            </li>
+            <li>
+              If |observer|.{{PressureObserver/[[AfterPenantyRecordMap]]}}[source] exists,
+              set observer.{{PressureObserver/[[AfterPenantyRecordMap]]}}[source] to |record|
+              and [=iteration/continue=].
+            </li>
+            <li>
+              If running [=passes rate obfuscation test=] with |observer| and |source| returns false:
+              <ol>
+                <li>
+                  Set |observer|.{{PressureObserver/[[AfterPenantyRecordMap]]}}[|source|] to |record|.
+                </li>
+                <li>
+                  Create timer of |observer|.{{PressureObserver/[[PenaltyDuration]]}} duration with the following callback:
+                  <ol>
+                    <li>
+                      Let |record| be the result of taking |observer|.{{PressureObserver/[[AfterPenantyRecordMap]]}}[|source|].
+                    </li>
+                    <li>
+                      Run [=queue a record=] with |observer|, |source|, |record|.
+                    </li>
+                  </ol>
+                </li>
+                <li>
+                  [=iteration/Continue=].
+                </li>
+              </ol>
+            </li>
+            <li>
+              Run [=queue a record=] with |observer|, |source|, |record|.
             </li>
           </ol>
         </li>
@@ -994,16 +1082,10 @@ of system resources such as the CPU.
     <h3>Queue a PressureRecord</h3>
     <p>
       To <dfn>queue a record</dfn> given the arguments |observer:PressureObserver|,
-      |source:PressureSource|, |state:PressureState| and |timestamp:DOMHighResTimeStamp|,
+      |source:PressureSource|, |record:PressureRecord|,
       run these steps:
     </p>
     <ol class="algorithm">
-      <li>
-        Let |record:PressureRecord| be a new {{PressureRecord}} object with its
-        {{PressureRecord/[[Source]]}} set to |source|,
-        {{PressureRecord/[[State]]}} set to |state|
-        and {{PressureRecord/[[Time]]}} set to |timestamp|.
-      </li>
       <li>
         If [=list/size=] of |observer|.{{PressureObserver/[[QueuedRecords]]}} is greater than
         [=max queued records=], then [=list/remove=] the first [=list/item=].
@@ -1220,8 +1302,9 @@ of system resources such as the CPU.
       <section>
         <h4>Rate obfuscation</h4>
         <p>
-          The specification will recommend the implementation to keep track of the number of
-          pressure changes over an [=implementation-defined=] sliding observation window and
+          The specification requires implementing the <dfn>rate obfuscation</dfn> mitigation
+          to keep track of the number of pressure changes over an [=implementation-defined=]
+          sliding observation window and
           set a flag if an [=implementation-defined=] threshold for the number of pressure
           changes is exceeded. Similarly, it is also recommended for the implementation to
           observe any abnormal activity such as a high number of pressure state changes
