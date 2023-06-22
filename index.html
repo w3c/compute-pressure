@@ -378,7 +378,7 @@
       a <dfn>[[\ChangesCountMap]]</dfn> integer set as part of the [=reset observation window=] steps.
     </li>
     <li>
-      a <dfn>[[\AfterPenantyRecordMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{PressureSource}},
+      a <dfn>[[\AfterPenaltyRecordMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{PressureSource}},
       representing the [=source type=] to which the last record belongs.
       The [=ordered map=]'s [=map/value=] is a {{PressureRecord}}.
     </li>
@@ -839,21 +839,23 @@ of system resources such as the CPU.
       The <dfn>reset observation window</dfn> steps given the argument |observer:PressureObserver|, are as follows:
       <ul>
         <li>
-          set |observer|.{{PressureObserver/[[ObservationWindow]]}} to an [=implementation-defined=] somewhat randomized integer value in
-          milliseconds, e.g., random between 300000 and 600000 (5 and 10 minutes).
+          set |observer|.{{PressureObserver/[[ObservationWindow]]}} to an [=implementation-defined=] randomized integer value in
+          milliseconds within an [=implementation-defined=] range, e.g., random between 300000 and 600000 (5 and 10 minutes).
         </li>
         <li>
-          set |observer|.{{PressureObserver/[[MaxChangesThreshold]]}} to an [=implementation-defined=] somewhat randomized integer
-          value of maximum allowed changes within the |observationWindow|.
+          set |observer|.{{PressureObserver/[[MaxChangesThreshold]]}} to an [=implementation-defined=] randomized integer
+          value of maximum allowed changes within the |observationWindow| within an [=implementation-defined=] range.
         </li>
         <li>
-          set |observer|.{{PressureObserver/[[PenaltyDuration]]}} to an [=implementation-defined=] somewhat randomized integer value in milliseconds.
+          set |observer|.{{PressureObserver/[[PenaltyDuration]]}} to an [=implementation-defined=] randomized integer value
+          in milliseconds, within an [=implementation-defined=] range.
         </li>
         <li>
           [=list/Empty=] the observer.{{PressureObserver/[[ChangesCountMap]]}} map.
         </li>
       </ul>
-      Run the [=reset observation window=] steps and start a timer to re-run the steps when the observer.{{PressureObserver/[[ObservationWindow]]}} time has passed.
+      Run the [=reset observation window=] steps and start a timer to re-run the steps when the observer.{{PressureObserver/[[ObservationWindow]]}}
+      time has passed, using different randomized values.
     </p>
     <p>
       <aside class="note">
@@ -983,8 +985,6 @@ of system resources such as the CPU.
           Return observer.{{PressureObserver/[[ChangesCountMap]]}}[|source|]
           &le; observer.{{PressureObserver/[[MaxChangesThreshold]]}}.
         </li>
-
-
       </ol>
     </p>
   </section>
@@ -1044,21 +1044,21 @@ of system resources such as the CPU.
               and {{PressureRecord/[[Time]]}} set to |timestamp|.
             </li>
             <li>
-              If |observer|.{{PressureObserver/[[AfterPenantyRecordMap]]}}[source] exists,
-              set observer.{{PressureObserver/[[AfterPenantyRecordMap]]}}[source] to |record|
+              If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] exists,
+              set observer.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] to |record|
               and [=iteration/continue=].
             </li>
             <li>
               If running [=passes rate obfuscation test=] with |observer| and |source| returns false:
               <ol>
                 <li>
-                  Set |observer|.{{PressureObserver/[[AfterPenantyRecordMap]]}}[|source|] to |record|.
+                  Set |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|] to |record|.
                 </li>
                 <li>
                   Create timer of |observer|.{{PressureObserver/[[PenaltyDuration]]}} duration with the following callback:
                   <ol>
                     <li>
-                      Let |record| be the result of taking |observer|.{{PressureObserver/[[AfterPenantyRecordMap]]}}[|source|].
+                      Let |record| be the result of taking |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
                     </li>
                     <li>
                       Run [=queue a record=] with |observer|, |source|, |record|.
