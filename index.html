@@ -426,6 +426,12 @@
     and can be [=implementation-defined=].
   </p>
   <p>
+    The <dfn>computing pressure state</dfn> steps, given [=implementation-defined=] |data| from contributing factors
+    and the [=source type=] |source:PressureSource| of |data|, is [=implementation-defined=] but the
+    exact thresholds used MUST change over time to avoid developers to create precise workloads that results
+    in states with high confidence, following the [=break calibration=] migitation strategy.
+  </p>
+  <p>
     The <dfn>change in contributing factors is substantial</dfn> steps are as follows:
     <ol>
       <li>
@@ -1005,10 +1011,10 @@ of system resources such as the CPU.
       are as follows:
       <ol>
         <li>
-          Let |source:PressureSource| be the [=source type=] of the |data| sample.
+          Let |source:PressureSource| be the [=source type=] of the [=implementation-defined=] |data| sample.
         </li>
         <li>
-          Let |state:PressureState| be an [=implementation-defined=] state given
+          Let |state:PressureState| be the result of [=computing pressure state=] given
           |data| and |source|.
         </li>
         <li>
@@ -1326,7 +1332,7 @@ of system resources such as the CPU.
           In a calibration process an attacker tries to manipulate the CPU so that this
           API would report a transition into a certain pressure state with the highest
           probability in response to the pressure exerted by the fabricated workload.
-          This mitigation solution can slow down or prevent this calibration process
+          This <dfn>break calibration</dfn> mitigation solution can slow down or prevent this calibration process
           from succeeding by slightly changing at runtime the [=implementation-defined=]
           low-level hardware metrics that contribute to these pressure state transitions.
           Even if the initial calibration would succeed, its results will be invalidated
