@@ -426,10 +426,9 @@
     and can be [=implementation-defined=].
   </p>
   <p>
-    The <dfn>computing pressure state</dfn> steps, given [=implementation-defined=] |data| from contributing factors
-    and the [=source type=] |source:PressureSource| of |data|, is [=implementation-defined=] but the
-    exact thresholds used MUST change over time to avoid developers to create precise workloads that results
-    in states with high confidence, following the [=break calibration=] migitation strategy.
+    The <dfn>adjusted pressure state</dfn> is a [=pressure state=] determined by an [=implementation-defined=]
+    algorithm that takes as input [=source type=] and (insert other relevant inputs here). This algorithm MUST
+    not be deterministic to ensure [=break calibration=] mitigation effectiveness.
   </p>
   <p>
     The <dfn>change in contributing factors is substantial</dfn> steps are as follows:
@@ -1011,11 +1010,10 @@ of system resources such as the CPU.
       are as follows:
       <ol>
         <li>
-          Let |source:PressureSource| be the [=source type=] of the [=implementation-defined=] |data| sample.
+          Let |source:PressureSource| be the [=source type=] of the |data| sample.
         </li>
         <li>
-          Let |state:PressureState| be the result of [=computing pressure state=] given
-          |data| and |source|.
+          Let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
         </li>
         <li>
           Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
