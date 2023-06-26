@@ -422,13 +422,13 @@
 
 <section> <h2>Contributing Factors</h2>
   <p>
-    Contributing factors represent the underlying hardware metrics contributing to the [=current pressure state=]
+    <dfn>Contributing factors</dfn> represent the underlying hardware metrics contributing to the [=current pressure state=]
     and can be [=implementation-defined=].
   </p>
   <p>
     The <dfn>adjusted pressure state</dfn> is a [=pressure state=] determined by an [=implementation-defined=]
-    algorithm that takes as input [=source type=] and (insert other relevant inputs here). This algorithm MUST
-    not be deterministic to ensure [=break calibration=] mitigation effectiveness.
+    algorithm that takes as input [=source type=] and and any other [=implementation-defined=] data from
+    [=contributing factors=]. This algorithm MUST not be deterministic to ensure [=break calibration=] mitigation effectiveness.
   </p>
   <p>
     The <dfn>change in contributing factors is substantial</dfn> steps are as follows:
