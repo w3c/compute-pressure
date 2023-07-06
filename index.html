@@ -375,7 +375,10 @@
       a <dfn>[[\PenaltyDuration]]</dfn> integer set as part of the [=reset observation window=] steps.
     </li>
     <li>
-      a <dfn>[[\ChangesCountMap]]</dfn> integer set as part of the [=reset observation window=] steps.
+      a <dfn>[[\ChangesCountMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{PressureSource}},
+      representing the [=source type=] to which the last state change belongs.
+      The [=ordered map=]'s [=map/value=] is an integer representing the count of state changes in the
+      current observation window timeframe.
     </li>
     <li>
       a <dfn>[[\AfterPenaltyRecordMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{PressureSource}},
