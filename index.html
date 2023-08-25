@@ -1051,15 +1051,21 @@ of system resources such as the CPU.
               and {{PressureRecord/[[Time]]}} set to |timestamp|.
             </li>
             <li>
-              If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] exists,
-              set observer.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] to |record|
-              and [=iteration/continue=].
+              Increase |observer|.{{PressureObserver/[[ChangesCountMap]]}}[|source|].
             </li>
             <li>
               If running [=passes rate obfuscation test=] with |observer| and |source| returns false:
               <ol>
                 <li>
+                  If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] exists,
+                  set observer.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] to |record|
+                  and [=iteration/continue=].
+                </li>
+                <li>
                   Set |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|] to |record|.
+                </li>
+                <li>
+                  Reset |observer|.{{PressureObserver/[[ChangesCountMap]]}}[|source|].
                 </li>
                 <li>
                   Create timer of |observer|.{{PressureObserver/[[PenaltyDuration]]}} duration with the following callback:
