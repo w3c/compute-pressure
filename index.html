@@ -1051,16 +1051,24 @@ of system resources such as the CPU.
               and {{PressureRecord/[[Time]]}} set to |timestamp|.
             </li>
             <li>
-              If running [=passes rate obfuscation test=] with |observer| and |source| returns false:
+              If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] exists
               <ol>
                 <li>
-                  Let |replacingRecord| be true if |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] exists
-                  or false otherwise.
+                  Set |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|] to |record|.
+                </li>
+                <li>
+                  Set |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|] to |record| and [=iteration/Continue=].
+                </li>
+              </ol>
+            </li>
+            <li>
+              If running [=passes rate obfuscation test=] with |observer| and |source| returns false:
+              <ol>
                 <li>
                   Set |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|] to |record|.
                 </li>
                 <li>
-                  If |replacingRecord| is true, [=iteration/continue=].
+                  Set |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|] to |record|.
                 </li>
                 <li>
                   Set |observer|.{{PressureObserver/[[ChangesCountMap]]}}[|source|] to 0.
@@ -1073,6 +1081,9 @@ of system resources such as the CPU.
                     </li>
                     <li>
                       Run [=queue a record=] with |observer|, |source|, |record|.
+                    </li>
+                    <li>
+                      Clear |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
                     </li>
                   </ol>
                 </li>
