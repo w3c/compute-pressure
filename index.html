@@ -1080,13 +1080,18 @@ of system resources such as the CPU.
                   Create timer of |observer|.{{PressureObserver/[[PenaltyDuration]]}} duration with the following callback:
                   <ol>
                     <li>
-                      Let |record| be |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
-                    </li>
-                    <li>
-                      Run [=queue a record=] with |observer|, |source|, |record|.
-                    </li>
-                    <li>
-                      [=map/Remove=] |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
+                      If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] [=map/exists]:
+                      <ol>
+                        <li>
+                          Let |record| be |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
+                        </li>
+                        <li>
+                          [=map/Remove=] |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
+                        </li>
+                        <li>
+                          Run [=queue a record=] with |observer|, |source|, |record|.
+                        </li>
+                      </ol>
                     </li>
                   </ol>
                 </li>
