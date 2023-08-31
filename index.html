@@ -618,6 +618,9 @@ of system resources such as the CPU.
           [=map/Remove=] |this|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
+          [=map/Remove=] |this|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
+        </li>
+        <li>
           [=list/For each=] (|promiseSource|, |pendingPromise|) of [=this=].{{PressureObserver/[[PendingObservePromises]]}},
           if |source| is equal to |promiseSource|, [=reject=] |pendingPromise| with an {{AbortError}}.
         </li>
@@ -645,6 +648,9 @@ of system resources such as the CPU.
         </li>
         <li>
           [=map/Clear=] |this|.{{PressureObserver/[[LastRecordMap]]}}.
+        </li>
+        <li>
+          [=map/Clear=] |this|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}.
         </li>
         <li>
           [=list/For each=] (|promiseSource|, |pendingPromise|) of [=this=].{{PressureObserver/[[PendingObservePromises]]}},
@@ -1051,9 +1057,15 @@ of system resources such as the CPU.
               and {{PressureRecord/[[Time]]}} set to |timestamp|.
             </li>
             <li>
-              If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] exists,
-              set observer.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] to |record|
-              and [=iteration/continue=].
+              If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] [=map/exists]:
+              <ol>
+                <li>
+                  Set |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|] to |record|.
+                </li>
+                <li>
+                  [=iteration/Continue=].
+                </li>
+              </ol>
             </li>
             <li>
               If running [=passes rate obfuscation test=] with |observer| and |source| returns false:
@@ -1062,13 +1074,24 @@ of system resources such as the CPU.
                   Set |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|] to |record|.
                 </li>
                 <li>
+                  Set |observer|.{{PressureObserver/[[ChangesCountMap]]}}[|source|] to 0.
+                </li>
+                <li>
                   Create timer of |observer|.{{PressureObserver/[[PenaltyDuration]]}} duration with the following callback:
                   <ol>
                     <li>
-                      Let |record| be the result of taking |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
-                    </li>
-                    <li>
-                      Run [=queue a record=] with |observer|, |source|, |record|.
+                      If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] [=map/exists]:
+                      <ol>
+                        <li>
+                          Let |record| be |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
+                        </li>
+                        <li>
+                          [=map/Remove=] |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
+                        </li>
+                        <li>
+                          Run [=queue a record=] with |observer|, |source|, |record|.
+                        </li>
+                      </ol>
                     </li>
                   </ol>
                 </li>
