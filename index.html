@@ -834,7 +834,7 @@ of system resources such as the CPU.
       </aside>
       The <dfn>passes privacy test</dfn> steps given the argument |observer:PressureObserver| and
       its [=relevant global object=] |relevantGlobal|, are as follows:
-      <ul>
+      <ol>
         <li>
           If |relevantGlobal| is a {{WorkerGlobalScope}} object:
           <ol>
@@ -886,7 +886,7 @@ of system resources such as the CPU.
             </li>
           </ol>
         </li>
-      </ul>
+      </ol>
       <aside class="note">
         As there might be multiple observers, each with a different [=requested sampling rate=], the underlying
         [=platform collector=] will need to use a [=sampling rate=] that fulfills all these requirements. This also
