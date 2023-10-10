@@ -889,67 +889,133 @@ of system resources such as the CPU.
           </li>
         </ul>
       </aside>
-      The <dfn>passes privacy test</dfn> steps given the argument |observer:PressureObserver| and
-      its [=relevant global object=] |relevantGlobal|, are as follows:
-      <ol>
-        <li>
-          If |relevantGlobal| is a {{WorkerGlobalScope}} object:
-          <ol>
-            <li>
-              If |relevantGlobal|'s relevant worker is not a <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
-              active needed worker</a>, return false.
-            </li>
-            <li>
-              Otherwise, return true.
-            </li>
-          </ol>
-        </li>
-        <li>
-          If |relevantGlobal| is a {{Window}} object:
-          <ol>
-            <li>
+      <p>
+        To determine the <dfn>owning global object</dfn> for a {{DedicatedWorkerGlobalScope}} |workerGlobalScope|:
+        <ol>
+          <li>
+            If |workerGlobalScope|'s [=WorkerGlobalScope/owner set=] consists of a single {{Document}} |document|,
+            then return |document|'s [=relevant global object=].
+          </li>
+          <li>
+            If |workerGlobalScope|'s [=WorkerGlobalScope/owner set=] consists of a single {{DedicatedWorkerGlobalScope}}
+            |parentWorkerGlobalScope|, then return |parentWorkerGlobalScope|'s [=owning global object=].
+          </li>
+          <li>
+            Return null.
+          </li>
+        </ol>
+        <aside class="note">
+          A {{DedicatedWorkerGlobalScope}}'s [=WorkerGlobalScope/owner set=] will always have exactly one item.
+        </aside>
+      </p>
+      <p>
+        The <dfn>passes window privacy test</dfn> steps given the argument |observer:PressureObserver| and
+        its [=relevant global object=] |relevantGlobal|, are as follows:
+        <ol>
+          <li>
+            Assert: |relevantGlobal| is a {{Window}} object.
+          </li>
+          <li>
             If |relevantGlobal|'s [=associated document=] is not [=Document/fully active=], return false.
-            </li>
-            <li>
-              [=list/For each=] |origin| in
-              <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
-                initiators of active Picture-in-Picture sessions</a>:
-              <ol>
-                <li>
-                  If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin=] with |origin|, return true.
-                </li>
-              </ol>
-            </li>
-            <li>
-              If |relevantGlobal|'s [=browsing context=] is [=context is capturing|capturing=], return true.
-            </li>
-            <li>
-              Let |topLevelBC| be |relevantGlobal|'s [=browsing context=]'s [=top-level browsing context=].
-            </li>
-            <li>
-              If |topLevelBC| does not have [=top-level traversable/system focus=], return false.
-            </li>
-            <li>
-              Let |focusedDocument| be the |topLevelBC|'s
-              <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
-                currently focused area</a>'s [=Node/node document=].
-            </li>
-            <li>
-              If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin=] with
-              |focusedDocument|'s [=origin=], return true.
-            </li>
-            <li>
-              Otherwise, return false.
-            </li>
-          </ol>
-        </li>
-      </ol>
-      <aside class="note">
-        As there might be multiple observers, each with a different [=requested sampling rate=], the underlying
-        [=platform collector=] will need to use a [=sampling rate=] that fulfills all these requirements. This also
-        means that not every data sample from the [=platform collector=] needs to be delivered to each active
-        observer.
-      </aside>
+          </li>
+          <li>
+            [=list/For each=] |origin| in
+            <a href="https://w3c.github.io/picture-in-picture/#initiators-of-active-picture-in-picture-sessions">
+              initiators of active Picture-in-Picture sessions</a>:
+            <ol>
+              <li>
+                If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin=] with |origin|, return true.
+              </li>
+            </ol>
+          </li>
+          <li>
+            If |relevantGlobal|'s [=browsing context=] is [=context is capturing|capturing=], return true.
+          </li>
+          <li>
+            Let |topLevelBC| be |relevantGlobal|'s [=browsing context=]'s [=top-level browsing context=].
+          </li>
+          <li>
+            If |topLevelBC| does not have [=top-level traversable/system focus=], return false.
+          </li>
+          <li>
+            Let |focusedDocument| be the |topLevelBC|'s
+            <a href="https://html.spec.whatwg.org/multipage/interaction.html#currently-focused-area-of-a-top-level-browsing-context">
+              currently focused area</a>'s [=Node/node document=].
+          </li>
+          <li>
+            If |relevantGlobal|'s [=relevant settings object=]'s [=origin=] is [=same origin=] with
+            |focusedDocument|'s [=origin=], return true.
+          </li>
+          <li>
+            Otherwise, return false.
+          </li>
+        </ol>
+      </p>
+      <p>
+        The <dfn>passes privacy test</dfn> steps given the argument |observer:PressureObserver| and
+        its [=relevant global object=] |relevantGlobal|, are as follows:
+        <ol>
+          <li>
+            If |relevantGlobal| is a {{WorkerGlobalScope}} object:
+            <ol>
+              <li>
+                If |relevantGlobal|'s relevant worker is not a <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
+                active needed worker</a>, return false.
+              </li>
+              <li>
+                If |relevantGlobal| is a {{DedicatedWorkerGlobalScope}} object:
+                <ol>
+                  <li>
+                    Let |ownerGlobal| be |relevantGlobal|'s [=owning global object=].
+                  </li>
+                  <li>
+                    Assert: |ownerGlobal| is not null.
+                  </li>
+                  <li>
+                    Return the result of running [=passes window privacy test=] with |observer| and |ownerGlobal|.
+                  </li>
+                </ol>
+              </li>
+              <li>
+                If |relevantGlobal| is a {{SharedWorkerGlobalScope}} object:
+                <ol>
+                  <li>
+                    [=list/For each=] |owner| in |relevantGlobal|'s [=WorkerGlobalScope/owner set=]:
+                    <ol>
+                      <li>
+                        Assert: |owner| is {{Document}}.
+                      </li>
+                      <li>
+                        If the result of running [=passes window privacy test=] with |observer| and |owner|'s
+                        [=relevant global object=] is true, return true, or else [=iteration/continue=].
+                      </li>
+                    </ol>
+                    <li>
+                      Return false.
+                    </li>
+                  </li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+          <li>
+            If |relevantGlobal| is not a {{Window}} object, return false.
+          </li>
+          <li>
+            Return the result of running [=passes window privacy test=] with |observer| and |relevantGlobal|.
+          </li>
+        </ol>
+        <aside class="note">
+          {{SharedWorkerGlobalScope}} is only exposed to the {{Window}} object, so shared workers
+          can only be created in this scope, which means that all owners will be {{Document}} objects.
+        </aside>
+        <aside class="note">
+          As there might be multiple observers, each with a different [=requested sampling rate=], the underlying
+          [=platform collector=] will need to use a [=sampling rate=] that fulfills all these requirements. This also
+          means that not every data sample from the [=platform collector=] needs to be delivered to each active
+          observer.
+        </aside>
+      </p>
       The <dfn>passes rate test</dfn> steps given the argument |observer:PressureObserver|,
       |source:PressureSource| and |timestamp:DOMHighResTimeStamp|, are as follows:
       <ol>
