@@ -959,17 +959,13 @@ of system resources such as the CPU.
             If |relevantGlobal| is a {{WorkerGlobalScope}} object:
             <ol>
               <li>
-                If |relevantGlobal|'s relevant worker is not a <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
-                active needed worker</a>, return false.
-              </li>
-              <li>
                 If |relevantGlobal| is a {{DedicatedWorkerGlobalScope}} object:
                 <ol>
                   <li>
                     Let |ownerGlobal| be |relevantGlobal|'s [=owning global object=].
                   </li>
                   <li>
-                    Assert: |ownerGlobal| is not null.
+                    If |ownerGlobal| is null, return false.
                   </li>
                   <li>
                     Return the result of running [=passes window privacy test=] with |observer| and |ownerGlobal|.
@@ -999,10 +995,15 @@ of system resources such as the CPU.
             </ol>
           </li>
           <li>
-            If |relevantGlobal| is not a {{Window}} object, return false.
+            If |relevantGlobal| is a {{Window}} object:
+            <ol>
+              <li>
+                Return the result of running [=passes window privacy test=] with |observer| and |relevantGlobal|.
+              </li>
+            </ol>
           </li>
           <li>
-            Return the result of running [=passes window privacy test=] with |observer| and |relevantGlobal|.
+            Return false.
           </li>
         </ol>
         <aside class="note">
@@ -1453,6 +1454,11 @@ of system resources such as the CPU.
         <p>
           The feature can be extended to third-party contexts such as iframes only by a
           <a href="https://www.w3.org/TR/permissions-policy/#permissions-policy-declared-policy">declared policy</a>.
+        </p>
+        <p>
+          Shared workers can be shared across documents, such as top level document and those associated iframes. If one
+          of the documents in the [=WorkerGlobalScope/owner set=] passes the above data delivery requirements, the shared worker will
+          qualify for data delivery. This means that the embedded iframe is able to pass along the data to the embedding document.
         </p>
       </section>
     </p>
