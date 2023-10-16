@@ -890,27 +890,30 @@ of system resources such as the CPU.
         </ul>
       </aside>
       <p>
-        To determine the <dfn>owning global object</dfn> for a {{DedicatedWorkerGlobalScope}} |workerGlobalScope|:
+        To determine the <dfn>owning global object set</dfn> for a {{WorkerGlobalScope}} |workerGlobalScope|:
         <ol>
           <li>
-            If |workerGlobalScope|'s [=WorkerGlobalScope/owner set=] consists of a single {{Document}} |document|,
-            then return |document|'s [=relevant global object=].
+            Let |owningGlobalObjectSet| be am empty set.
           </li>
           <li>
-            If |workerGlobalScope|'s [=WorkerGlobalScope/owner set=] consists of a single {{DedicatedWorkerGlobalScope}}
-            |parentWorkerGlobalScope|, then return |parentWorkerGlobalScope|'s [=owning global object=].
-          </li>
-          <li>
-            Return null.
+            [=list/For each=] |owner| in |workerGlobalScope|'s [=WorkerGlobalScope/owner set=]:
+            <ol>
+              <li>
+                If |owner| is a {{Document}}, then [=set/append=] |owner|'s [=relevant global object=] to |owningGlobalObjectSet|.
+              </li>
+              <li>
+                If |owner| is a {{WorkerGlobalScope}}, set |owningGlobalObjectSet| to the [=set/union=] of
+                |owningGlobalObjectSet| and |owner|'s [=owning global object set=].
+              </li>
+            </ol>
+            <li>
+              Return |owningGlobalObjectSet|.
+            </li>
           </li>
         </ol>
-        <aside class="note">
-          A {{DedicatedWorkerGlobalScope}}'s [=WorkerGlobalScope/owner set=] will always have exactly one item.
-        </aside>
       </p>
       <p>
-        The <dfn>passes window privacy test</dfn> steps given the argument |observer:PressureObserver| and
-        its [=relevant global object=] |relevantGlobal|, are as follows:
+        The <dfn>window has implicit focus</dfn> steps given the argument [=relevant global object=] |relevantGlobal|, are as follows:
         <ol>
           <li>
             Assert: |relevantGlobal| is a {{Window}} object.
@@ -952,53 +955,34 @@ of system resources such as the CPU.
         </ol>
       </p>
       <p>
-        The <dfn>passes privacy test</dfn> steps given the argument |observer:PressureObserver| and
-        its [=relevant global object=] |relevantGlobal|, are as follows:
+        The <dfn>may receive data</dfn> steps given the argument |observer:PressureObserver| are as follows:
         <ol>
           <li>
-            If |relevantGlobal| is a {{WorkerGlobalScope}} object:
-            <ol>
-              <li>
-                If |relevantGlobal| is a {{DedicatedWorkerGlobalScope}} object:
-                <ol>
-                  <li>
-                    Let |ownerGlobal| be |relevantGlobal|'s [=owning global object=].
-                  </li>
-                  <li>
-                    If |ownerGlobal| is null, return false.
-                  </li>
-                  <li>
-                    Return the result of running [=passes window privacy test=] with |observer| and |ownerGlobal|.
-                  </li>
-                </ol>
-              </li>
-              <li>
-                If |relevantGlobal| is a {{SharedWorkerGlobalScope}} object:
-                <ol>
-                  <li>
-                    [=list/For each=] |owner| in |relevantGlobal|'s [=WorkerGlobalScope/owner set=]:
-                    <ol>
-                      <li>
-                        Assert: |owner| is {{Document}}.
-                      </li>
-                      <li>
-                        If the result of running [=passes window privacy test=] with |observer| and |owner|'s
-                        [=relevant global object=] is true, return true, or else [=iteration/continue=].
-                      </li>
-                    </ol>
-                    <li>
-                      Return false.
-                    </li>
-                  </li>
-                </ol>
-              </li>
-            </ol>
+            Let |relevantGlobal| be |observer|'s [=relevant global object=].
           </li>
           <li>
             If |relevantGlobal| is a {{Window}} object:
             <ol>
               <li>
-                Return the result of running [=passes window privacy test=] with |observer| and |relevantGlobal|.
+                Return the result of running [=window has implicit focus=] with |relevantGlobal|.
+              </li>
+            </ol>
+          </li>
+          <li>
+            If |relevantGlobal| is a {{WorkerGlobalScope}} object:
+            <ol>
+              <li>Let |owningGlobals| be |relevantGlobal|'s [=owning global object set=].</li>
+              <li>
+                [=list/For each=] |windowGlobal| in |owningGlobals|:
+                <ol>
+                  <li>
+                    If the result of running [=window has implicit focus=] with |windowGlobal| is true,
+                    return true.
+                  </li>
+                  <li>
+                    Otherwise, [=iteration/continue=].
+                  </li>
+                </ol>
               </li>
             </ol>
           </li>
@@ -1006,10 +990,6 @@ of system resources such as the CPU.
             Return false.
           </li>
         </ol>
-        <aside class="note">
-          {{SharedWorkerGlobalScope}} is only exposed to the {{Window}} object, so shared workers
-          can only be created in this scope, which means that all owners will be {{Document}} objects.
-        </aside>
         <aside class="note">
           As there might be multiple observers, each with a different [=requested sampling rate=], the underlying
           [=platform collector=] will need to use a [=sampling rate=] that fulfills all these requirements. This also
@@ -1106,7 +1086,7 @@ of system resources such as the CPU.
           [=registered observer list=] for |source|:
           <ol>
             <li>
-              If running [=passes privacy test=] with |observer|
+              If running [=may receive data=] with |observer|
               returns false, [=iteration/continue=].
             </li>
             <li>
@@ -1276,7 +1256,7 @@ of system resources such as the CPU.
       <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
       active needed workers</a>), like when
       entering the back/forward cache, or "BFCache" for short, then no events are send to the pressure observers
-      (see [=passes privacy test=])
+      (see [=may receive data=])
       in accordance with <a href="https://www.w3.org/TR/design-principles/#listen-fully-active">
       Web Platform Design Principles: Listen for changes to fully active status</a>. This means that the
       system can safely deactivate [=data delivery=] from the associated [=platform collector=],
