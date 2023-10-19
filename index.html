@@ -283,6 +283,28 @@
     identified by the token "compute-pressure".
     Its [=policy-controlled feature/default allowlist=] is `["self"]`.
   </p>
+  <p>
+    Workers (dedicated and shared) adhere to the permission policy set by their
+    owning document(s).
+  </p>
+  <p>
+    Shared workers often have multiple owning documents as they can be obtained
+    by other documents with the [=same origin=].
+
+    In this case, all owning documents must be [=allowed to use=] the [=policy-controlled
+    feature=] defined by this specification.
+  </p>
+  <p>
+    Dedicated workers can be created from other workers,
+    in which case the permission policy of the first owning document
+    (or owning documents, in case of a shared worker) up the owner
+    chain will be used.
+  </p>
+  <aside class="note">
+    There has been discussion on allowing setting permission policy directly
+    on a worker on creation, in which case that would have to be consulted
+    as well.
+  </aside>
   <aside class="note">
     <p>
       The [=policy-controlled feature/default allowlist=] of `["self"]` allows usage in
@@ -523,17 +545,24 @@ of system resources such as the CPU.
       The {{PressureObserver/observe(source)}} method steps are:
       <ol class="algorithm">
         <li>
-          Let |document:Document| be [=this=]'s [=relevant settings
-          object=]'s [=associated Document=].
+          Let |relevantGlobal| be [=this=]'s [=relevant global object=].
         </li>
         <li>
-          If |document| is not null and is not [=allowed to use=] the [=policy-controlled
-          feature=] token "compute-pressure", return [=a promise rejected with=] {{NotAllowedError}}.
-        <aside class="issue">
-          <a href="https://github.com/wicg/compute-pressure/issues/110">
-            Permission policy doesn't support workers yet #110
-          </a>
-        </aside>
+          [=list/For each=] |document:Document| in |relevantGlobal|'s [=owning document set=]:
+          <ol>
+            <li>
+              If |document| is not [=allowed to use=] the [=policy-controlled
+              feature=] token "compute-pressure", return [=a promise rejected with=] {{NotAllowedError}}.
+            </li>
+          </ol>
+          <aside class="issue">
+            <a href="https://github.com/w3c/compute-pressure/issues/110">
+            Permission policy does not support workers directly yet #110</a>, so they cannot be set per
+            individual worker, so for now we consult the policy for all owning documents. For shared
+            workers this means that all owning documents have to have the policy enabled, which should
+            be easy to coordinate as shared workers require same origin.
+          </aside>
+        </li>
         </li>
         <li>
           Let |promise:Promise| be [=a new promise=].
@@ -563,15 +592,15 @@ of system resources such as the CPU.
             <li>
               If |source:PressureSource| is not a [=supported source type=],
               [=queue a global task=] on the [=PressureObserver task source=]
-              given |document|'s [=relevant global object=] |relevantGlobal|
+              given |relevantGlobal|
               to reject |promise| {{NotSupportedError}} and abort these steps.
             </li>
             <li>
               Activate [=data delivery=] of |source| data to |relevantGlobal|.
             </li>
             <li>
-              [=Queue a global task=] on the [=PressureObserver task source=] given |document|'s
-              [=relevant global object=] |relevantGlobal| to run these steps:
+              [=Queue a global task=] on the [=PressureObserver task source=] given
+              |relevantGlobal| to run these steps:
               <ol>
                 <li>
                   If |promise| was rejected, run the following substeps:
@@ -890,36 +919,39 @@ of system resources such as the CPU.
         </ul>
       </aside>
       <p>
-        To determine the <dfn>owning global object set</dfn> for a {{WorkerGlobalScope}} |workerGlobalScope|:
+        To determine the <dfn>owning document set</dfn> for a [=relevant global object=] |relevantGlobal|:
         <ol>
           <li>
-            Let |owningGlobalObjectSet| be an empty [=set=].
+            Let |owningDocumentSet| be an empty [=set=].
           </li>
           <li>
-            [=list/For each=] |owner| in |workerGlobalScope|'s [=WorkerGlobalScope/owner set=]:
+            If |relevantGlobal| is {{Window}}, then [=set/append=] |relevantGlobal|'s [=associated document=] to |owningDocumentSet|.
+          </li>
+          <li>
+            Otherwise, [=list/for each=] |owner| in {{WorkerGlobalScope}} |relevantGlobal|'s [=WorkerGlobalScope/owner set=]:
             <ol>
               <li>
-                If |owner| is a {{Document}}, then [=set/append=] |owner|'s [=relevant global object=] to |owningGlobalObjectSet|.
+                If |owner| is a {{Document}}, then [=set/append=] |owner| to |owningDocumentSet|.
               </li>
               <li>
-                If |owner| is a {{WorkerGlobalScope}}, set |owningGlobalObjectSet| to the [=set/union=] of
-                |owningGlobalObjectSet| and |owner|'s [=owning global object set=].
+                If |owner| is a {{WorkerGlobalScope}}, set |owningDocumentSet| to the [=set/union=] of
+                |owningDocumentSet| and |owner|'s [=owning document set=].
               </li>
             </ol>
             <li>
-              Return |owningGlobalObjectSet|.
+              Return |owningDocumentSet|.
             </li>
           </li>
         </ol>
       </p>
       <p>
-        The <dfn>window has implicit focus</dfn> steps given the argument [=relevant global object=] |relevantGlobal|, are as follows:
+        The <dfn>document has implicit focus</dfn> steps given the argument |document:Document|, are as follows:
         <ol>
           <li>
-            Assert: |relevantGlobal| is a {{Window}} object.
+            If |document| is not [=Document/fully active=], return false.
           </li>
           <li>
-            If |relevantGlobal|'s [=associated document=] is not [=Document/fully active=], return false.
+            Let |relevantGlobal| be |document|'s [=relevant global object=].
           </li>
           <li>
             [=list/For each=] |origin| in
@@ -964,19 +996,19 @@ of system resources such as the CPU.
             If |relevantGlobal| is a {{Window}} object:
             <ol>
               <li>
-                Return the result of running [=window has implicit focus=] with |relevantGlobal|.
+                Return the result of running [=document has implicit focus=] with |relevantGlobal|'s [=associated Document=].
               </li>
             </ol>
           </li>
           <li>
             If |relevantGlobal| is a {{WorkerGlobalScope}} object:
             <ol>
-              <li>Let |owningGlobals| be |relevantGlobal|'s [=owning global object set=].</li>
+              <li>Let |owningDocuments| be |relevantGlobal|'s [=owning document set=].</li>
               <li>
-                [=list/For each=] |windowGlobal| in |owningGlobals|:
+                [=list/For each=] |document| in |owningDocuments|:
                 <ol>
                   <li>
-                    If the result of running [=window has implicit focus=] with |windowGlobal| is true,
+                    If the result of running [=document has implicit focus=] with |document| is true,
                     return true.
                   </li>
                   <li>
