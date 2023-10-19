@@ -549,8 +549,10 @@ of system resources such as the CPU.
         <li>
           [=list/For each=] |document:Document| in |relevantGlobal|'s [=owning document set=]:
           <ol>
-            If |document| is not [=allowed to use=] the [=policy-controlled
-            feature=] token "compute-pressure", return [=a promise rejected with=] {{NotAllowedError}}.
+            <li>
+              If |document| is not [=allowed to use=] the [=policy-controlled
+              feature=] token "compute-pressure", return [=a promise rejected with=] {{NotAllowedError}}.
+            </li>
           </ol>
         </li>
         <aside class="issue">
