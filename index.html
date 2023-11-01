@@ -1436,13 +1436,14 @@ of system resources such as the CPU.
           Based on implementation experience, implementers are advised to use:
           <ul>
             <li>
-              a range in between 300000 milliseconds (5 minutes) and 600000 milliseconds (10 minutes) for |observer|.{{PressureObserver/[[ObservationWindow]]}}.
+              a range in between 300000 milliseconds (5 minutes) and 600000 milliseconds (10 minutes) for PressureObserver's
+              {{PressureObserver/[[ObservationWindow]]}} internal slot.
             </li>
             <li>
-              a range in between 50 and 100 changes for |observer|.{{PressureObserver/[[MaxChangesThreshold]]}}.
+              a range in between 50 and 100 changes for PressureObserver's {{PressureObserver/[[MaxChangesThreshold]]}} internal slot.
             </li>
             <li>
-              a range in between 5000 milliseconds and 10000 milliseconds for |observer|.{{PressureObserver/[[PenaltyDuration]]}}.
+              a range in between 5000 milliseconds and 10000 milliseconds for PressureObserver's {{PressureObserver/[[PenaltyDuration]]}} internal slot.
             </li>
           </ul>
           These values are subject to change and are updated based on further implementation experience and research findings.
@@ -1475,7 +1476,7 @@ of system resources such as the CPU.
         <p><i>This section is non-normative.</i></p>
         <p>
           Based on implementation experience, implementers are advised to apply the mitigation
-          to a randomized time value within a range between 120000 milliseconds (2minutes) and 240000 milliseconds (4 minutes).
+          to a randomized time value within a range between 120000 milliseconds (2 minutes) and 240000 milliseconds (4 minutes).
         </p>
         <p>
           These values are subject to change and are updated based on further implementation experience and research findings.
