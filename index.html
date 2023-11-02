@@ -1430,7 +1430,22 @@ of system resources such as the CPU.
         </p>
       </section>
       <section>
-        <h4>Rate obfuscation parameters</h4>
+        <h4>Rate obfuscation normative parameters</h4>
+        <p>
+          Base on implementation experience, implementers must use:
+          <ul>
+            <li>
+              a range in between 50 and 100 changes for PressureObserver's {{PressureObserver/[[MaxChangesThreshold]]}} internal slot.
+            </li>
+            <li>
+              a range in between 5000 milliseconds and 10000 milliseconds for PressureObserver's {{PressureObserver/[[PenaltyDuration]]}} internal slot.
+            </li>
+          </ul>
+          These values are subject to change and are updated based on further implementation experience and research findings.
+        <p>
+      </section>
+      <section>
+      <h4>Rate obfuscation non-normative parameters</h4>
         <p><i>This section is non-normative.</i></p>
         <p>
           Based on implementation experience, implementers are advised to use:
@@ -1438,12 +1453,6 @@ of system resources such as the CPU.
             <li>
               a range in between 300000 milliseconds (5 minutes) and 600000 milliseconds (10 minutes) for PressureObserver's
               {{PressureObserver/[[ObservationWindow]]}} internal slot.
-            </li>
-            <li>
-              a range in between 50 and 100 changes for PressureObserver's {{PressureObserver/[[MaxChangesThreshold]]}} internal slot.
-            </li>
-            <li>
-              a range in between 5000 milliseconds and 10000 milliseconds for PressureObserver's {{PressureObserver/[[PenaltyDuration]]}} internal slot.
             </li>
           </ul>
           These values are subject to change and are updated based on further implementation experience and research findings.
