@@ -883,7 +883,7 @@ of system resources such as the CPU.
       <ul>
         <li>
           set |observer|.{{PressureObserver/[[ObservationWindow]]}} to an [=implementation-defined=] randomized integer value in
-          milliseconds within an [=implementation-defined=] range, e.g., random between 300000 and 600000 (5 and 10 minutes).
+          milliseconds within an [=implementation-defined=] range.
         </li>
         <li>
           set |observer|.{{PressureObserver/[[MaxChangesThreshold]]}} to an [=implementation-defined=] randomized integer
@@ -1430,6 +1430,39 @@ of system resources such as the CPU.
         </p>
       </section>
       <section>
+        <h4>Rate obfuscation normative parameters</h4>
+        <p>
+          Based on implementation experience, implementers must use:
+          <ul>
+            <li>
+              a range in between 50 and 100 changes for PressureObserver's {{PressureObserver/[[MaxChangesThreshold]]}} internal slot.
+            </li>
+            <li>
+              a range in between 5000 milliseconds and 10000 milliseconds for PressureObserver's {{PressureObserver/[[PenaltyDuration]]}} internal slot.
+            </li>
+          </ul>
+          <aside class="note">
+            These values are subject to change and are updated based on further implementation experience and research findings.
+          </aside>
+        <p>
+      </section>
+      <section>
+      <h4>Rate obfuscation non-normative parameters</h4>
+        <p><i>This section is non-normative.</i></p>
+        <p>
+          Based on implementation experience, implementers are advised to use:
+          <ul>
+            <li>
+              a range in between 300000 milliseconds (5 minutes) and 600000 milliseconds (10 minutes) for PressureObserver's
+              {{PressureObserver/[[ObservationWindow]]}} internal slot.
+            </li>
+          </ul>
+          <aside class="note">
+            These values are subject to change and are updated based on further implementation experience and research findings.
+          </aside>
+        </p>
+      </section>
+      <section>
         <h4>Break calibration</h4>
         <p>
           In a calibration process an attacker tries to manipulate the CPU so that this
@@ -1442,14 +1475,25 @@ of system resources such as the CPU.
           at runtime when this mitigation is running continuously. Any attempts to recalibrate
           will similarly be mitigated against.
         </p>
-        <div class="note">
+        <aside class="note">
           Modern browsers throttle background tabs using [=implementation-defined=]
           heuristics in order to reduce resource usage. For example, after a period of
           no user interaction a background tab can be throttled that will influence
           the global pressure state of the system. This built-in feature of modern
           browsers further improves the effectiveness of the break calibration
           mitigation.
-        </div>
+        </aside>
+      </section>
+      <section>
+        <h4>Break calibration parameters</h4>
+        <p><i>This section is non-normative.</i></p>
+        <p>
+          Based on implementation experience, implementers are advised to apply the mitigation
+          to a randomized time value within a range between 120000 milliseconds (2 minutes) and 240000 milliseconds (4 minutes).
+        </p>
+        <aside class="note">
+          These values are subject to change and are updated based on further implementation experience and research findings.
+        </aside>
       </section>
       <section>
         <h4>Same-origin restriction</h4>
