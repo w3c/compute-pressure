@@ -47,7 +47,7 @@
 
 >🆕✨ We propose a new API that conveys the utilization of system resources, initially
 focusing on CPU resources (v1) with the plan to add other resources such as GPU
-resources in the future (post v1). 
+resources in the future (post v1).
 
 In a perfect world, a computing device is able to perform all the tasks assigned to it with guaranteed and consistent quality of service. In practice, the system is constantly balancing the needs of multiple tasks that compete for shared system resources. The underlying system software tries to minimize both the overall wait time and response time (time to interactive) and maximize throughput and fairness across multiple tasks running concurrently.
 
@@ -59,9 +59,16 @@ the resource pressure of the end-user device.
 
 ## Goals / Motivating Use Cases
 
-The primary use cases enhanced by v1 are video conferencing and video games. These  popular
-[real-time applications](https://en.wikipedia.org/wiki/Real-time_computing#Criteria_for_real-time_computing) are classified as _soft_. That is, the quality of service degrades if the system is exercised beyond certain states, but does not lead to a total system failure.
+The primary use-cases enhanced by v1 are focused on improving the user experience of web apps,
+in particular, but not restricted to streaming apps like video video conferencing and video games.
+
+These  popular [real-time applications](https://en.wikipedia.org/wiki/Real-time_computing#Criteria_for_real-time_computing)
+are classified as _soft_. That is, the quality of service degrades if the system is exercised beyond certain states, but does not lead to a total system failure.
 These _soft_ real-time applications greatly benefit from being able to adapt their workloads based on CPU consumption/pressure.
+
+Web apps can also suffer from high CPU pressure beyond the apps control, which can result in a degraded interactivity experience. This can impact the time it takes
+for complex components to render and thus increase the response time to interactions, resulting in a degraded user experience. This can be mitigates by rendering
+simpler content or skeleton content in cases where the CPU pressure is high.
 
 Specifically, v1 aims to facilitate the following adaptation decisions for these use cases:
 
@@ -84,6 +91,8 @@ Specifically, v1 aims to facilitate the following adaptation decisions for these
     simulations that don’t impact gameplay)
   * Tweak quality-vs-speed knobs in the game’s rendering engine (shadows
     quality, texture filtering, view distance)
+* User interfaces
+  * Render simple or skeleton content instead of real data while system is under pressure
 
 Technically these can be accomplished by knowing thermal states (e.g., is the system being passively cooled - throttled) as well as CPU pressure states for the threads the site is using such as main thread and workers. System thermal state is a global state and can be affected by other apps and sites than the observing site.
 
@@ -139,7 +148,7 @@ Human-readable pressure states with semantics attached to them improve ergonomic
 
 For instance, a processor might have additional cores that work can be distributed to in certain cases, and it might be able to adjust clock speed. The faster clock speed a processor runs at, the more power it consumes which can affect battery and the temperature of the processor. A processor that runs hot may become unstable and crash or even burn.
 
-For this reason processors adjust clock speed all the time based on factors such as the amount of work, whether the device is on battery power or not (AC vs DC power) and whether the cooling system can keep the processor cool. Work often comes in bursts. For example, when the user is performing a certain operation that requires the system to be both fast and responsive, modern processors use multiple boost modes to temporarily runs the processor at an extremely high clock rate in order to get work out of the way and return to normal operation faster. When this happens in short bursts it does not heat up the processor too much. This is more complex in real life because boost frequencies depend on how many cores are utilized among other factors. 
+For this reason processors adjust clock speed all the time based on factors such as the amount of work, whether the device is on battery power or not (AC vs DC power) and whether the cooling system can keep the processor cool. Work often comes in bursts. For example, when the user is performing a certain operation that requires the system to be both fast and responsive, modern processors use multiple boost modes to temporarily runs the processor at an extremely high clock rate in order to get work out of the way and return to normal operation faster. When this happens in short bursts it does not heat up the processor too much. This is more complex in real life because boost frequencies depend on how many cores are utilized among other factors.
 
 The high-level states proposal hides all this complexity from the web developer.
 
@@ -184,9 +193,9 @@ This is even more complicated when the processor has multiple cores and the core
 The overall system processor utilization may be low for nonobvious reasons. An active core can be running slower waiting on memory I/O, or it may be busy but is throttled due to thermals.
 
 Furthermore, some modern systems have different kind of cores, such as performance cores and efficiency cores, or even multiple levels of such. You can imagine a system with just an efficiency core running when workload is nominal (background check of notifications etc.) and performance cores taking over to prioritize UX when an application is in active use. In this scenario, system will never reach 100% overall utilizations as the efficiency core will never run when other cores are in use.
- 
+
 Clock frequency is likewise a misleading measurement as the frequency is impacted by factors such as which core is active, whether the system is on battery power or plugged in, boost mode being active or not, or other factors.
- 
+
 How to properly calculate pressure
 ---
 Properly calculating pressure is architecture dependent and as such an implementation must consider multiple input signals that may vary by architecture, form factor, or other system characteristics. Possible signals could be, for example:
@@ -243,7 +252,7 @@ As an example, a video conferencing app might have the following dialogue with t
 Other considerations
 ---
 There are a lot of advantages to using the above states. For once, it is easier for web developers to understand. What web developers care about is delivering the best user experience to their users given the available resources that vary depending on the system. This may mean taking the system to its limits as long as it provides a better experience, but avoiding taxing the system so much that it starts throttling work.
- 
+
 Another advantage is that this high-level abstraction allows for considering multiple signals and adapts to constant innovation in software and hardware below the API layer. For instance, a CPU can consider memory pressure, thermal conditions and map them to these states. As the industry strives to make the fastest silicon that offers the best user experience, it is important that the API abstraction that developers will depend on is future-proof and stands the test of time.
 
 If we'd expose low-level raw values such as clock speed, a developer might hardcode in the application logic that everything above 90% the base clock is considered critical, which could be the case on some systems today, but wouldn't generalize well. For example, on a desktop form factor or on a properly cooled laptop with an advanced CPU, you might go way beyond the base clock with frequency boosting without negative impacting user experience, while a passively-cooled mobile device would likely behave differently.
@@ -303,7 +312,7 @@ class IteratablePromise extends Promise {
         this,
         new Promise(resolve => setTimeout(resolve, this.#interval))
       ]);
-          
+
       yield value || this.#fallback;
     }
   }
