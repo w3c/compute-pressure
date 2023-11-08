@@ -62,12 +62,12 @@ the resource pressure of the end-user device.
 The primary use-cases enhanced by v1 are focused on improving the user experience of web apps,
 in particular, but not restricted to streaming apps like video video conferencing and video games.
 
-These  popular [real-time applications](https://en.wikipedia.org/wiki/Real-time_computing#Criteria_for_real-time_computing)
+These popular [real-time applications](https://en.wikipedia.org/wiki/Real-time_computing#Criteria_for_real-time_computing)
 are classified as _soft_. That is, the quality of service degrades if the system is exercised beyond certain states, but does not lead to a total system failure.
 These _soft_ real-time applications greatly benefit from being able to adapt their workloads based on CPU consumption/pressure.
 
 Web apps can also suffer from high CPU pressure beyond the apps control, which can result in a degraded interactivity experience. This can impact the time it takes
-for complex components to render and thus increase the response time to interactions, resulting in a degraded user experience. This can be mitigates by rendering
+for complex components to render and thus increase the response time to interactions, resulting in a degraded user experience. This can be mitigated by rendering
 simpler content or skeleton content in cases where the CPU pressure is high.
 
 Specifically, v1 aims to facilitate the following adaptation decisions for these use cases:
