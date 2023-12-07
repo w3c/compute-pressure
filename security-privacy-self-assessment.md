@@ -107,7 +107,8 @@ however, we think our mitigations would prevent this risk.
 
 ### 2.13. How does this specification distinguish between behavior in first-party and third-party contexts?
 
-The specified API will not be available in third-party contexts.
+The specified API will be available in third-part contexts via iframe
+guarded by permission policy and focus requirements.
 
 ### 2.14. How does this specification work in the context of a user agent’s Private Browsing or "incognito" mode?
 
@@ -116,6 +117,8 @@ cross-origin identification mitigations also prevent identification across
 normal and Private Browsing modes.
 
 ### 2.15. Does this specification have a "Security Considerations" and "Privacy Considerations" section?
+
+Yes.
 
 ### 2.16. Does this specification allow downgrading default security characteristics?
 
