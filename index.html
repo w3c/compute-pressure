@@ -1520,6 +1520,44 @@ of system resources such as the CPU.
     </p>
   </section>
 </section>
+
+<section>
+  <h2>
+    Accessibility considerations
+  </h2>
+  <p>
+    The Compute Pressure API is focused on improving the user experience. There are two ways in which applications that build on the API can positively impact accessibility.
+  </p>
+  <ol>
+    <li>
+      Considering users' access needs when making decisions based on information gathered using the API.
+    </li>
+    <li>
+      Designing and making user interfaces based on information gained from the API with accessibility in mind.
+    </li>
+  </ol>
+  <p>
+    As a consumer of the API, it's important to consider both of these opportunities. Here are some examples:
+    <ul>
+      <li>
+        <strong>Decision:</strong> In a video conferencing scenario, there may be multiple video streams. The system may determines that it needs to drop certain streams in order to conserve resources. If one of the video streams comes from a sign language interpreter, then that stream must be prioritized over others, so that the user can still understand the conversation. In practice, this could be simply implemented by allowing the user to "pin" a certain stream, and ensuring that that pinned stream is never automatically dropped by the system.
+      </li>
+      <li>
+        <strong>User Interface:</strong>
+        <ul>
+          <li>
+            A simple load-level meter, in which the current usage level bucket is indicated on the screen. This information must be conveyed using more than just color, so that people who cannot perceive color can still perceive the information. A symbol could be used in conjunction with color. Text could also be used in conjunction with both shape and color.
+          </li>
+          <li>
+            Some applications may present a notification to the user when some functionality is restricted due to compute pressure. These notifications may take the form of "toast" messages, in which case care must be taken to ensure that people using assistive technologies (including screen readers) can be made aware of the notification, and dismiss it, without unduly interrupting their workflow.
+          </li>
+        </ul>
+
+      </li>
+    </ul>
+</section>
+
+
 <section id="examples" class="informative">
   <h2>
     Examples
