@@ -1353,7 +1353,48 @@ of system resources such as the CPU.
       a video conferencing session will typically exert sustained pressure on the CPU that makes it harder to
       manipulate the pressure state in a predictive manner.
     </div>
-
+    <h4>Targeted de-anonymization attacks</h4>
+    <p>
+      Targeted de-anonymization attacks constitute a critical class of threats that jeopardize a user's anonymity.
+      These attacks allow a malicious or partially compromised website (referred to as the “malicious site”) to
+      ascertain whether a website visitor possesses a specific public identifier, such as an email address or a
+      social media handle.
+    </p>
+    <p>
+      While anonymity may be a luxury for some, for certain individuals, it is far more than that—it is a matter
+      of survival. Consider for instance those who engage in political protests, work as journalists covering
+      sensitive topics, etc.
+    </p>
+    <p>
+      As an example, an attacker can privately share a resource with the target for instance using a public
+      resource sharing service (“victim site”), and then measure side-effects (indicating successful access)
+      on loading the resource via side-channels. If the logged in visitor can access the embedded resource
+      successfully, that indicates that the current visit is indeed the intended target.
+    </p>
+    <p>
+      Specifically, exposing reliable information about the total CPU pressure can let an attacking site
+      understand if a target of a cross-origin navigation (e.g. an iframe or pop-up window from another site)
+      performed a CPU-intensive operation.
+    </p>
+    <p>
+      Techniques such as <a href="https://en.wikipedia.org/wiki/Pop-up_ad#Pop-under_ads">pop-under</a> and
+      <a href="https://www.usenix.org/system/files/sec22-zaheri.pdf">tab-under</a> can be used to hide the loading
+      from the user.
+    </p>
+    <p>
+      One possible attack is that the malicious website opens e.g., a popup to a resource on a victim site
+      to which the user is logged in (e.g. a video streaming site or online document editor) pointing to a
+      resource shared with specific users.
+    </p>
+    <p>
+      Assuming that loading the resource puts increased pressure on the CPU, this would create a side-channel
+      reveals to the attacking site if the user is logged into an account with access to the resource,
+      deanonymizing the user.
+    </p>
+    <p>
+      Given that modern CPUs recover quickly from high pressure, one possible mitigation strategy could be to
+      temporarily disable readings for a few seconds after loading popup and iframe content.
+    </p>
   </section>
 
   <section>
