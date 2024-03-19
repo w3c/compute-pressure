@@ -202,9 +202,10 @@
       interval between samples, expressed in milliseconds.
     </p>
     <p>
-      The [=requested sampling interval=] can also be expressed as the
+      Interval and frequency are inverses of each other, so the
+      [=requested sampling interval=] can also be expressed as a
       <dfn>requested sampling rate</dfn> in Hertz (cycles per second) by
-      dividing 1000 with the [=requested sampling interval=] value.
+      dividing 1000 by the [=requested sampling interval=] value.
     </p>
     <p>
       The <dfn>sampling rate</dfn> for a [=platform collector=] is defined as a rate
@@ -825,9 +826,7 @@ of system resources such as the CPU.
     <h3>The <dfn>sampleInterval</dfn> member</h3>
     <p>
       The {{PressureObserverOptions/sampleInterval}} member represents the [=requested sampling
-      interval=] expressed in milliseconds, ie. it represents the requested interval between samples
-      to be obtained from the hardware. The [=reporting rate=] will never exceed the sampling rate which
-      is obtained by dividing 1000 by the [=requested sampling interval=].
+      interval=] expressed in milliseconds. 
     </p>
     <aside class="note">
       <p>
