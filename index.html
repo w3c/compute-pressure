@@ -198,19 +198,27 @@
   <section>
     <h3>Sampling and Reporting Rate</h3>
     <p>
+      The <dfn>requested sampling interval</dfn> represents the desired
+      interval between samples, expressed in milliseconds.
+    </p>
+    <p>
+      The [=requested sampling interval=] can also be expressed as the
+      <dfn>requested sampling rate</dfn> in Hertz (cycles per second) by
+      dividing 1000 with the [=requested sampling interval=] value.
+    </p>
+    <p>
       The <dfn>sampling rate</dfn> for a [=platform collector=] is defined as a rate
-      at which the [=user agent=] obtains telemetry readings from the underlying platform
-      in Hertz (cycles per second), and it might differ from the rate derived from the
-      pressure observers' [=requested sample interval=] (in milliseconds) by dividing
-      1000 with the value.
+      at which the [=user agent=] obtains telemetry readings from the underlying platform,
+      and it might differ from the pressure observers' [=requested sampling rates=].
+      The rate is measured in Hertz (cycles per second).
     </p>
     <p>
       The <dfn>reporting rate</dfn> for a pressure observer is the rate at which it runs
-      the [=data delivery=] steps.
+      the [=data delivery=] steps, and it will never exceed the [=sampling rate=].
     </p>
     <p>
-      The [=sampling rate=] differs from the [=requested sample interval=] derived rate,
-      when it exceeds upper or lower sampling rate bounds
+      The [=sampling rate=] differs from the [=requested sampling rate=] when the
+      [=requested sampling rate=] exceeds upper or lower sampling rate bounds
       supported or accepted by the underlying platform and [=user agent=]<sup>†</sup>.
     </p>
     <p>
@@ -218,15 +226,15 @@
       as outlined in [[[#rate-limiting-change-notifications]]].
     </p>
     <p>
-      In case the user didn't request a sample interval, the [=sampling rate=]
+      In case the user didn't request a [=sampling rate=], the [=sampling rate=]
       is [=implementation-defined=].
     </p>
     <aside class="note">
       In case there are multiple instances of {{PressureObserver}} active with different
-      [=requested sample intervals=], it is up to the [=user agent=] to set a
+      [=requested sampling intervals=], it is up to the [=user agent=] to set a
       [=platform collector=] level [=sampling rate=] that best fulfills these requests,
       while making sure that the [=reporting rate=] of all {{PressureObserver}}s does
-      not exceed their respective [=requested sample intervals=].
+      not exceed their respective [=requested sampling rates=].
     </aside>
   </section>
 </section>
@@ -368,7 +376,7 @@
       a <dfn>[[\Callback]]</dfn> of type {{PressureUpdateCallback}} set on creation.
     </li>
     <li>
-      a <dfn>[[\SampleInterval]]</dfn> unsigned long long set on creation.
+      a <dfn>[[\SampleInterval]]</dfn> unsigned long set on creation.
     </li>
     <li>
       a <dfn>[[\PendingObservePromises]]</dfn> [=list=] of zero or more source-promise [=tuples=], initially empty,
@@ -810,20 +818,20 @@ of system resources such as the CPU.
   <h3>The <dfn>PressureObserverOptions</dfn> dictionary</h3>
   <pre class="idl">
     dictionary PressureObserverOptions {
-      [EnforceRange] unsigned long long sampleInterval = 0;
+      [EnforceRange] unsigned long sampleInterval = 0;
     };
   </pre>
   <section>
     <h3>The <dfn>sampleInterval</dfn> member</h3>
     <p>
-      The {{PressureObserverOptions/sampleInterval}} member represents the <dfn>requested sample
-      interval</dfn> expressed in milliseconds, ie. it represents the requested interval between samples
+      The {{PressureObserverOptions/sampleInterval}} member represents the [=requested sampling
+      interval=] expressed in milliseconds, ie. it represents the requested interval between samples
       to be obtained from the hardware. The [=reporting rate=] will never exceed the sampling rate which
-      is obtained by dividing 1000 by the [=requested sample interval=].
+      is obtained by dividing 1000 by the [=requested sampling interval=].
     </p>
     <aside class="note">
       <p>
-        A [=user agent=] might not be able to respect the requested sample interval. For more information
+        A [=user agent=] might not be able to respect the requested sampling interval. For more information
         consult [[[#sampling-and-reporting-rate]]].
       </p>
     </aside>
@@ -1017,7 +1025,7 @@ of system resources such as the CPU.
           </li>
         </ol>
         <aside class="note">
-          As there might be multiple observers, each with a different [=requested sample interval=], the underlying
+          As there might be multiple observers, each with a different [=requested sampling rate=], the underlying
           [=platform collector=] will need to use a [=sampling rate=] that fulfills all these requirements. This also
           means that not every data sample from the [=platform collector=] needs to be delivered to each active
           observer.
