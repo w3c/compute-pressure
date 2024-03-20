@@ -73,6 +73,6 @@ function pressureCallback(update) {
   }
 }
 
-const observer = new PressureObserver(pressureCallback, { sampleRate : 1 });
+const observer = new PressureObserver(pressureCallback, { sampleInterval : 1000 });
 observer.observe('cpu');
 ```
