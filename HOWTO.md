@@ -29,8 +29,8 @@ function pressureObserverCallback(updates) {
   console.log("timestamp = " + updates[0].time);
 }
 
-// Create observer with 1s sample rate.
-observer = new PressureObserver(pressureObserverCallback, { sampleRate: 1 });
+// Create observer with 1000ms sample interval.
+observer = new PressureObserver(pressureObserverCallback, { sampleInterval: 1000 });
 
 // Start observer.
 await observer.observe("cpu");
