@@ -30,10 +30,10 @@ function pressureObserverCallback(updates) {
 }
 
 // Create observer with 1000ms sample interval.
-observer = new PressureObserver(pressureObserverCallback, { sampleInterval: 1000 });
+observer = new PressureObserver(pressureObserverCallback);
 
 // Start observer.
-await observer.observe("cpu");
+await observer.observe("cpu", { sampleInterval: 1_000 });
 ```
 
 You should see, everytime the state changes, the following:

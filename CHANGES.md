@@ -73,6 +73,27 @@ function pressureCallback(update) {
   }
 }
 
-const observer = new PressureObserver(pressureCallback, { sampleInterval : 1000 });
+const observer = new PressureObserver(pressureCallback, { sampleInterval : 1_000 });
 observer.observe('cpu');
+```
+### After (Release in Chrome M125)
+
+sampleRate was renamed to sampleInterval and changed from Hz to ms.[issue #253](https://github.com/w3c/compute-pressure/issues/253);
+Options are moved to the observe method. [issue #259] (https://github.com/w3c/compute-pressure/issues/259);
+
+
+[The explainer](https://github.com/w3c/compute-pressure/blob/main/README.md) and
+[specification](https://www.w3.org/TR/compute-pressure/) capture the latest vision for the API,
+implemented for further experimentation.
+
+```js
+function pressureCallback(update) {
+  if (update.status === "critical") {
+    // Dramatically cut down compute requirements to avoid overheating.
+    return;
+  }
+}
+
+const observer = new PressureObserver(pressureCallback);
+observer.observe('cpu',  { sampleInterval : 1_000 });
 ```
