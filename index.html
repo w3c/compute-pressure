@@ -521,9 +521,9 @@ of system resources such as the CPU.
   <pre class="idl">
     [Exposed=(DedicatedWorker,SharedWorker,Window), SecureContext]
     interface PressureObserver {
-      constructor(PressureUpdateCallback callback, optional PressureObserverOptions options = {});
+      constructor(PressureUpdateCallback callback);
 
-      Promise&lt;undefined&gt; observe(PressureSource source);
+      Promise&lt;undefined&gt; observe(PressureSource source, optional PressureObserverOptions options = {});
       undefined unobserve(PressureSource source);
       undefined disconnect();
       sequence&lt;PressureRecord&gt; takeRecords();
@@ -537,13 +537,10 @@ of system resources such as the CPU.
   <section>
     <h3>The <dfn>constructor()</dfn> method</h3>
     <p>
-      The `new` {{PressureObserver(callback, options)}} constructor steps are:
+      The `new` {{PressureObserver(callback)}} constructor steps are:
       <ol class="algorithm">
         <li>
           Set |this|.{{PressureObserver/[[Callback]]}} to |callback:PressureUpdateCallback|.
-        </li>
-        <li>
-          Set |this:PressureObserver|.{{PressureObserver/[[SampleInterval]]}} to |options|["sampleInterval"].
         </li>
       </ol>
     </p>
@@ -551,7 +548,7 @@ of system resources such as the CPU.
   <section>
     <h3>The <dfn>observe()</dfn> method</h3>
     <p>
-      The {{PressureObserver/observe(source)}} method steps are:
+      The {{PressureObserver/observe(source, options)}} method steps are:
       <ol class="algorithm">
         <li>
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
@@ -572,6 +569,9 @@ of system resources such as the CPU.
             be easy to coordinate as shared workers require same origin.
           </aside>
         </li>
+        </li>
+        <li>
+          Set [=this=].{{PressureObserver/[[SampleInterval]]}} to |options:PressureObserverOptions|["sampleInterval"].
         </li>
         <li>
           Let |promise:Promise| be [=a new promise=].
