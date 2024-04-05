@@ -273,8 +273,8 @@ function callback(entries) {
   console.log(`Current pressure ${lastEntry.state}`);
 }
 
-const observer = new PressureObserver(callback, { sampleInterval: 1000 }); // 1000ms
-await observer.observe("cpu");
+const observer = new PressureObserver(callback);
+await observer.observe("cpu", {sampleInterval: 1_000 }); // 1000ms
 ```
 
 ## Key scenarios
@@ -356,8 +356,8 @@ function pressureChange(entries) {
   }
 }
 
-const observer = new PressureObserver(pressureChange, { sampleInterval: 1000 });
-await observer.observe("cpu");
+const observer = new PressureObserver(pressureChange);
+await observer.observe("cpu", { sampleInterval: 1_000 });
 ```
 
 ## Detailed design discussion
