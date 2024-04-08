@@ -378,9 +378,6 @@
       a <dfn>[[\Callback]]</dfn> of type {{PressureUpdateCallback}} set on creation.
     </li>
     <li>
-      a <dfn>[[\SampleInterval]]</dfn> unsigned long set on creation.
-    </li>
-    <li>
       a <dfn>[[\PendingObservePromises]]</dfn> [=list=] of zero or more source-promise [=tuples=], initially empty,
       where source holds a {{PressureSource}} string and promise holds a {{Promise}} object.
     </li>
@@ -392,6 +389,11 @@
       a <dfn>[[\LastRecordMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{PressureSource}},
       representing the [=source type=] to which the last record belongs.
       The [=ordered map=]'s [=map/value=] is a {{PressureRecord}}.
+    </li>
+    <li>
+      a <dfn>[[\SampleIntervalMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{PressureSource}},
+      representing the [=source type=] to which the sample interval belongs.
+      The [=ordered map=]'s [=map/value=] is a n unsigned long.
     </li>
   </ul>
   <p>
@@ -571,7 +573,7 @@ of system resources such as the CPU.
         </li>
         </li>
         <li>
-          Set [=this=].{{PressureObserver/[[SampleInterval]]}} to |options:PressureObserverOptions|["sampleInterval"].
+          Set [=this=].{{PressureObserver/[[SampleIntervalMap]]}}[|source|] to |options:PressureObserverOptions|["sampleInterval"].
         </li>
         <li>
           Let |promise:Promise| be [=a new promise=].
@@ -653,6 +655,9 @@ of system resources such as the CPU.
           |records| associated with |source|.
         </li>
         <li>
+          [=map/Remove=] |this|.{{PressureObserver/[[SampleIntervalMap]]}}[|source|].
+        </li>
+        <li>
           [=map/Remove=] |this|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
@@ -683,6 +688,9 @@ of system resources such as the CPU.
       <ol class="algorithm">
         <li>
           [=list/Empty=] |observer|.{{PressureObserver/[[QueuedRecords]]}}.
+        </li>
+        <li>
+          [=map/Clear=] |this|.{{PressureObserver/[[SampleIntervalMap]]}}.
         </li>
         <li>
           [=map/Clear=] |this|.{{PressureObserver/[[LastRecordMap]]}}.
@@ -1041,7 +1049,7 @@ of system resources such as the CPU.
           Let |record:PressureRecord| be |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|].
         </li>
         <li>
-          Let |sampleInterval| be |observer|.{{PressureObserver/[[SampleInterval]]}}.
+          Let |sampleInterval| be |observer|.{{PressureObserver/[[SampleIntervalMap]]}}[|source|].
         </li>
         <li>
           Let |timeDeltaMilliseconds:DOMHighResTimeStamp| = |timestamp| - |record|.{{PressureRecord/[[Time]]}}.
