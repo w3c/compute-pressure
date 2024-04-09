@@ -386,14 +386,12 @@
       objects, which is initially empty.
     </li>
     <li>
-      a <dfn>[[\LastRecordMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{PressureSource}},
-      representing the [=source type=] to which the last record belongs.
-      The [=ordered map=]'s [=map/value=] is a {{PressureRecord}}.
+      a <dfn>[[\LastRecordMap]]</dfn> [=ordered map=] of {{PressureSource}} to
+      the latest {{PressureRecord}}.
     </li>
     <li>
-      a <dfn>[[\SampleIntervalMap]]</dfn> [=ordered map=], [=map/keyed=] on a {{PressureSource}},
-      representing the [=source type=] to which the sample interval belongs.
-      The [=ordered map=]'s [=map/value=] is a n unsigned long.
+      a <dfn>[[\SampleIntervalMap]]</dfn> [=ordered map=] of {{PressureSource}} to
+      positive numbers. It represents the sample interval given source type.
     </li>
   </ul>
   <p>
@@ -573,7 +571,7 @@ of system resources such as the CPU.
         </li>
         </li>
         <li>
-          Set [=this=].{{PressureObserver/[[SampleIntervalMap]]}}[|source|] to |options:PressureObserverOptions|["sampleInterval"].
+          Set [=this=].{{PressureObserver/[[SampleIntervalMap]]}}[|source|] to |options:PressureObserverOptions|'s {{PressureObserverOptions/sampleInterval}}.
         </li>
         <li>
           Let |promise:Promise| be [=a new promise=].
