@@ -187,7 +187,7 @@
       <p>
         If the [=source type=] is part of {{PressureSource}}, but not supported by the
         [=user agent=], host OS or underlying hardware, the method will instead throw
-        {{NotSupportedError}}.
+        {{"NotSupportedError"}}.
       </p>
       <p>
         To check what [=source types=] are supported, a user can call the static method
@@ -378,10 +378,6 @@
       a <dfn>[[\Callback]]</dfn> of type {{PressureUpdateCallback}} set on creation.
     </li>
     <li>
-      a <dfn>[[\PendingObservePromises]]</dfn> [=list=] of zero or more source-promise [=tuples=], initially empty,
-      where source holds a {{PressureSource}} string and promise holds a {{Promise}} object.
-    </li>
-    <li>
       a <dfn>[[\QueuedRecords]]</dfn> [=queue=] of zero or more {{PressureRecord}}
       objects, which is initially empty.
     </li>
@@ -523,7 +519,7 @@ of system resources such as the CPU.
     interface PressureObserver {
       constructor(PressureUpdateCallback callback);
 
-      Promise&lt;undefined&gt; observe(PressureSource source, optional PressureObserverOptions options = {});
+      undefined observe(PressureSource source, optional PressureObserverOptions options = {});
       undefined unobserve(PressureSource source);
       undefined disconnect();
       sequence&lt;PressureRecord&gt; takeRecords();
@@ -558,7 +554,7 @@ of system resources such as the CPU.
           <ol>
             <li>
               If |document| is not [=allowed to use=] the [=policy-controlled
-              feature=] token "compute-pressure", return [=a promise rejected with=] {{NotAllowedError}}.
+              feature=] token "compute-pressure", throw {{NotAllowedError}}.
             </li>
           </ol>
           <aside class="issue">
@@ -574,68 +570,14 @@ of system resources such as the CPU.
           Set [=this=].{{PressureObserver/[[SampleIntervalMap]]}}[|source|] to |options:PressureObserverOptions|'s {{PressureObserverOptions/sampleInterval}}.
         </li>
         <li>
-          Let |promise:Promise| be [=a new promise=].
+          If |source:PressureSource| is not a [=supported source type=], throw {{"NotSupportedError"}}.
         </li>
         <li>
-          Let |pendingPromiseTuple| be (|source|, |promise|).
+          Activate [=data delivery=] of |source| data to |relevantGlobal|.
         </li>
         <li>
-          [=list/Append=] |pendingPromiseTuple| to [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
-        </li>
-        <li>
-          [=promise/React=] to |promise|:
-          <ul>
-            <li>
-              If |promise| was [=resolved|fulfilled=] or [=rejected=], then:
-              <ol>
-                <li>
-                  [=list/Remove=] |tuple| from [=this=].{{PressureObserver/[[PendingObservePromises]]}}.
-                </li>
-              </ol>
-            </li>
-          </ul>
-        </li>
-        <li>
-          Run the following steps [=in parallel=]:
-          <ol>
-            <li>
-              If |source:PressureSource| is not a [=supported source type=],
-              [=queue a global task=] on the [=PressureObserver task source=]
-              given |relevantGlobal|
-              to reject |promise| {{NotSupportedError}} and abort these steps.
-            </li>
-            <li>
-              Activate [=data delivery=] of |source| data to |relevantGlobal|.
-            </li>
-            <li>
-              [=Queue a global task=] on the [=PressureObserver task source=] given
-              |relevantGlobal| to run these steps:
-              <ol>
-                <li>
-                  If |promise| was rejected, run the following substeps:
-                  <ol>
-                    <li>
-                      If |relevantGlobal|'s [=registered observer list=] for |source| is [=list/empty=],
-                      deactivate [=data delivery=] of |source| data to |relevantGlobal|.
-                    </li>
-                    <li>
-                      Return.
-                    </li>
-                  </ol>
-                </li>
-                <li>
-                  [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
-                  to |relevantGlobal|'s [=registered observer list=] for |source|.
-                </li>
-                <li>
-                  Resolve |promise|.
-                </li>
-              </ol>
-            </li>
-          </ol>
-        </li>
-        <li>
-          Return |promise|.
+          [=list/Append=] a new [=registered observer=] whose [=observer=] is [=this=]
+          to |relevantGlobal|'s [=registered observer list=] for |source|.
         </li>
       </ol>
     </p>
@@ -660,10 +602,6 @@ of system resources such as the CPU.
         </li>
         <li>
           [=map/Remove=] |this|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[|source|].
-        </li>
-        <li>
-          [=list/For each=] (|promiseSource|, |pendingPromise|) of [=this=].{{PressureObserver/[[PendingObservePromises]]}},
-          if |source| is equal to |promiseSource|, [=reject=] |pendingPromise| with an {{AbortError}}.
         </li>
         <li>
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
@@ -695,10 +633,6 @@ of system resources such as the CPU.
         </li>
         <li>
           [=map/Clear=] |this|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}.
-        </li>
-        <li>
-          [=list/For each=] (|promiseSource|, |pendingPromise|) of [=this=].{{PressureObserver/[[PendingObservePromises]]}},
-          [=reject=] |pendingPromise| with an {{AbortError}}.
         </li>
         <li>
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
