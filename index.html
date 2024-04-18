@@ -1634,7 +1634,7 @@ of system resources such as the CPU.
         a <dfn>pending state updates</dfn> [=queue=] of zero or more [=pressure states=], which is initially empty.
       </li>
       <li>
-        a <dfn>sample update interval</dfn> positive number, initially set to 0 (update immidiately).
+        a <dfn>sample update interval</dfn> positive number, initially set to -1 (don't update).
       </li>
     </ul>
   </p>
@@ -1879,40 +1879,48 @@ of system resources such as the CPU.
       <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "states" from |parameters|.
     </li>
     <li>
-      If |states| is undefined or is not an Array, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
-    </li>
-    <li>
-      For each |state| in |states|:
+      If |states| is not undefined:
       <ol>
         <li>
-          If |state| is not a [=string=] and a valid {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+          If |states| is not an Array, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
         </li>
         <li>
-          Push |state| to |virtualPressureSource|'s [=pending state updates=].
+          For each |state| in |states|:
+          <ol>
+            <li>
+              If |state| is not a [=string=] and a valid {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+            </li>
+            <li>
+              Push |state| to |virtualPressureSource|'s [=pending state updates=].
+            </li>
+          </ol>
         </li>
       </ol>
-    </li>
     <li>
       Let |sampleInterval| be the result of invoking
       <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "sampleInterval" from |parameters|.
     </li>
     <li>
-      If |sampleInterval| is not an Number, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
-    </li>
-    <li>
-      If |sampleInterval| is negative, stop updating the [=mock platform collector=].
-    </li>
-    <li>
-      If |sampleInterval| is positive, start updating the [=mock platform collector=] each |sampleInterval| milliseconds:
+      If |sampleInterval| is not undefined:
       <ol>
         <li>
-          Let |state| be the result of [=stack/pop|popping=] a value from [=pending state updates=].
+          If |sampleInterval| is not an Number, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
         </li>
         <li>
-          If |state| is not undefined, update the [=mock platform collector=] with the value, or else do nothing.
+          If |sampleInterval| is negative, stop updating the [=mock platform collector=].
+        </li>
+        <li>
+          If |sampleInterval| is positive, start updating the [=mock platform collector=] each |sampleInterval| milliseconds:
+          <ol>
+            <li>
+              Let |state| be the result of [=stack/pop|popping=] a value from [=pending state updates=].
+            </li>
+            <li>
+              If |state| is not undefined, update the [=mock platform collector=] with the value, or else do nothing.
+            </li>
+          </ol>
         </li>
       </ol>
-    </li>
     </li>
     <li>
       Return [=success=] with data <code>null</code>.
