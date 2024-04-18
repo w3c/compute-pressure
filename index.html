@@ -1092,7 +1092,8 @@ of system resources such as the CPU.
   <section>
     <h3>Data delivery</h3>
     <p>
-      [=Data delivery=] from a [=platform collector=] can be activate and deactivated in an
+      [=Data delivery=] from a [=platform collector=] or [=mock platform collector=]
+      can be activate and deactivated in an
       [=implementation-defined=] manner per [=source type=] and [=global object=].
     </p>
     <aside class="note">
@@ -1604,6 +1605,320 @@ of system resources such as the CPU.
 
       </li>
     </ul>
+</section>
+
+<section>
+  <h2>
+    Automation
+  </h2>
+  <p>
+    The Compute Pressure API pose a challenge to test authors, as fully
+    exercising interface requires physical hardware devices that respond in predictable ways.
+
+    To address this challenge this document defines a [[WEBDRIVER2]] [=extension
+    commands=] that allows defining and controlling virtual pressure sources that behave
+    like real ones and which can have particular properties and whose readings can be
+    entirely defined by users.
+  </p>
+  <h2>
+    Virtual Pressure Source
+  </h2>
+  <p>
+    A <dfn>virtual pressure source</dfn> simulates the behavior of a real pressure source in controlled ways.
+    It reports pressure changes to zero or more [=platform collectors=] connected to it.
+  </p>
+  <p>
+    Each [=virtual pressure source=] has:
+    <ul>
+      <li>
+        a <dfn>pending state updates</dfn> [=queue=] of zero or more [=pressure states=], which is initially empty.
+      </li>
+      <li>
+        a <dfn>sample update interval</dfn> positive number, initially set to 0 (update immidiately).
+      </li>
+    </ul>
+  </p>
+  <p>
+    A [=virtual pressure source=] is a string that represents a pressure source of a given [=source type=].
+  </p>
+  <p>
+    Each [=top-level traversable=] has a <dfn>virtual pressure source mapping</dfn>, which is an [=ordered map=] of
+    [=source types=] to [=virtual pressure source=].
+  </p>
+  <p>
+    A <dfn>mock platform collector</dfn> is a [=platform collector=] that uses data from the [=virtual pressure sources=]
+    in an [=implementation-defined=] manner.
+  </p>
+  <h3>
+    Extension Commands
+  </h3>
+  <h4>
+    Create virtual pressure source
+  </h4>
+  <table class="def">
+    <tr>
+      <th>
+        HTTP Method
+      </th>
+      <th>
+        [=extension command URI Template|URI Template=]
+      </th>
+    </tr>
+    <tr>
+      <td>
+        POST
+      </td>
+      <td>
+        /session/{session id}/pressuresource
+      </td>
+    </tr>
+  </table>
+  <p>
+    This [=extension command=] creates a new [=virtual pressure source=] of a certain
+    [=source type=]. Calls to {{PressureObserver/observe()}} from {{PressureObserver}} instances
+    of the same [=source type=] will cause this [=virtual pressure source=] to be used as their
+    backing pressure source until [[[#delete-virtual-pressure-source]]] is run.
+  </p>
+  <table class="data">
+    <caption>
+      Properties of the parameters argument used by this algorithm
+    </caption>
+    <tr>
+      <th>
+        Parameter name
+      </th>
+      <th>
+        Value type
+      </th>
+      <th>
+        Required
+      </th>
+    </tr>
+    <tr>
+      <td>
+        type
+      </td>
+      <td>
+        String
+      </td>
+      <td>
+        yes
+      </td>
+    </tr>
+  </table>
+  <p>
+    The [=remote end steps=]  given |session|, |URL variables| and |parameters| are:
+  </p>
+  <ol class="algorithm" data-cite="WEBDRIVER2">
+    <li>
+      Let |virtualPressureSourceType| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "type" from |parameters|.
+    </li>
+    <li>
+      If |virtualPressureSourceType| is not a [=string=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
+      context</a>'s [=browsing context/top-level traversable=].
+    </li>
+    <li>
+      Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+    </li>
+    <li>
+      If |topLevelVirtualPressureSourceMapping| contains |virtualPressureSourceType|, return [=error=] with
+      [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |virtualPressureSource| be a new [=virtual pressure source=].
+    </li>
+    <li>
+      Set |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|] to |virtualPressureSource|.
+    </li>
+    <li>
+      Return [=success=] with data <code>null</code>.
+    </li>
+  </ol>
+  <h4>
+    Delete virtual pressure source
+  </h4>
+  <table class="def">
+    <tr>
+      <th>
+        HTTP Method
+      </th>
+      <th>
+        [=extension command URI Template|URI Template=]
+      </th>
+    </tr>
+    <tr>
+      <td>
+        DELETE
+      </td>
+      <td>
+        /session/{session id}/pressuresource/{type}
+      </td>
+    </tr>
+  </table>
+  <p>
+    This [=extension command=] deletes a given [=source type=] of [=virtual pressure source=] and returns
+    pressure source updates back to hardware.
+  </p>
+  <p>
+    The [=remote end steps=] given |session|, |URL variables| and |parameters| are:
+  </p>
+  <ol class="algorithm" data-cite="WEBDRIVER2">
+    <li>
+      Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
+    </li>
+    <li>
+      Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
+      context</a>'s [=browsing context/top-level traversable=].
+    </li>
+    <li>
+      Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+    </li>
+    <li>
+      Remove |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|] and any data associated with its
+      [=virtual pressure source=], including any active data delivery to the [=mock platform collector=].
+    </li>
+    <li>
+      Return [=success=] with data <code>null</code>.
+    </li>
+  </ol>
+
+  <h4>
+    Update virtual pressure source
+  </h4>
+  <table class="def">
+    <tr>
+      <th>
+        HTTP Method
+      </th>
+      <th>
+        [=extension command URI Template|URI Template=]
+      </th>
+    </tr>
+    <tr>
+      <td>
+        POST
+      </td>
+      <td>
+        /session/{session id}/pressuresource/{type}
+      </td>
+    </tr>
+  </table>
+  <p>
+    This [=extension command=] allows updating the state of a [=virtual pressure source=] by pushing
+    additional [=pending state updates=] and turning on and off reporting by setting the
+    [=sample update interval=].
+  </p>
+  <table class="data">
+    <caption>
+      Properties of the parameters argument used by this algorithm
+    </caption>
+    <tr>
+      <th>
+        Parameter name
+      </th>
+      <th>
+        Value type
+      </th>
+      <th>
+        Required
+      </th>
+    </tr>
+    <tr>
+      <td>
+        states
+      </td>
+      <td>
+        Array of strings
+      </td>
+      <td>
+        no
+      </td>
+    </tr>
+    <tr>
+      <td>
+        sampleInterval
+      </td>
+      <td>
+        Number
+      </td>
+      <td>
+        no
+      </td>
+    </tr>
+  </table>
+  <p>
+    The [=remote end steps=] given |session|, |URL variables| and |parameters| are:
+  </p>
+  <ol class="algorithm" data-cite="WEBDRIVER2">
+    <li>
+      Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
+    </li>
+    <li>
+      If |virtualPressureSourceType| is not a [=string=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
+      context</a>'s [=browsing context/top-level traversable=].
+    </li>
+    <li>
+      Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+    </li>
+    <li>
+      If |topLevelVirtualPressureSourceMapping| does not [=map/contain=] |virtualPressureSource|,
+      return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |virtualPressureSource| be |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|].
+    </li>
+    <li>
+      Let |states| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "states" from |parameters|.
+    </li>
+    <li>
+      If |states| is undefined or is not an Array, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      For each |state| in |states|:
+      <ol>
+        <li>
+          If |state| is not a [=string=] and a valid {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+        </li>
+        <li>
+          Push |state| to |virtualPressureSource|'s [=pending state updates=].
+        </li>
+      </ol>
+    </li>
+    <li>
+      Let |sampleInterval| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "sampleInterval" from |parameters|.
+    </li>
+    <li>
+      If |sampleInterval| is not an Number, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      If |sampleInterval| is negative, stop updating the [=mock platform collector=].
+    </li>
+    <li>
+      If |sampleInterval| is positive, start updating the [=mock platform collector=] each |sampleInterval| milliseconds:
+      <ol>
+        <li>
+          Let |state| be the result of [=stack/pop|popping=] a value from [=pending state updates=].
+        </li>
+        <li>
+          If |state| is not undefined, update the [=mock platform collector=] with the value, or else do nothing.
+        </li>
+      </ol>
+    </li>
+    </li>
+    <li>
+      Return [=success=] with data <code>null</code>.
+    </li>
+  </ol>
+
 </section>
 
 
