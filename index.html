@@ -185,13 +185,13 @@
         the method will throw a {{TypeError}}.
       </p>
       <p>
-        If the [=source type=] is part of {{PressureSource}}, but not supported by the
-        [=user agent=], host OS or underlying hardware, the method will instead throw
-        {{NotSupportedError}}.
+        If the [=source type=] is known by the [=user agent=] (part of {{PressureSource}}),
+        but not supported by it, the host OS or the underlying hardware, the method will instead
+        throw {{NotSupportedError}}.
       </p>
       <p>
-        To check what [=source types=] are supported, a user can call the static method
-        {{PressureObserver/supportedSources()}}.
+        To list the known [=source types=], a user can call the static attribute
+        {{PressureObserver/knownSources}}.
       </p>
     </aside>
   </section>
@@ -528,7 +528,7 @@ of system resources such as the CPU.
       undefined disconnect();
       sequence&lt;PressureRecord&gt; takeRecords();
 
-      [SameObject] static readonly attribute FrozenArray&lt;PressureSource&gt; supportedSources;
+      [SameObject] static readonly attribute FrozenArray&lt;PressureSource&gt; knownSources;
     };
   </pre>
 
@@ -745,24 +745,28 @@ of system resources such as the CPU.
     </p>
   </section>
   <section>
-    <h3>The <dfn>supportedSources</dfn> attribute</h3>
+    <h3>The <dfn>knownSources</dfn> attribute</h3>
     <p>
-      The {{PressureObserver/supportedSources}} attribute is informing on the [=supported source type=] by the [=platform collector=].
+      Each [=global object=] has an associated <dfn>frozen array of supported source types</dfn>, which is initialized
+      to the 	{{FrozenArray}} created from the sequence of strings values present in the enumeration
+      {{PressureSource}}, in alphabetical order.
     </p>
     <p>
-      The {{PressureObserver/supportedSources}} getter steps are:
+      The {{PressureObserver/knownSources}} getter steps are:
       <ol class="algorithm">
         <li>
-          Let |sources| be a [=list=] of |source:PressureSource|.
+          Let |globalObject| be the [=environment settings object=]'s [=global object=].
         </li>
         <li>
-          Return |observer|'s frozen array of supported [=source types=].
+          Return |globalObject|'s [=frozen array of supported source types=].
         </li>
       </ol>
     </p>
     <aside class="note">
       <p>
-        This attribute allows web developers to easily know which [=source types=] are supported by the user agent.
+        The attribute property is a merely hint about the [=source types=] the [=user agent=] supports.
+        It is not guaranteed pressure observation will work on the underlying operating system or hardware.
+        Call {{PressureObserver/observe()}} and check for {{NotSupportedError}} if pressure observation is possible.
       </p>
     </aside>
   </section>
@@ -833,7 +837,7 @@ of system resources such as the CPU.
     <h3>The <dfn>sampleInterval</dfn> member</h3>
     <p>
       The {{PressureObserverOptions/sampleInterval}} member represents the [=requested sampling
-      interval=] expressed in milliseconds. 
+      interval=] expressed in milliseconds.
     </p>
     <aside class="note">
       <p>
