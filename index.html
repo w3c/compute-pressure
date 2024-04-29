@@ -155,9 +155,9 @@
     </p>
   </section>
   <section>
-    <h3>Supported sources</h3>
+    <h3>Pressure sources</h3>
     <p>
-      The specification currently defines the <dfn>supported source types</dfn> as
+      The specification currently defines the <dfn>valid source types</dfn> as
       <em>global system thermals</em> and the <em>central [=processing unit=]</em>, also know as the CPU.
       Future levels of this specification MAY introduce additional [=source types=].
     </p>
@@ -165,7 +165,7 @@
       enum PressureSource { "thermals", "cpu" };
     </pre>
     <p>
-      The <dfn>PressureSource</dfn> enum represents the [=supported source types=]:
+      The <dfn>PressureSource</dfn> enum represents the [=valid source types=]:
     </p>
     <p>
       <ul class="pressure-source">
@@ -367,8 +367,15 @@
     A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{PressureObserver}} object).
   </p>
   <p>
-    The [=user agent=] additionally has a <dfn>max queued records</dfn> integer, which
-    is set to an [=implementation-defined=] value, greater than 0.
+    The [=user agent=] has:
+    <ul>
+      <li>
+        a <dfn>max queued records</dfn> integer, which is set to an [=implementation-defined=] value, greater than 0.
+      </li>
+      <li>
+        a <dfn>supported source types</dfn> [=list=] of [=implementation-defined=] {{PressureSource}} values.
+      </li>
+    </ul>
   </p>
   <p>
     A constructed {{PressureObserver}} object has the following internal slots:
@@ -599,7 +606,7 @@ of system resources such as the CPU.
           Run the following steps [=in parallel=]:
           <ol>
             <li>
-              If |source:PressureSource| is not a [=supported source type=],
+              If |source:PressureSource| is not a [=valid source type=],
               [=queue a global task=] on the [=PressureObserver task source=]
               given |relevantGlobal|
               to reject |promise| {{NotSupportedError}} and abort these steps.
@@ -747,18 +754,10 @@ of system resources such as the CPU.
   <section>
     <h3>The <dfn>knownSources</dfn> attribute</h3>
     <p>
-      Each [=global object=] has an associated <dfn>frozen array of supported source types</dfn>, which is initialized
-      to the {{FrozenArray}} created from the sequence of strings values present in the enumeration
-      {{PressureSource}}, in alphabetical order.
-    </p>
-    <p>
       The {{PressureObserver/knownSources}} getter steps are:
       <ol class="algorithm">
         <li>
-          Let |globalObject| be the [=environment settings object=]'s [=global object=].
-        </li>
-        <li>
-          Return |globalObject|'s [=frozen array of supported source types=].
+          Return [=user agent=]'s [=supported source types=] in alphabetical order.
         </li>
       </ol>
     </p>
