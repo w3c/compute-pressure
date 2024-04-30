@@ -247,19 +247,20 @@
 
 <section> <h2>Platform primitives</h2>
   <p>
-    The [=platform collector=] refers to a platform interface, with which the [=user agent=] interacts to
-    obtain the telemetry readings required by this specification.
+    The [=platform collector=] refers to an abstract platform interface, with which the [=user agent=]
+    interacts to obtain the telemetry readings required by this specification.
   </p>
   <p>
     A [=platform collector=] can be defined by the underlying platform (e.g. in a native telemetry
-    framework) or by the [=user agent=], if it has a direct access to hardware counters.
+    framework) or by the [=user agent=] itself, if it has a direct access to hardware counters.
   </p>
   <p>
     A [=platform collector=] can support telemetry for different <dfn>source types</dfn> of computing
-    devices defined by {{PressureSource}}, or there can be multiple [=platform collectors=].
+    devices defined by {{PressureSource}}, or there can be multiple [=platform collectors=]. This is
+    [=implementation-defined=].
   </p>
   <p>
-    From the implementation perspective [=platform collector=] can be treated as a software proxy for the
+    From the implementation perspective it can be treated as a software proxy for the
     corresponding hardware counters. It is possible to have multiple [=platform collector=] simultaneously
     interacting with the same underlying hardware if the underlying platform supports it.
   </p>
@@ -267,6 +268,11 @@
     In simple cases, a [=platform collector=] represents individual hardware counters, but if the provided
     counter readings are a product of data fusion performed in software, the [=platform collector=]
     represents the results of the data fusion process. This may happen in user space or in kernel space.
+  </p>
+  <p>
+    For automation purposes, a [=platform collector=] must have the ability to connect to
+    [=virtual pressure sources=] and user their simulated data, as already [=adjusted pressure states=]
+    instead of actual platform data.
   </p>
   <p>
     As collecting telemetry data often means polling hardware counters, it is not a free operation and thus,
@@ -616,7 +622,7 @@ of system resources such as the CPU.
               to reject |promise| {{NotSupportedError}} and abort these steps.
             </li>
             <li>
-              Activate [=data delivery=] of |source| data to |relevantGlobal|.
+              Activate [=data delivery=] from |relevantGlobal|'s [=platform collector=] of |source| data to |relevantGlobal|.
             </li>
             <li>
               [=Queue a global task=] on the [=PressureObserver task source=] given
@@ -685,7 +691,7 @@ of system resources such as the CPU.
         </li>
         <li>
           If the above [=registered observer list=] is [=list/empty=],
-          deactivate [=data delivery=] of |source| data to |relevantGlobal|.
+          deactivate [=data delivery=] from |relevantGlobal|'s [=platform collector=] of |source| data to |relevantGlobal|.
         </li>
       </ol>
     </p>
@@ -1096,8 +1102,7 @@ of system resources such as the CPU.
   <section>
     <h3>Data delivery</h3>
     <p>
-      [=Data delivery=] from a [=platform collector=] or [=mock platform collector=]
-      can be activated and deactivated in an
+      [=Data delivery=] from a [=platform collector=] can be activated and deactivated in an
       [=implementation-defined=] manner per [=source type=] and [=global object=].
     </p>
     <aside class="note">
@@ -1105,26 +1110,27 @@ of system resources such as the CPU.
       when there is no active [=data delivery=] to any {{PressureObserver}} [=relevant global object=].
     </aside>
     <p>
-      The <dfn>data delivery</dfn> steps that are run when
-      an [=implementation-defined=] |data| sample of [=source type=] |source:PressureSource| is
-      obtained from [=global object=] |relevantGlobal|'s [=platform collector=],
-      are as follows:
+      The <dfn>data delivery</dfn> steps that are run when the [=global object=] |relevantGlobal|'s
+      [=platform collector=] has new |data| available, and are as follows:
       <ol>
         <li>
           Let |source:PressureSource| be the [=source type=] of the |data| sample.
         </li>
         <li>
-          Let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
+          Let |state:PressureState| be |data| if it comes from a [=virtual pressure source=].
+        </li>
+        <li>
+          Otherwise, let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
+          <aside class="note">
+            The |data| sample and mapping between |data| sample, and [=pressure states=],
+            is [=implementation-defined=] and may use many different metrics. For instance,
+            for CPU, it might consider processor frequency and utilization, as well
+            as thermal conditions.
+          </aside>
         </li>
         <li>
           Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
           obtained from the |relevantGlobal|'s [=platform collector=].
-        <aside class="note">
-          The |data| sample and mapping between |data| sample, and [=pressure states=],
-          is [=implementation-defined=] and may use many different metrics. For instance,
-          for CPU, it might consider processor frequency and utilization, as well
-          as thermal conditions.
-        </aside>
         </li>
         <li>
           [=list/For each=] |observer:PressureObserver| in |relevantGlobal|'s
@@ -1635,23 +1641,19 @@ of system resources such as the CPU.
     Each [=virtual pressure source=] has:
     <ul>
       <li>
-        a <dfn>pending state updates</dfn> [=queue=] of zero or more [=pressure states=], which is initially empty.
+        a [=source type=].
       </li>
       <li>
-        a <dfn>sample update interval</dfn> number, initially set to -1 (don't update).
+        a <dfn>pending samples</dfn> [=queue=] of zero or more [=pressure states=], which is initially empty.
+      </li>
+      <li>
+        a <dfn>sample update interval</dfn> positive number.
       </li>
     </ul>
   </p>
   <p>
-    A [=virtual pressure source=] is a string that represents a pressure source of a given [=source type=].
-  </p>
-  <p>
     Each [=top-level traversable=] has a <dfn>virtual pressure source mapping</dfn>, which is an [=ordered map=] of
     [=source types=] to [=virtual pressure source=].
-  </p>
-  <p>
-    A <dfn>mock platform collector</dfn> is a [=platform collector=] that uses data from the [=virtual pressure sources=]
-    in an [=implementation-defined=] manner.
   </p>
   <h3>
     Extension Commands
@@ -1709,6 +1711,28 @@ of system resources such as the CPU.
         yes
       </td>
     </tr>
+    <tr>
+      <td>
+        sampleInterval
+      </td>
+      <td>
+        Number
+      </td>
+      <td>
+        yes
+      </td>
+    </tr>
+    <tr>
+      <td>
+        samples
+      </td>
+      <td>
+        Array of strings
+      </td>
+      <td>
+        yes
+      </td>
+    </tr>
   </table>
   <p>
     The [=remote end steps=]  given |session|, |URL variables| and |parameters| are:
@@ -1720,6 +1744,31 @@ of system resources such as the CPU.
     </li>
     <li>
       If |virtualPressureSourceType| is not a [=string=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |sampleInterval| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "sampleInterval" from |parameters|.
+    </li>
+    <li>
+      If |sampleInterval| is not an Number, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |samples| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "samples" from |parameters|.
+    </li>
+    <li>
+      If |samples| is not an Array, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      For each |sample| in |samples|:
+      <ol>
+        <li>
+          If |sample| is not a [=string=] and a valid {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+        </li>
+        <li>
+          [=queue/Enqueue=] |sample| to |virtualPressureSource|'s [=pending samples=].
+        </li>
+      </ol>
     </li>
     <li>
       Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
@@ -1734,6 +1783,20 @@ of system resources such as the CPU.
     </li>
     <li>
       Let |virtualPressureSource| be a new [=virtual pressure source=].
+    </li>
+    <li>
+      In an [=implementation-defined=] way connect to the [=platform collector=] and when sampling, let it
+      read the first item in the |virtualPressureSource|'s [=pending samples=] as the current data sample,
+      or else consider that there is no data available.
+    </li>
+    <li>
+      Let |virtualPressureSource|'s [=sample update interval=] be |sampleInterval|.
+    </li>
+    <li>
+      Run the following steps [=in parallel=] at the |sampleInterval| time interval:
+      <ol>
+        Remove |virtualPressureSource|'s [=pending samples=] first item if the queue is not empty.
+      </ol>
     </li>
     <li>
       Set |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|] to |virtualPressureSource|.
@@ -1783,7 +1846,11 @@ of system resources such as the CPU.
     </li>
     <li>
       Remove |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|] and any data associated with its
-      [=virtual pressure source=], including any active data delivery to the [=mock platform collector=].
+      [=virtual pressure source=].
+    </li>
+    <li>
+      In an [=implementation-defined=] way disconnect to the [=platform collector=] and let normal
+      platform data delivery resume.
     </li>
     <li>
       Return [=success=] with data <code>null</code>.
@@ -1813,8 +1880,7 @@ of system resources such as the CPU.
   </table>
   <p>
     This [=extension command=] allows updating the state of a [=virtual pressure source=] by pushing
-    additional [=pending state updates=] and turning on and off reporting by setting the
-    [=sample update interval=].
+    additional [=pending samples=].
   </p>
   <aside class="note" data-cite="WEBDRIVER2">
     Additionally, the [=extension command=] can be used to check whether a source type is created
@@ -1840,24 +1906,13 @@ of system resources such as the CPU.
     </tr>
     <tr>
       <td>
-        states
+        samples
       </td>
       <td>
         Array of strings
       </td>
       <td>
-        no
-      </td>
-    </tr>
-    <tr>
-      <td>
-        sampleInterval
-      </td>
-      <td>
-        Number
-      </td>
-      <td>
-        no
+        yes
       </td>
     </tr>
   </table>
@@ -1887,50 +1942,20 @@ of system resources such as the CPU.
       Let |virtualPressureSource| be |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|].
     </li>
     <li>
-      Let |states| be the result of invoking
-      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "states" from |parameters|.
+      Let |samples| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "samples" from |parameters|.
     </li>
     <li>
-      If |states| is not undefined:
-      <ol>
-        <li>
-          If |states| is not an Array, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
-        </li>
-        <li>
-          For each |state| in |states|:
-          <ol>
-            <li>
-              If |state| is not a [=string=] and a valid {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
-            </li>
-            <li>
-              Push |state| to |virtualPressureSource|'s [=pending state updates=].
-            </li>
-          </ol>
-        </li>
-      </ol>
-    <li>
-      Let |sampleInterval| be the result of invoking
-      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "sampleInterval" from |parameters|.
+      If |samples| is not an Array, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
-      If |sampleInterval| is not undefined:
+      For each |sample| in |samples|:
       <ol>
         <li>
-          If |sampleInterval| is not an Number, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+          If |sample| is not a [=string=] and a valid {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
         </li>
         <li>
-          If |sampleInterval| is &lt; 0, stop updating the [=mock platform collector=].
-        </li>
-        <li>
-          If |sampleInterval| is &ge; 0, start updating the [=mock platform collector=] each |sampleInterval| milliseconds:
-          <ol>
-            <li>
-              Let |state| be the result of [=stack/pop|popping=] a value from [=pending state updates=].
-            </li>
-            <li>
-              If |state| is not undefined, update the [=mock platform collector=] with the value, or else do nothing.
-            </li>
-          </ol>
+          [=queue/Enqueue=] |sample| to |virtualPressureSource|'s [=pending samples=].
         </li>
       </ol>
     </li>
