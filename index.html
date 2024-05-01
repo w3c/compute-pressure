@@ -220,7 +220,7 @@
     </p>
     <p>
       The <dfn>reporting rate</dfn> for a pressure observer is the rate at which it runs
-      the [=data delivery=] steps, and it will never exceed the [=sampling rate=].
+      the [=data collection=] steps, and it will never exceed the [=sampling rate=].
     </p>
     <p>
       The [=sampling rate=] differs from the [=requested sampling rate=] when the
@@ -247,27 +247,18 @@
 
 <section> <h2>Platform primitives</h2>
   <p>
-    The [=platform collector=] refers to an abstract platform interface, with which the [=user agent=]
-    interacts to obtain the telemetry readings required by this specification.
+    The [=platform collector=] refers to an abstract platform interface, with which the
+    [=user agent=] interacts to obtain the telemetry samples required by this specification.
   </p>
   <p>
-    A [=platform collector=] can be defined by the underlying platform (e.g. in a native telemetry
-    framework) or by the [=user agent=] itself, if it has a direct access to hardware counters.
-  </p>
-  <p>
-    A [=platform collector=] can support telemetry for different <dfn>source types</dfn> of computing
-    devices defined by {{PressureSource}}, or there can be multiple [=platform collectors=]. This is
-    [=implementation-defined=].
+    For this specification's purposes, there is one separate [=platform collector=] per
+    [=global object=], which can support telemetry for different <dfn>source types</dfn>
+    defined by {{PressureSource}}.
   </p>
   <p>
     From the implementation perspective it can be treated as a software proxy for the
-    corresponding hardware counters. It is possible to have multiple [=platform collector=] simultaneously
-    interacting with the same underlying hardware if the underlying platform supports it.
-  </p>
-  <p>
-    In simple cases, a [=platform collector=] represents individual hardware counters, but if the provided
-    counter readings are a product of data fusion performed in software, the [=platform collector=]
-    represents the results of the data fusion process. This may happen in user space or in kernel space.
+    corresponding hardware counters or underlying telemetry framework, and it can make use
+    of data fusion with data from additional sources if that provides better results.
   </p>
   <p>
     For automation purposes, a [=platform collector=] must have the ability to connect to
@@ -371,7 +362,7 @@
         a <dfn>registered observer list</dfn> per supported [=source type=], which is initially empty.
       </li>
       <li>
-        a reference to an underlying <dfn>platform collector</dfn> as detailed in [[[#platform-primitives]]].
+        a <dfn>platform collector</dfn> as detailed in [[[#platform-primitives]]].
       </li>
     </ul>
     A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{PressureObserver}} object).
@@ -622,7 +613,7 @@ of system resources such as the CPU.
               to reject |promise| {{NotSupportedError}} and abort these steps.
             </li>
             <li>
-              Activate [=data delivery=] from |relevantGlobal|'s [=platform collector=] of |source| data to |relevantGlobal|.
+              Activate [=data collection=] from |relevantGlobal|'s [=platform collector=] of |source| data to |relevantGlobal|.
             </li>
             <li>
               [=Queue a global task=] on the [=PressureObserver task source=] given
@@ -633,7 +624,7 @@ of system resources such as the CPU.
                   <ol>
                     <li>
                       If |relevantGlobal|'s [=registered observer list=] for |source| is [=list/empty=],
-                      deactivate [=data delivery=] of |source| data to |relevantGlobal|.
+                      deactivate [=data collection=] of |source| data to |relevantGlobal|.
                     </li>
                     <li>
                       Return.
@@ -691,7 +682,7 @@ of system resources such as the CPU.
         </li>
         <li>
           If the above [=registered observer list=] is [=list/empty=],
-          deactivate [=data delivery=] from |relevantGlobal|'s [=platform collector=] of |source| data to |relevantGlobal|.
+          deactivate [=data collection=] from |relevantGlobal|'s [=platform collector=] of |source| data to |relevantGlobal|.
         </li>
       </ol>
     </p>
@@ -726,7 +717,7 @@ of system resources such as the CPU.
         </li>
         <li>
           If the above [=registered observer list=] is [=list/empty=],
-          deactivate [=data delivery=] of |source| data to |relevantGlobal|.
+          deactivate [=data collection=] of |source| data to |relevantGlobal|.
         </li>
       </ol>
     </p>
@@ -1100,24 +1091,41 @@ of system resources such as the CPU.
     </p>
   </section>
   <section>
-    <h3>Data delivery</h3>
+    <h3>Data Collection and Delivery</h3>
     <p>
-      [=Data delivery=] from a [=platform collector=] can be activated and deactivated in an
+      [=Data collection=] from a [=platform collector=] can be activated and deactivated in an
       [=implementation-defined=] manner per [=source type=] and [=global object=].
     </p>
     <aside class="note">
-      It is recommended that the [=platform collector=] suspends low-level data polling
-      when there is no active [=data delivery=] to any {{PressureObserver}} [=relevant global object=].
+      It is recommended that the [=platform collector=] suspends low-level data collection
+      when there is no active [=data collection=] to any {{PressureObserver}} [=relevant global object=].
     </aside>
     <p>
-      The <dfn>data delivery</dfn> steps that are run when the [=global object=] |relevantGlobal|'s
-      [=platform collector=] has new |data| available, and are as follows:
+      The <dfn>data collection</dfn> steps given |relevantGlobal| as input, is run when
+      the |relevantGlobal| associated [=platform collector=] needs to obtain new |data|
+      for a [=source type=] |source:PressureSource| and are as follows:
       <ol>
         <li>
-          Let |source:PressureSource| be the [=source type=] of the |data| sample.
+          Let |virtualPressureSource| be null.
         </li>
         <li>
-          Let |state:PressureState| be |data| if it comes from a [=virtual pressure source=].
+          If |relevantGlobal|'s [=navigable/active document=] |document| is not null:
+          <ol>
+            <li>
+              Let |topLevelTraversable| be |document|'s [=node navigable=]'s [=top-level traversable=].
+            </li>
+            <li>
+              Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+            </li>
+            <li>
+              Set |virtualPressureSource| to |topLevelVirtualPressureSourceMapping|[|source|].
+            </li>
+          </ol>
+        </li>
+        <li>
+          If |virtualPressureSource| is not null, let |state:PressureState| and |data|
+          be the first item in the |virtualPressureSource|'s [=pending samples=]
+          or else abort these steps if there is no data available.
         </li>
         <li>
           Otherwise, let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
@@ -1130,7 +1138,7 @@ of system resources such as the CPU.
         </li>
         <li>
           Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
-          obtained from the |relevantGlobal|'s [=platform collector=].
+          collected by the |relevantGlobal|'s [=platform collector=].
         </li>
         <li>
           [=list/For each=] |observer:PressureObserver| in |relevantGlobal|'s
@@ -1282,25 +1290,25 @@ of system resources such as the CPU.
     <h3>Handling change of fully active</h3>
     <p>
       When a {{Document}} |document| is no longer [=Document/fully active=],
-      deactivate [=data delivery=] of data of all [=supported source types=] to |document|'s [=relevant global object=].
+      deactivate [=data collection=] of data of all [=supported source types=] to |document|'s [=relevant global object=].
     </p>
     <p>
       When a worker with associated {{WorkerGlobalScope}} |relevantGlobal| is no longer
       an <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
       active needed workers</a>,
-      deactivate [=data delivery=] of data of all [=supported source types=] to |relevantGlobal|.
+      deactivate [=data collection=] of data of all [=supported source types=] to |relevantGlobal|.
     </p>
     <p>
       When a {{Document}} |document| becomes [=Document/fully active=],
       for each non-[=list/empty=] [=registered observer list=] associated the [=source type=] |source|,
-      activate [=data delivery=] of |source| data to |document|'s [=relevant global object=].
+      activate [=data collection=] of |source| data to |document|'s [=relevant global object=].
     </p>
     <p>
       When a worker with associated {{WorkerGlobalScope}} |relevantGlobal| becomes
       an <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
       active needed workers</a>,
       for each non-[=list/empty=] [=registered observer list=] associated the [=source type=] |source|,
-      activate [=data delivery=] of |source| data to |document|'s [=relevant global object=].
+      activate [=data collection=] of |source| data to |document|'s [=relevant global object=].
     </p>
     <aside class="note">
       When a document is no longer [=Document/fully active=] (or associated workers no longer
@@ -1310,7 +1318,7 @@ of system resources such as the CPU.
       (see [=may receive data=])
       in accordance with <a href="https://www.w3.org/TR/design-principles/#listen-fully-active">
       Web Platform Design Principles: Listen for changes to fully active status</a>. This means that the
-      system can safely deactivate [=data delivery=] from the associated [=platform collector=],
+      system can safely deactivate [=data collection=] from the associated [=platform collector=],
       but also that it needs to be re-activated when the opposite happens.
     </aside>
   </section>
@@ -1320,11 +1328,11 @@ of system resources such as the CPU.
     <p>
       When a worker with associated {{WorkerGlobalScope}} |relevantGlobal|,
       once |relevantGlobal|'s [=WorkerGlobalScope/closing=] flag is set to true,
-      deactivate [=data delivery=] for all [=supported source types=] to |relevantGlobal|.
+      deactivate [=data collection=] for all [=supported source types=] to |relevantGlobal|.
     </p>
     <p>
       As one of the [=unloading document cleanup steps=] given {{Document}} |document|,
-      deactivate [=data delivery=] for all [=supported source types=] to |document|'s [=relevant global object=].
+      deactivate [=data collection=] for all [=supported source types=] to |document|'s [=relevant global object=].
     </p>
   </section>
 </section>
@@ -1785,11 +1793,6 @@ of system resources such as the CPU.
       Let |virtualPressureSource| be a new [=virtual pressure source=].
     </li>
     <li>
-      In an [=implementation-defined=] way connect to the [=platform collector=] and when sampling, let it
-      read the first item in the |virtualPressureSource|'s [=pending samples=] as the current data sample,
-      or else consider that there is no data available.
-    </li>
-    <li>
       Let |virtualPressureSource|'s [=sample update interval=] be |sampleInterval|.
     </li>
     <li>
@@ -1847,10 +1850,6 @@ of system resources such as the CPU.
     <li>
       Remove |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|] and any data associated with its
       [=virtual pressure source=].
-    </li>
-    <li>
-      In an [=implementation-defined=] way disconnect to the [=platform collector=] and let normal
-      platform data delivery resume.
     </li>
     <li>
       Return [=success=] with data <code>null</code>.
