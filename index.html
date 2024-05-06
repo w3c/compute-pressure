@@ -161,10 +161,6 @@
       <em>global system thermals</em> and the <em>central [=processing unit=]</em>, also known as the CPU.
       Future levels of this specification MAY introduce additional [=source types=].
     </p>
-    <p>
-      If a [=virtual pressure source=] exists, the [=supported source types=] is equal to the
-      [=source types=] [=map/keys=] in the [=virtual pressure source mapping=] [=ordered map=].
-    </p>
     <pre class="idl">
       enum PressureSource { "thermals", "cpu" };
     </pre>
@@ -1098,10 +1094,10 @@ of system resources such as the CPU.
     </p>
     <aside class="note">
       It is recommended that the [=platform collector=] suspends low-level data collection
-      when there is no active [=data collection=] to any {{PressureObserver}} [=relevant global object=].
+      when there is no active [=data collection=] to any {{PressureObserver}}'s [=relevant global object=].
     </aside>
     <p>
-      The <dfn>data collection</dfn> steps given |relevantGlobal| as input, is run when
+      The <dfn>data collection</dfn> steps given |relevantGlobal| as input, are run when
       the |relevantGlobal| associated [=platform collector=] needs to obtain new |data|
       for a [=source type=] |source:PressureSource| and are as follows:
       <ol>
@@ -1730,17 +1726,6 @@ of system resources such as the CPU.
         yes
       </td>
     </tr>
-    <tr>
-      <td>
-        samples
-      </td>
-      <td>
-        Array of strings
-      </td>
-      <td>
-        yes
-      </td>
-    </tr>
   </table>
   <p>
     The [=remote end steps=]  given |session|, |URL variables| and |parameters| are:
@@ -1759,24 +1744,6 @@ of system resources such as the CPU.
     </li>
     <li>
       If |sampleInterval| is not an Number, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
-    </li>
-    <li>
-      Let |samples| be the result of invoking
-      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "samples" from |parameters|.
-    </li>
-    <li>
-      If |samples| is not an Array, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
-    </li>
-    <li>
-      For each |sample| in |samples|:
-      <ol>
-        <li>
-          If |sample| is not a [=string=] and a valid {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
-        </li>
-        <li>
-          [=queue/Enqueue=] |sample| to |virtualPressureSource|'s [=pending samples=].
-        </li>
-      </ol>
     </li>
     <li>
       Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
@@ -1832,8 +1799,8 @@ of system resources such as the CPU.
     </tr>
   </table>
   <p>
-    This [=extension command=] deletes a given [=source type=] of [=virtual pressure source=] and returns
-    pressure source updates back to hardware.
+    This [=extension command=] deletes a given [=source type=] of [=virtual pressure source=], meaning that,
+    if available, data will be delivered the regular way, by non-virtual means.
   </p>
   <p>
     The [=remote end steps=] given |session|, |URL variables| and |parameters| are:
@@ -1843,6 +1810,9 @@ of system resources such as the CPU.
       Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
     </li>
     <li>
+      If |virtualPressureSourceType| is not a [=valid source type=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
       Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
       context</a>'s [=browsing context/top-level traversable=].
     </li>
@@ -1850,8 +1820,7 @@ of system resources such as the CPU.
       Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
     </li>
     <li>
-      Remove |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|] and any data associated with its
-      [=virtual pressure source=].
+      [map/Remove] |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|].
     </li>
     <li>
       Return [=success=] with data <code>null</code>.
@@ -1925,7 +1894,7 @@ of system resources such as the CPU.
       Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
     </li>
     <li>
-      If |virtualPressureSourceType| is not a [=string=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+      If |virtualPressureSourceType| is not a [=valid source type=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
       Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
@@ -1955,6 +1924,9 @@ of system resources such as the CPU.
         <li>
           If |sample| is not a [=string=] and a valid {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
         </li>
+      </ol>
+      For each |sample| in |samples|:
+      <ol>
         <li>
           [=queue/Enqueue=] |sample| to |virtualPressureSource|'s [=pending samples=].
         </li>
