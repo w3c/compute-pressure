@@ -1105,18 +1105,33 @@ of system resources such as the CPU.
           Let |virtualPressureSource| be null.
         </li>
         <li>
-          If |relevantGlobal|'s [=navigable/active document=] |document| is not null:
+          If |relevantGlobal| is a {{Window}} object:
           <ol>
             <li>
-              Let |topLevelTraversable| be |document|'s [=node navigable=]'s [=top-level traversable=].
-            </li>
-            <li>
-              Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
-            </li>
-            <li>
-              Set |virtualPressureSource| to |topLevelVirtualPressureSourceMapping|[|source|].
+              Let |topLevelTraversable| be |relevantGlobal|'s [=Window/navigable=]'s [=top-level traversable=].
             </li>
           </ol>
+        </li>
+        <li>
+          If |relevantGlobal| is a {{DedicatedWorkerGlobalScope}} object:
+          <ol>
+            <li>
+              Let |owningDocuments| be |relevantGlobal|'s [=owning document set=].
+            </li>
+            <li>
+              If |owningDocuments| is empty, abort these steps.
+            </li>
+            <li>
+              Let |topLevelTraversable| be |owningDocuments|[0]'s [=node navigable=]'s [=top-level traversable=].
+            </li>
+          </ol>
+        </li>
+        <li>
+          Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+        </li>
+        <li>
+          Set |virtualPressureSource| to |topLevelVirtualPressureSourceMapping|[|source|].
+        </li>
         </li>
         <li>
           If |virtualPressureSource| is not null, let |state:PressureState| and |data|
