@@ -1135,8 +1135,13 @@ of system resources such as the CPU.
         </li>
         <li>
           If |virtualPressureSource| is not null, let |state:PressureState| and |data|
-          be the first item in the |virtualPressureSource|'s [=pending samples=]
-          or else abort these steps if there is no data available.
+          be |virtualPressureSource|'s [=pending sample=].
+        </li>
+        <li>
+          Set |virtualPressureSource|'s [=pending sample=] to null.
+        </li>
+        <li>
+          If |data| is null, abort these steps.
         </li>
         <li>
           Otherwise, let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
@@ -1663,10 +1668,7 @@ of system resources such as the CPU.
         a [=source type=].
       </li>
       <li>
-        a <dfn>pending samples</dfn> [=queue=] of zero or more [=pressure states=], which is initially empty.
-      </li>
-      <li>
-        a <dfn>sample update interval</dfn> positive number.
+        a <dfn>pending sample</dfn> of type {{PressureState}} or null, which is initially null.
       </li>
     </ul>
   </p>
@@ -1730,17 +1732,6 @@ of system resources such as the CPU.
         yes
       </td>
     </tr>
-    <tr>
-      <td>
-        sampleInterval
-      </td>
-      <td>
-        Number
-      </td>
-      <td>
-        yes
-      </td>
-    </tr>
   </table>
   <p>
     The [=remote end steps=]  given |session|, |URL variables| and |parameters| are:
@@ -1752,13 +1743,6 @@ of system resources such as the CPU.
     </li>
     <li>
       If |virtualPressureSourceType| is not a [=string=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
-    </li>
-    <li>
-      Let |sampleInterval| be the result of invoking
-      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "sampleInterval" from |parameters|.
-    </li>
-    <li>
-      If |sampleInterval| is not an Number, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
       Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
@@ -1773,17 +1757,6 @@ of system resources such as the CPU.
     </li>
     <li>
       Let |virtualPressureSource| be a new [=virtual pressure source=].
-    </li>
-    <li>
-      Let |virtualPressureSource|'s [=sample update interval=] be |sampleInterval|.
-    </li>
-    <li>
-      Run the following steps [=in parallel=] at the |sampleInterval| time interval:
-      <ol>
-        <li>
-          Remove |virtualPressureSource|'s [=pending samples=] first item if the queue is not empty.
-        </li>
-      </ol>
     </li>
     <li>
       Set |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|] to |virtualPressureSource|.
@@ -1865,7 +1838,7 @@ of system resources such as the CPU.
   </table>
   <p>
     This [=extension command=] allows updating the state of a [=virtual pressure source=] by pushing
-    additional [=pending samples=].
+    a new [=pending sample=].
   </p>
   <aside class="note" data-cite="WEBDRIVER2">
     Additionally, the [=extension command=] can be used to check whether a source type is created
@@ -1891,10 +1864,10 @@ of system resources such as the CPU.
     </tr>
     <tr>
       <td>
-        samples
+        sample
       </td>
       <td>
-        Array of strings
+        {{PressureState}}
       </td>
       <td>
         yes
@@ -1927,33 +1900,23 @@ of system resources such as the CPU.
       Let |virtualPressureSource| be |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|].
     </li>
     <li>
-      Let |samples| be the result of invoking
-      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "samples" from |parameters|.
+      Let |sample| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "sample" from |parameters|.
     </li>
     <li>
-      If |samples| is not an Array, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+      If |sample| is not of type {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
-      For each |sample| in |samples|:
-      <ol>
-        <li>
-          If |sample| is not a [=string=] and a valid {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
-        </li>
-      </ol>
-      For each |sample| in |samples|:
-      <ol>
-        <li>
-          [=queue/Enqueue=] |sample| to |virtualPressureSource|'s [=pending samples=].
-        </li>
-      </ol>
+      Set |virtualPressureSource|'s [=pending sample=] to |sample|.
+    </li>
+    <li>
+      In an [=implementation-defined=] way, run the [=data collection=] steps.
     </li>
     <li>
       Return [=success=] with data <code>null</code>.
     </li>
   </ol>
-
 </section>
-
 
 <section id="examples" class="informative">
   <h2>
