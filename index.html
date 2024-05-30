@@ -602,8 +602,34 @@ of system resources such as the CPU.
         <li>
           Run the following steps [=in parallel=]:
           <ol>
+            <!-- Issue 273: The virtual and non-virtual handling of |supported|
+            be unified. -->
             <li>
-              If |source:PressureSource| is not a [=valid source type=],
+              Let |supported| be true.
+            </li>
+            <li>
+              Let |virtualPressureSource| be the result of invoking [=get a
+              virtual pressure source=] with |source| and |relevantGlobal|.
+            </li>
+            <li>
+              If |virtualPressureSource| is not null:
+              <ol>
+                <li>
+                  Set |supported| to |virtualPressureSource|'s [=virtual
+                  pressure source/can provide samples flag=].
+                </li>
+              </ol>
+            </li>
+            <li>
+              Otherwise, if |source| is not a [=valid source type=]:
+              <ol>
+                <li>
+                  Set |supported| to false.
+                </li>
+              </ol>
+            </li>
+            <li>
+              If |supported| is false,
               [=queue a global task=] on the [=PressureObserver task source=]
               given |relevantGlobal|
               to reject |promise| {{NotSupportedError}} and abort these steps.
@@ -1691,6 +1717,10 @@ of system resources such as the CPU.
         a <dfn data-dfn-for="virtual pressure source">pending sample</dfn> of
         type {{PressureState}} or null, which is initially null.
       </li>
+      <li>
+        a <dfn data-dfn-for="virtual pressure source">can provide samples
+        flag</dfn>, a boolean.
+      </li>
     </ul>
   </p>
   <p>
@@ -1753,6 +1783,17 @@ of system resources such as the CPU.
         yes
       </td>
     </tr>
+    <tr>
+      <td>
+        supported
+      </td>
+      <td>
+        Boolean
+      </td>
+      <td>
+        no
+      </td>
+    </tr>
   </table>
   <p>
     The [=remote end steps=]  given |session|, |URL variables| and |parameters| are:
@@ -1777,7 +1818,17 @@ of system resources such as the CPU.
       [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
+      Let |supported| be the result of invoking <a
+      data-cite="!WEBDRIVER2#dfn-getting-the-property-with-default">get a
+      property with default</a>
+      with "supported" and true from |parameters|.
+    </li>
+    <li>
       Let |virtualPressureSource| be a new [=virtual pressure source=].
+    </li>
+    <li>
+      Set |virtualPressureSource|'s [=virtual pressure source/can provide
+      samples flag=] to |supported|.
     </li>
     <li>
       Set |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|] to |virtualPressureSource|.
