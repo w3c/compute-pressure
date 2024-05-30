@@ -1109,8 +1109,9 @@ of system resources such as the CPU.
           Let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
         </li>
         <li>
-          Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
-          obtained from the |relevantGlobal|'s [=platform collector=].
+          Let |timestamp| be an platform-specific timestamp converted in an [=implementation-defined=]
+          way to an [=monotonic clock/unsafe current time=] using the same [=monotonic clock=]
+          that is shared by [=environment settings object/time origin=].
         <aside class="note">
           The |data| sample and mapping between |data| sample, and [=pressure states=],
           is [=implementation-defined=] and may use many different metrics. For instance,
@@ -1138,7 +1139,8 @@ of system resources such as the CPU.
               Let |record:PressureRecord| be a new {{PressureRecord}} object with its
               {{PressureRecord/[[Source]]}} set to |source|,
               {{PressureRecord/[[State]]}} set to |state|
-              and {{PressureRecord/[[Time]]}} set to |timestamp|.
+              and {{PressureRecord/[[Time]]}} set to [=relative high resolution time=] based on |timestamp|
+              and a global.
             </li>
             <li>
               If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] [=map/exists=]:
