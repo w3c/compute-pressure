@@ -1134,11 +1134,13 @@ of system resources such as the CPU.
         </li>
         </li>
         <li>
-          If |virtualPressureSource| is not null, let |state:PressureState| and |data|
-          be |virtualPressureSource|'s [=pending sample=].
+          If |virtualPressureSource| is not null, let |state:PressureState| and
+          |data| be |virtualPressureSource|'s [=virtual pressure source/pending
+          sample=].
         </li>
         <li>
-          Set |virtualPressureSource|'s [=pending sample=] to null.
+          Set |virtualPressureSource|'s [=virtual pressure source/pending
+          sample=] to null.
         </li>
         <li>
           If |data| is null, abort these steps.
@@ -1665,7 +1667,8 @@ of system resources such as the CPU.
     Each [=virtual pressure source=] has:
     <ul>
       <li>
-        a <dfn>pending sample</dfn> of type {{PressureState}} or null, which is initially null.
+        a <dfn data-dfn-for="virtual pressure source">pending sample</dfn> of
+        type {{PressureState}} or null, which is initially null.
       </li>
     </ul>
   </p>
@@ -1835,7 +1838,7 @@ of system resources such as the CPU.
   </table>
   <p>
     This [=extension command=] allows updating the state of a [=virtual pressure source=] by pushing
-    a new [=pending sample=].
+    a new [=virtual pressure source/pending sample=].
   </p>
   <aside class="note" data-cite="WEBDRIVER2">
     Additionally, the [=extension command=] can be used to check whether a source type is created
@@ -1904,7 +1907,7 @@ of system resources such as the CPU.
       If |sample| is not of type {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
-      Set |virtualPressureSource|'s [=pending sample=] to |sample|.
+      Set |virtualPressureSource|'s [=virtual pressure source/pending sample=] to |sample|.
     </li>
     <li>
       In an [=implementation-defined=] way, run the [=data collection=] steps.
