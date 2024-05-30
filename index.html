@@ -1665,9 +1665,6 @@ of system resources such as the CPU.
     Each [=virtual pressure source=] has:
     <ul>
       <li>
-        a [=source type=].
-      </li>
-      <li>
         a <dfn>pending sample</dfn> of type {{PressureState}} or null, which is initially null.
       </li>
     </ul>
@@ -1787,8 +1784,8 @@ of system resources such as the CPU.
     </tr>
   </table>
   <p>
-    This [=extension command=] deletes a given [=source type=] of [=virtual pressure source=], meaning that,
-    if available, data will be delivered the regular way, by non-virtual means.
+    This [=extension command=] deletes a given [=virtual pressure source=], meaning that,
+    if available, data for the given [=source type=] will be delivered the regular way, by non-virtual means.
   </p>
   <p>
     The [=remote end steps=] given |session|, |URL variables| and |parameters| are:
