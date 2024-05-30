@@ -1177,35 +1177,50 @@ of system resources such as the CPU.
     </aside>
     <p>
       The <dfn>data collection</dfn> steps given |relevantGlobal| as input, are run when
-      the |relevantGlobal| associated [=platform collector=] needs to obtain new |data|
+      the |relevantGlobal| associated [=platform collector=] needs to obtain new data
       for a [=source type=] |source:PressureSource| and are as follows:
       <ol class="algorithm">
+        <li>
+          Let |state:PressureState| be null.
+        </li>
         <li>
           Let |virtualPressureSource| be the result of invoking [=get a virtual pressure source=] with |source| and |relevantGlobal|.
         </li>
         <li>
-          If |virtualPressureSource| is not null, let |state:PressureState| and
-          |data| be |virtualPressureSource|'s [=virtual pressure source/pending
-          sample=].
+          If |virtualPressureSource| is not null:
+          <ol>
+            <li>
+              Set |state| to |virtualPressureSource|'s [=virtual pressure
+              source/pending sample=].
+          </li>
+            <li>
+              If |state| is null, abort these steps.
+            </li>
+          </ol>
         </li>
         <li>
-          Set |virtualPressureSource|'s [=virtual pressure source/pending
-          sample=] to null.
+          Otherwise:
+          <ol>
+            <li>
+              Set |state| to an [=adjusted pressure state=] calculated from
+              |source| and any [=implementation-defined=] platform data related
+              to |source|.
+              <aside class="note">
+                <p>
+                  The data sample and the mapping between data sample and [=pressure states=]
+                  is [=implementation-defined=] and may use many different metrics. For instance,
+                  for CPU, it might consider processor frequency and utilization, as well
+                  as thermal conditions.
+                </p>
+              </aside>
+            </li>
+          </ol>
         </li>
         <li>
-          If |data| is null, abort these steps.
+          [=Assert=]: |state| is not null.
         </li>
         <li>
-          Otherwise, let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
-          <aside class="note">
-            The |data| sample and mapping between |data| sample, and [=pressure states=],
-            is [=implementation-defined=] and may use many different metrics. For instance,
-            for CPU, it might consider processor frequency and utilization, as well
-            as thermal conditions.
-          </aside>
-        </li>
-        <li>
-          Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
+          Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |state| was
           collected by the |relevantGlobal|'s [=platform collector=].
         </li>
         <li>
