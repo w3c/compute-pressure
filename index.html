@@ -1135,6 +1135,9 @@ of system resources such as the CPU.
               If |owningDocuments| is empty, return null.
             </li>
             <li>
+              [=Assert=]: |owningDocuments|'s [=set/size=] is 1.
+            </li>
+            <li>
               Set |topLevelTraversable| to |owningDocuments|[0]'s [=node navigable=]'s [=top-level traversable=].
             </li>
           </ol>
