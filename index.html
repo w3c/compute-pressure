@@ -1085,6 +1085,56 @@ of system resources such as the CPU.
         </li>
       </ol>
     </p>
+    <p>
+      To <dfn>get a virtual pressure source</dfn>, given a [=source type=]
+      |source| and |relevantGlobal|, perform the following steps. They return a
+      [=virtual pressure source=] or null.
+      <ol class="algorithm">
+        <li>Let |topLevelTraversable| be null.</li>
+        <li>
+          If |relevantGlobal| is a {{Window}} object:
+          <ol>
+            <li>
+              Set |topLevelTraversable| to |relevantGlobal|'s [=Window/navigable=]'s [=top-level traversable=].
+            </li>
+          </ol>
+        </li>
+        <li>
+          If |relevantGlobal| is a {{DedicatedWorkerGlobalScope}} object:
+          <ol>
+            <li>
+              Let |owningDocuments| be |relevantGlobal|'s [=owning document set=].
+            </li>
+            <li>
+              If |owningDocuments| is empty, return null.
+            </li>
+            <li>
+              Set |topLevelTraversable| to |owningDocuments|[0]'s [=node navigable=]'s [=top-level traversable=].
+            </li>
+          </ol>
+        </li>
+        <li>
+          If |topLevelTraversable| is null, return null.
+        </li>
+        <li>
+          Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+        </li>
+        <li>
+          Let |virtualPressureSource| be null.
+        </li>
+        <li>
+          If |topLevelVirtualPressureSourceMapping| [=map/contains=] |source|:
+          <ol>
+            <li>
+              Set |virtualPressureSource| to |topLevelVirtualPressureSourceMapping|[|source|].
+            </li>
+          </ol>
+        </li>
+        <li>
+          Return |virtualPressureSource|.
+        </li>
+      </ol>
+    </p>
   </section>
   <section>
     <h3>Data Collection and Delivery</h3>
@@ -1100,38 +1150,9 @@ of system resources such as the CPU.
       The <dfn>data collection</dfn> steps given |relevantGlobal| as input, are run when
       the |relevantGlobal| associated [=platform collector=] needs to obtain new |data|
       for a [=source type=] |source:PressureSource| and are as follows:
-      <ol>
+      <ol class="algorithm">
         <li>
-          Let |virtualPressureSource| be null.
-        </li>
-        <li>
-          If |relevantGlobal| is a {{Window}} object:
-          <ol>
-            <li>
-              Let |topLevelTraversable| be |relevantGlobal|'s [=Window/navigable=]'s [=top-level traversable=].
-            </li>
-          </ol>
-        </li>
-        <li>
-          If |relevantGlobal| is a {{DedicatedWorkerGlobalScope}} object:
-          <ol>
-            <li>
-              Let |owningDocuments| be |relevantGlobal|'s [=owning document set=].
-            </li>
-            <li>
-              If |owningDocuments| is empty, abort these steps.
-            </li>
-            <li>
-              Let |topLevelTraversable| be |owningDocuments|[0]'s [=node navigable=]'s [=top-level traversable=].
-            </li>
-          </ol>
-        </li>
-        <li>
-          Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
-        </li>
-        <li>
-          Set |virtualPressureSource| to |topLevelVirtualPressureSourceMapping|[|source|].
-        </li>
+          Let |virtualPressureSource| be the result of invoking [=get a virtual pressure source=] with |source| and |relevantGlobal|.
         </li>
         <li>
           If |virtualPressureSource| is not null, let |state:PressureState| and
