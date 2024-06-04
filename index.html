@@ -676,12 +676,20 @@ of system resources such as the CPU.
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
         </li>
         <li>
-          Remove any [=registered observer=] from |relevantGlobal|'s [=registered observer list=] for
-          |source| for which [=this=] is the [=registered observer=].
+          Let |registeredObserverList| be |relevantGlobal|'s [=registered
+          observer list=] for |source|.
+        <li>
+          [=list/Remove=] any [=registered observer=] from
+          |registeredObserverList| whose [=observer=] is [=this=].
         </li>
         <li>
-          If the above [=registered observer list=] is [=list/empty=],
-          deactivate [=data delivery=] of |source| data to |relevantGlobal|.
+          If |registeredObserverList| is [=list/empty=]:
+          <ol>
+            <li>
+              Deactivate [=data delivery=] of |source| data to
+              |relevantGlobal|.
+            </li>
+          </ol>
         </li>
       </ol>
     </p>
@@ -711,12 +719,24 @@ of system resources such as the CPU.
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
         </li>
         <li>
-          Remove any [=registered observer=] from |relevantGlobal|'s' [=registered observer list=] for
-          all supported [=source types=] for which [=this=] is the [=observer=].
-        </li>
-        <li>
-          If the above [=registered observer list=] is [=list/empty=],
-          deactivate [=data delivery=] of |source| data to |relevantGlobal|.
+          [=map/For each=] |source| → |registeredObserverList| of
+          |relevantGlobal|'s [=registered observer list=] [=ordered map=]:
+
+          <ol>
+            <li>
+              [=list/Remove=] any [=registered observer=] from
+              |registeredObserverList| whose [=observer=] is [=this=].
+            </li>
+            <li>
+              If |registeredObserverList| is [=list/empty=]:
+              <ol>
+                <li>
+                  Deactivate [=data delivery=] of |source| data to
+                  |relevantGlobal|.
+                </li>
+              </ol>
+            </li>
+          </ol>
         </li>
       </ol>
     </p>
