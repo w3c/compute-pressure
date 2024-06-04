@@ -1931,6 +1931,29 @@ of system resources such as the CPU.
     Each [=top-level traversable=] has a <dfn>virtual pressure source mapping</dfn>, which is an [=ordered map=] of
     [=source types=] to [=virtual pressure source=].
   </p>
+  <aside class="note">
+    <p>
+      As currently specified, [=virtual pressure sources=] only have an effect
+      on a {{Window}} or {{DedicatedWorkerGlobalScope}} when its [=platform
+      collector mapping=] does not have an entry for the [=source type=] the
+      [=virtual pressure source=] represents.
+    </p>
+    <p>
+      In other words, creating a virtual pressure source for a [=source type=]
+      for which {{PressureObserver/observe()}} has already been called will not
+      affect any existing instances until either
+      {{PressureObserver/disconnect()}} or {{PressureObserver/unobserve()}} has
+      been called on them. New instances will only make use of the new
+      [=virtual pressure source=] if {{PressureObserver/observe()}} is called
+      after existing observers have been disconnected.
+    </p>
+    <p>
+      Similarly, if a [=virtual pressure source=] is in use by one or more
+      {{PressureObserver}} instances and it is removed, all instances must stop
+      observation before calls to {{PressureObserver/observe()}} attempt to
+      connect to a real [=pressure source=].
+    </p>
+  </aside>
   <h3>
     Extension Commands
   </h3>
