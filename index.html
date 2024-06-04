@@ -699,12 +699,20 @@ of system resources such as the CPU.
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
         </li>
         <li>
-          Remove any [=registered observer=] from |relevantGlobal|'s [=registered observer list=] for
-          |source| for which [=this=] is the [=registered observer=].
+          Let |registeredObserverList| be |relevantGlobal|'s [=registered
+          observer list=] for |source|.
+        <li>
+          [=list/Remove=] any [=registered observer=] from
+          |registeredObserverList| whose [=observer=] is [=this=].
         </li>
         <li>
-          If the above [=registered observer list=] is [=list/empty=],
-          deactivate [=data collection=] from |relevantGlobal|'s [=platform collector=] of |source| data to |relevantGlobal|.
+          If |registeredObserverList| is [=list/empty=]:
+          <ol>
+            <li>
+              Deactivate [=data collection=] of |source| data to
+              |relevantGlobal|.
+            </li>
+          </ol>
         </li>
       </ol>
     </p>
@@ -734,12 +742,23 @@ of system resources such as the CPU.
           Let |relevantGlobal| be [=this=]'s [=relevant global object=].
         </li>
         <li>
-          Remove any [=registered observer=] from |relevantGlobal|'s' [=registered observer list=] for
-          all supported [=source types=] for which [=this=] is the [=observer=].
-        </li>
-        <li>
-          If the above [=registered observer list=] is [=list/empty=],
-          deactivate [=data collection=] of |source| data to |relevantGlobal|.
+          [=map/For each=] |source| → |registeredObserverList| of
+          |relevantGlobal|'s [=registered observer list=] [=ordered map=]:
+          <ol>
+            <li>
+              [=list/Remove=] any [=registered observer=] from
+              |registeredObserverList| whose [=observer=] is [=this=].
+            </li>
+            <li>
+              If |registeredObserverList| is [=list/empty=]:
+              <ol>
+                <li>
+                  Deactivate [=data collection=] of |source| data to
+                  |relevantGlobal|.
+                </li>
+              </ol>
+            </li>
+          </ol>
         </li>
       </ol>
     </p>
@@ -1370,53 +1389,71 @@ of system resources such as the CPU.
     </ol>
   </section>
   <section>
-    <h3>Handling change of fully active</h3>
+    <h3>Handling change of [=Document/fully active=] status</h3>
     <p>
-      When a {{Document}} |document| is no longer [=Document/fully active=],
-      deactivate [=data collection=] of data of all [=supported source types=] to |document|'s [=relevant global object=].
+      This specification defines the following [=unloading document cleanup
+      steps=] given a {{Document}} |document|:
     </p>
-    <p>
-      When a worker with associated {{WorkerGlobalScope}} |relevantGlobal| is no longer
-      an <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
-      active needed workers</a>,
-      deactivate [=data collection=] of data of all [=supported source types=] to |relevantGlobal|.
+    <ol class="algorithm">
+      <li>
+        Let |relevantGlobal| be |document:Document|'s [=relevant global
+        object=].
+      </li>
+      <li>
+        [=list/For each=] |source| [=map/key=] of |relevantGlobal|'s
+        [=registered observer list=] [=ordered map=]:
+        <ol>
+          <li>
+            Deactivate [=data collection=] of |source| to |relevantGlobal|.
+          </li>
+        </ol>
+      </li>
+    </ol>
+    <p class="issue" data-number="275">
+      This specification previously included steps covering the case of a
+      {{Document}} becoming [=Document/fully active=] again (i.e. integration
+      with {{Document}}'s [=Document/reactivate=] steps). Those steps have been
+      removed while the intended behavior is discussed.
     </p>
-    <p>
-      When a {{Document}} |document| becomes [=Document/fully active=],
-      for each non-[=list/empty=] [=registered observer list=] associated the [=source type=] |source|,
-      activate [=data collection=] of |source| data to |document|'s [=relevant global object=].
-    </p>
-    <p>
-      When a worker with associated {{WorkerGlobalScope}} |relevantGlobal| becomes
-      an <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
-      active needed workers</a>,
-      for each non-[=list/empty=] [=registered observer list=] associated the [=source type=] |source|,
-      activate [=data collection=] of |source| data to |document|'s [=relevant global object=].
-    </p>
-    <aside class="note">
-      When a document is no longer [=Document/fully active=] (or associated workers no longer
-      <a href="https://html.spec.whatwg.org/multipage/workers.html#active-needed-worker">
-      active needed workers</a>), like when
-      entering the back/forward cache, or "BFCache" for short, then no events are send to the pressure observers
-      (see [=may receive data=])
-      in accordance with <a href="https://www.w3.org/TR/design-principles/#listen-fully-active">
-      Web Platform Design Principles: Listen for changes to fully active status</a>. This means that the
-      system can safely deactivate [=data collection=] from the associated [=platform collector=],
-      but also that it needs to be re-activated when the opposite happens.
-    </aside>
   </section>
 
-  <section id="unload-observers">
-    <h3>Handle unloading document and closing of workers</h3>
+  <section>
+    <h3>Handling changes to worker status</h3>
+
+    <aside class="note">
+      <p>
+        This section is similar to the above, but for workers, which do not
+        have an equivalent for the [=unloading document cleanup steps=].
+      </p>
+    </aside>
+
+    <!--
+      Note: the steps below do not properly fit into the the process model for
+      Workers in the HTML spec (i.e. they are not specifically invoked from one
+      or more locations).
+
+      The WebDriver BiDi spec does something similar with different language
+      that can serve as inspiration:
+      https://w3c.github.io/webdriver-bidi/#event-script-realmDestroyed
+    -->
+
     <p>
-      When a worker with associated {{WorkerGlobalScope}} |relevantGlobal|,
-      once |relevantGlobal|'s [=WorkerGlobalScope/closing=] flag is set to true,
-      deactivate [=data collection=] for all [=supported source types=] to |relevantGlobal|.
+      Whenever a {{WorkerGlobalScope}} |relevantGlobal|'s
+      [=WorkerGlobalScope/closing=] flag is set to true, perform the following
+      steps:
     </p>
-    <p>
-      As one of the [=unloading document cleanup steps=] given {{Document}} |document|,
-      deactivate [=data collection=] for all [=supported source types=] to |document|'s [=relevant global object=].
-    </p>
+
+    <ol class="algorithm">
+      <li>
+        [=list/For each=] |source| [=map/key=] of |relevantGlobal|'s
+        [=registered observer list=] [=ordered map=]:
+        <ol>
+          <li>
+            Deactivate [=data collection=] of |source| to |relevantGlobal|.
+          </li>
+        </ol>
+      </li>
+    </ol>
   </section>
 </section>
 </section> <!-- Pressure Observer -->
