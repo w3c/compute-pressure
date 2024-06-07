@@ -1107,16 +1107,21 @@ of system resources such as the CPU.
         </li>
         <li>
           Let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
+        <aside class="note">
+          The |data| sample and mapping between |data| sample, and [=pressure states=],
+          is [=implementation-defined=] and may use many different metrics. For instance,
+          for CPU, it might consider processor frequency and utilization, as well
+          as thermal conditions.
+        </aside>
         </li>
         <li>
           Let |timestamp| be an platform-specific timestamp converted in an [=implementation-defined=]
           way to an [=monotonic clock/unsafe current time=] using the same [=monotonic clock=]
           that is shared by [=environment settings object/time origin=].
         <aside class="note">
-          The |data| sample and mapping between |data| sample, and [=pressure states=],
-          is [=implementation-defined=] and may use many different metrics. For instance,
-          for CPU, it might consider processor frequency and utilization, as well
-          as thermal conditions.
+          The goal of this step is to ensure that a timestamp that may have been relative to
+          a different time origin is converted to a value that can be used in computations with
+          the same [=monotonic clock=] used by the operations described in [[HR-TIME]].
         </aside>
         </li>
         <li>
@@ -1140,7 +1145,7 @@ of system resources such as the CPU.
               {{PressureRecord/[[Source]]}} set to |source|,
               {{PressureRecord/[[State]]}} set to |state|
               and {{PressureRecord/[[Time]]}} set to [=relative high resolution time=] based on |timestamp|
-              and a global.
+              and |relevantGlobal|.
             </li>
             <li>
               If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] [=map/exists=]:
