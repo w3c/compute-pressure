@@ -277,9 +277,10 @@
     [=global object=] via the [=platform collector mapping=].
   </p>
   <p>
-    For automation purposes, a [=platform collector=] must have the ability to connect to
-    [=virtual pressure sources=] and use their simulated data as already [=adjusted pressure states=]
-    instead of actual platform data.
+    For automation purposes, a [=platform collector=] must have the ability to
+    connect to [=virtual pressure sources=] and use their simulated data
+    [=pressure states=] rather than raw platform data that must be transformed
+    into an [=adjusted pressure state=].
   </p>
   <p>
     As collecting telemetry data often means polling hardware counters, it is not a free operation and thus,
@@ -1351,9 +1352,9 @@ of system resources such as the CPU.
           Otherwise:
           <ol>
             <li>
-              Set |state| to an [=adjusted pressure state=] calculated in an
-              [=implementation-defined=] manner from |source| and any
-              [=implementation-defined=] platform data related to |source|.
+              Set |state| to an [=adjusted pressure state=] calculated from
+              |source| and any [=implementation-defined=] platform data related
+              to |source|.
               <aside class="note">
                 <p>
                   The data sample and the mapping between data sample and [=pressure states=]
