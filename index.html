@@ -1129,16 +1129,26 @@ of system resources such as the CPU.
         </li>
         <li>
           Let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
-        </li>
-        <li>
-          Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |data| was
-          obtained from the |relevantGlobal|'s [=platform collector=].
         <aside class="note">
           The |data| sample and mapping between |data| sample, and [=pressure states=],
           is [=implementation-defined=] and may use many different metrics. For instance,
           for CPU, it might consider processor frequency and utilization, as well
           as thermal conditions.
         </aside>
+        </li>
+        <li>
+          Let |timestamp| be a platform-specific timestamp converted in an [=implementation-defined=]
+          way to an [=monotonic clock/unsafe current time=] using the same [=monotonic clock=]
+          that is shared by [=environment settings object/time origins=].
+        <aside class="note">
+          The goal of this step is to ensure that a timestamp that may have been relative to
+          a different time origin is converted to a value that can be used in computations with
+          the same [=monotonic clock=] used by the operations described in [[HR-TIME]].
+        </aside>
+        </li>
+        <li>
+          Let |timeValue| be the [=relative high resolution time=] based on |timestamp| and
+          |relevantGlobal|.
         </li>
         <li>
           [=list/For each=] |observer:PressureObserver| in |relevantGlobal|'s
@@ -1160,7 +1170,7 @@ of system resources such as the CPU.
               Let |record:PressureRecord| be a new {{PressureRecord}} object with its
               {{PressureRecord/[[Source]]}} set to |source|,
               {{PressureRecord/[[State]]}} set to |state|
-              and {{PressureRecord/[[Time]]}} set to |timestamp|.
+              and {{PressureRecord/[[Time]]}} set to |timeValue|.
             </li>
             <li>
               If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] [=map/exists=]:
