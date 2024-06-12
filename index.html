@@ -250,6 +250,30 @@
     fusion with data from additional sources if that provides better results.
   </p>
   <p>
+    The telemetry information provided by a [=pressure source=] is represented
+    in this specification as a <dfn>pressure source sample</dfn>, a [=struct=]
+    consisting of the following [=struct/items=]:
+    <ul>
+      <li>
+        <dfn data-dfn-for="pressure source sample">data</dfn>: [=contributing
+        factors=] obtained from the underlying hardware or operating system.
+      </li>
+      <li>
+        <dfn data-dfn-for="pressure source sample">timestamp</dfn>: the
+        [=unsafe shared current time=] when [=pressure source sample/data=] was
+        obtained.
+        <aside class="note">
+          <p>
+            The purpose of [=pressure source sample/timestamp=] is to use the
+            same [=monotonic clock/unsafe current time=] for a sample across
+            all globals and invocations of the [=data collection=] algorithm
+            which are processing the same [=pressure source sample=].
+          </p>
+        </aside>
+      </li>
+    </ul>
+  </p>
+  <p>
     A <dfn>platform collector</dfn> is an abstract interface responsible for
     obtaining telemetry samples from a [=pressure source=], translating them
     into [=pressure states=] and providing them to the [=user agent=].
@@ -1337,14 +1361,22 @@ of system resources such as the CPU.
           Let |state:PressureState| be null.
         </li>
         <li>
+          Let |rawTimestamp| be null.
+        </li>
+        <li>
           If |pressureSource| is a [=virtual pressure source=]:
           <ol>
             <li>
               Set |state| to |pressureSource|'s [=virtual pressure
-              source/pending sample=].
+              source/pending sample=]'s [=pending sample descriptor/state=].
             </li>
             <li>
               If |state| is null, abort these steps.
+            </li>
+            <li>
+              Set |rawTimestamp| to |pressureSource|'s [=virtual pressure
+              source/pending sample=]'s [=pending sample
+              descriptor/timestamp=].
             </li>
           </ol>
         </li>
@@ -1352,17 +1384,24 @@ of system resources such as the CPU.
           Otherwise:
           <ol>
             <li>
+              Let |sample| be |pressureSource|'s [=pressure source sample=].
+            </li>
+            <li>
               Set |state| to an [=adjusted pressure state=] calculated from
-              |source| and any [=implementation-defined=] platform data related
-              to |source|.
+              |source| and |sample|'s [=pressure source sample/data=].
               <aside class="note">
                 <p>
-                  The data sample and the mapping between data sample and [=pressure states=]
-                  is [=implementation-defined=] and may use many different metrics. For instance,
-                  for CPU, it might consider processor frequency and utilization, as well
-                  as thermal conditions.
+                  The mapping between |sample|'s [=pressure source
+                  sample/data=] and [=pressure states=] is
+                  [=implementation-defined=] and may use many different
+                  metrics. For instance, for CPU, it might consider processor
+                  frequency and utilization, as well as thermal conditions.
                 </p>
               </aside>
+            </li>
+            <li>
+              Set |rawTimestamp| to |sample|'s [=pressure source
+              sample/timestamp=].
             </li>
           </ol>
         </li>
@@ -1370,18 +1409,8 @@ of system resources such as the CPU.
           [=Assert=]: |state| is not null.
         </li>
         <li>
-          Let |timestamp| be a platform-specific timestamp converted in an [=implementation-defined=]
-          way to an [=monotonic clock/unsafe current time=] using the same [=monotonic clock=]
-          that is shared by [=environment settings object/time origins=].
-        <aside class="note">
-          The goal of this step is to ensure that a timestamp that may have been relative to
-          a different time origin is converted to a value that can be used in computations with
-          the same [=monotonic clock=] used by the operations described in [[HR-TIME]].
-        </aside>
-        </li>
-        <li>
-          Let |timeValue| be the [=relative high resolution time=] based on |timestamp| and
-          |relevantGlobal|.
+          Let |timeValue| be the [=relative high resolution time=] based on
+          |rawTimestamp| and |relevantGlobal|.
         </li>
         <li>
           [=list/For each=] |observer:PressureObserver| in |relevantGlobal|'s
@@ -1922,11 +1951,25 @@ of system resources such as the CPU.
     must be processed into [=pressure states=] by a [=platform collector=].
   </p>
   <p>
+    A <dfn>pending sample descriptor</dfn> is a [=struct=] with the following
+    [=struct/items=]:
+    <ul>
+      <li>
+        <dfn data-dfn-for="pending sample descriptor">state</dfn>, a
+        {{PressureState}}.
+      </li>
+      <li>
+        <dfn data-dfn-for="pending sample descriptor">timestamp</dfn>, a
+        [=monotonic clock/unsafe current time=] from the [=monotonic clock=].
+      </li>
+    </ul>
+  </p>
+  <p>
     Each [=virtual pressure source=] has:
     <ul>
       <li>
-        a <dfn data-dfn-for="virtual pressure source">pending sample</dfn> of
-        type {{PressureState}} or null, which is initially null.
+        a <dfn data-dfn-for="virtual pressure source">pending sample</dfn>,
+        which is a [=pending sample descriptor=] or null.
       </li>
       <li>
         a <dfn data-dfn-for="virtual pressure source">can provide samples
@@ -2161,7 +2204,7 @@ of system resources such as the CPU.
   </table>
   <p>
     This [=extension command=] allows updating the state of a [=virtual pressure source=] by pushing
-    a new [=virtual pressure source/pending sample=].
+    a new [=pending sample descriptor=].
   </p>
   <aside class="note" data-cite="WEBDRIVER2">
     Additionally, the [=extension command=] can be used to check whether a source type is created
@@ -2230,7 +2273,10 @@ of system resources such as the CPU.
       If |sample| is not of type {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
-      Set |virtualPressureSource|'s [=virtual pressure source/pending sample=] to |sample|.
+      Set |virtualPressureSource|'s [=virtual pressure source/pending sample=]
+      to a new [=pending sample descriptor=] whose [=pending sample
+      descriptor/state=] is |sample| and [=pending sample
+      descriptor/timestamp=] is the [=unsafe shared current time=].
     </li>
     <li>
       In an [=implementation-defined=] way, make |virtualPressureSource|'s
