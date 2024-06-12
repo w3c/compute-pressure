@@ -1370,8 +1370,18 @@ of system resources such as the CPU.
           [=Assert=]: |state| is not null.
         </li>
         <li>
-          Let |timestamp:DOMHighResTimeStamp| be a timestamp representing the time the |state| was
-          collected by the |relevantGlobal|'s [=platform collector=].
+          Let |timestamp| be a platform-specific timestamp converted in an [=implementation-defined=]
+          way to an [=monotonic clock/unsafe current time=] using the same [=monotonic clock=]
+          that is shared by [=environment settings object/time origins=].
+        <aside class="note">
+          The goal of this step is to ensure that a timestamp that may have been relative to
+          a different time origin is converted to a value that can be used in computations with
+          the same [=monotonic clock=] used by the operations described in [[HR-TIME]].
+        </aside>
+        </li>
+        <li>
+          Let |timeValue| be the [=relative high resolution time=] based on |timestamp| and
+          |relevantGlobal|.
         </li>
         <li>
           [=list/For each=] |observer:PressureObserver| in |relevantGlobal|'s
@@ -1393,7 +1403,7 @@ of system resources such as the CPU.
               Let |record:PressureRecord| be a new {{PressureRecord}} object with its
               {{PressureRecord/[[Source]]}} set to |source|,
               {{PressureRecord/[[State]]}} set to |state|
-              and {{PressureRecord/[[Time]]}} set to |timestamp|.
+              and {{PressureRecord/[[Time]]}} set to |timeValue|.
             </li>
             <li>
               If |observer|.{{PressureObserver/[[AfterPenaltyRecordMap]]}}[source] [=map/exists=]:
