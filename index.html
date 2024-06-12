@@ -1987,6 +1987,17 @@ of system resources such as the CPU.
   </p>
   <aside class="note">
     <p>
+      As currently specified, the [[WEBDRIVER2]] integration and the
+      [=extension commands=] below do <em>not</em> have an effect on shared
+      workers.
+    </p>
+    <p>
+      Developer feedback and use cases for shared worker support are welcome
+      via GitHub issues.
+    </p>
+  </aside>
+  <aside class="note">
+    <p>
       As currently specified, [=virtual pressure sources=] only have an effect
       on a {{Window}} or {{DedicatedWorkerGlobalScope}} when its [=platform
       collector mapping=] does not have an entry for the [=source type=] the
