@@ -1137,13 +1137,14 @@ of system resources such as the CPU.
         </aside>
         </li>
         <li>
-          Let |timestamp| be a platform-specific timestamp converted in an [=implementation-defined=]
-          way to an [=monotonic clock/unsafe current time=] using the same [=monotonic clock=]
-          that is shared by [=environment settings object/time origins=].
+          Let |timestamp| be [=unsafe shared current time=] corresponding to
+          the moment when |data| was obtained from |relevantGlobal|'s
+          [=platform collector=].
         <aside class="note">
-          The goal of this step is to ensure that a timestamp that may have been relative to
-          a different time origin is converted to a value that can be used in computations with
-          the same [=monotonic clock=] used by the operations described in [[HR-TIME]].
+          The goal of this step is to ensure that the same [=monotonic
+          clock/unsafe current time=] is used across all globals. The value is
+          then converted into a global-specific, [=coarsened moment=] in the
+          step below.
         </aside>
         </li>
         <li>
