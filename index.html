@@ -244,15 +244,15 @@
 <section> <h2>Platform primitives</h2>
   <p>
     A <dfn>pressure source</dfn> is an abstract, [=implementation-defined=]
-    interface to hardware counters or an underlying telemetry framework that
-    provides information about a <dfn>source type</dfn>
+    interface to hardware counters or an underlying framework that provides
+    telemetry data about a <dfn>source type</dfn>
     defined by {{PressureSource}}. A [=pressure source=] can make use of data
     fusion with data from additional sources if that provides more precise
     results.
   </p>
   <p>
-    The telemetry information provided by a [=pressure source=] is represented
-    in this specification as a <dfn>pressure source sample</dfn>, a [=struct=]
+    The telemetry data provided by a [=pressure source=] is represented in this
+    specification as a <dfn>pressure source sample</dfn>, a [=struct=]
     consisting of the following [=struct/items=]:
     <ul>
       <li>
@@ -298,9 +298,10 @@
     </li>
   </ul>
   <p>
-    The format of the data provided by a [=pressure source=] is
-    [=implementation-defined=], and so is the process through which a
-    [=platform collector=] transforms it into a [=pressure state=].
+    The format of the telemetry data provided by a [=pressure source=]
+    and stored in its [=pressure source/latest sample=]'s [=pressure source
+    sample/data=] is [=implementation-defined=], and so is the process through
+    which a [=platform collector=] transforms it into a [=pressure state=].
   </p>
   <p>
     For this specification's purposes, [=platform collectors=] are scoped to a
@@ -308,9 +309,9 @@
   </p>
   <p>
     For automation purposes, a [=platform collector=] must have the ability to
-    connect to [=virtual pressure sources=] and use their simulated data as
-    [=pressure states=] rather than raw platform data that must be transformed
-    into an [=adjusted pressure state=].
+    connect to [=virtual pressure sources=] and use their simulated [=pressure
+    source sample/data=] as [=pressure states=] rather than raw platform data
+    that must be transformed into an [=adjusted pressure state=].
   </p>
   <p>
     As collecting telemetry data often means polling hardware counters, it is not a free operation and thus,
@@ -692,8 +693,8 @@ of system resources such as the CPU.
                   <ol>
                     <li>
                       Let |realPressureSource| be an [=implementation-defined=]
-                      [=pressure source=] that provides telemetry information
-                      about |source|, or null if none exists.
+                      [=pressure source=] that provides telemetry data about
+                      |source|, or null if none exists.
                     </li>
                     <li>
                       Set |newCollector|'s [=platform collector/associated
