@@ -2079,7 +2079,9 @@ of system resources such as the CPU.
       <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "type" from |parameters|.
     </li>
     <li>
-      If |virtualPressureSourceType| is not a [=string=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+      If the [=user agent=]'s [=supported source types=] does not
+      [=list/contain=] |virtualPressureSourceType|, return [=error=] with
+      [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
       Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
@@ -2145,7 +2147,9 @@ of system resources such as the CPU.
       Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
     </li>
     <li>
-      If |virtualPressureSourceType| is not a [=valid source type=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+      If the [=user agent=]'s [=supported source types=] does not
+      [=list/contain=] |virtualPressureSourceType|, return [=error=] with
+      [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
       Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
@@ -2242,7 +2246,9 @@ of system resources such as the CPU.
       Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
     </li>
     <li>
-      If |virtualPressureSourceType| is not a [=valid source type=], return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+      If the [=user agent=]'s [=supported source types=] does not
+      [=list/contain=] |virtualPressureSourceType|, return [=error=] with
+      [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
       Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
