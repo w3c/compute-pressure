@@ -274,6 +274,11 @@
     </ul>
   </p>
   <p>
+    A [=pressure source=] has an associated <dfn
+    data-dfn-for="pressure source">latest sample</dfn>, a [=pressure source
+    sample=] or null. It is initially null.
+  </p>
+  <p>
     A <dfn>platform collector</dfn> is an abstract interface responsible for
     obtaining telemetry samples from a [=pressure source=], translating them
     into [=pressure states=] and providing them to the [=user agent=].
@@ -1358,34 +1363,25 @@ of system resources such as the CPU.
           If |pressureSource| is null, abort these steps.
         </li>
         <li>
-          Let |state:PressureState| be null.
+          Let |sample| be |pressureSource|'s [=pressure source/latest sample=].
         </li>
         <li>
-          Let |rawTimestamp| be null.
+          If |sample| is null, abort these steps.
+        </li>
+        <li>
+          Let |state:PressureState| be null.
         </li>
         <li>
           If |pressureSource| is a [=virtual pressure source=]:
           <ol>
             <li>
-              Set |state| to |pressureSource|'s [=virtual pressure
-              source/pending sample=]'s [=pending sample descriptor/state=].
-            </li>
-            <li>
-              If |state| is null, abort these steps.
-            </li>
-            <li>
-              Set |rawTimestamp| to |pressureSource|'s [=virtual pressure
-              source/pending sample=]'s [=pending sample
-              descriptor/timestamp=].
+              Set |state| to |sample|'s [=pressure source sample/data=].
             </li>
           </ol>
         </li>
         <li>
           Otherwise:
           <ol>
-            <li>
-              Let |sample| be |pressureSource|'s [=pressure source sample=].
-            </li>
             <li>
               Set |state| to an [=adjusted pressure state=] calculated from
               |source| and |sample|'s [=pressure source sample/data=].
@@ -1399,14 +1395,14 @@ of system resources such as the CPU.
                 </p>
               </aside>
             </li>
-            <li>
-              Set |rawTimestamp| to |sample|'s [=pressure source
-              sample/timestamp=].
-            </li>
           </ol>
         </li>
         <li>
           [=Assert=]: |state| is not null.
+        </li>
+        <li>
+          Let |rawTimestamp| be |sample|'s [=pressure source
+          sample/timestamp=].
         </li>
         <li>
           Let |timeValue| be the [=relative high resolution time=] based on
@@ -1942,35 +1938,21 @@ of system resources such as the CPU.
     Virtual Pressure Source
   </h2>
   <p>
-    A <dfn>virtual pressure source</dfn> simulates the behavior of a real [=pressure source=] in controlled ways.
-    It reports pressure changes to zero or more [=platform collectors=] connected to it.
+    A <dfn>virtual pressure source</dfn> is a [=pressure source=] that
+    simulates the behavior of a real one in controlled ways. It reports
+    pressure changes to zero or more [=platform collectors=] connected to it.
   </p>
   <p>
     Contrary to a real [=pressure source=], however, it reports [=pressure
     state=] values directly instead of [=implementation-defined=] values that
-    must be processed into [=pressure states=] by a [=platform collector=].
+    must be processed into [=pressure states=] by a [=platform collector=]. In
+    other words, a [=virtual pressure source=]'s [=pressure source sample=]'s
+    [=pressure source sample/data=] is a {{PressureState}}.
   </p>
   <p>
-    A <dfn>pending sample descriptor</dfn> is a [=struct=] with the following
-    [=struct/items=]:
+    In addition to the data associated with all [=pressure sources=] (such as
+    [=pressure source sample=]), each [=virtual pressure source=] has:
     <ul>
-      <li>
-        <dfn data-dfn-for="pending sample descriptor">state</dfn>, a
-        {{PressureState}}.
-      </li>
-      <li>
-        <dfn data-dfn-for="pending sample descriptor">timestamp</dfn>, a
-        [=monotonic clock/unsafe current time=] from the [=monotonic clock=].
-      </li>
-    </ul>
-  </p>
-  <p>
-    Each [=virtual pressure source=] has:
-    <ul>
-      <li>
-        a <dfn data-dfn-for="virtual pressure source">pending sample</dfn>,
-        which is a [=pending sample descriptor=] or null.
-      </li>
       <li>
         a <dfn data-dfn-for="virtual pressure source">can provide samples
         </dfn> boolean flag.
@@ -2215,7 +2197,7 @@ of system resources such as the CPU.
   </table>
   <p>
     This [=extension command=] allows updating the state of a [=virtual pressure source=] by pushing
-    a new [=pending sample descriptor=].
+    a new [=pressure source sample=].
   </p>
   <aside class="note" data-cite="WEBDRIVER2">
     Additionally, the [=extension command=] can be used to check whether a source type is created
@@ -2284,16 +2266,15 @@ of system resources such as the CPU.
       If |sample| is not of type {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
-      Set |virtualPressureSource|'s [=virtual pressure source/pending sample=]
-      to a new [=pending sample descriptor=] whose [=pending sample
-      descriptor/state=] is |sample| and [=pending sample
-      descriptor/timestamp=] is the [=unsafe shared current time=].
+      Set |virtualPressureSource|'s [=pressure source/latest sample=] to a new
+      [=pressure source sample=] whose [=pressure source sample/data=] is
+      |sample| and [=pressure source sample/timestamp=] is the [=unsafe shared
+      current time=].
     </li>
     <li>
       In an [=implementation-defined=] way, make |virtualPressureSource|'s
-      [=virtual pressure source/pending sample=] available to
-      |virtualPressureSource|'s [=virtual pressure source/connected platform
-      collectors=].
+      [=pressure source/latest sample=] available to |virtualPressureSource|'s
+      [=virtual pressure source/connected platform collectors=].
     </li>
     <li>
       Return [=success=] with data <code>null</code>.
