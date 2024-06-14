@@ -257,7 +257,8 @@
     <ul>
       <li>
         <dfn data-dfn-for="pressure source sample">data</dfn>: [=contributing
-        factors=] obtained from the underlying hardware or operating system.
+        factors=] obtained from the underlying hardware or operating system or,
+        in the case of a [=virtual pressure source=], a {{PressureState}}.
       </li>
       <li>
         <dfn data-dfn-for="pressure source sample">timestamp</dfn>: the
@@ -306,6 +307,12 @@
   <p>
     For this specification's purposes, [=platform collectors=] are scoped to a
     [=global object=] via the [=platform collector mapping=].
+  </p>
+  <p>
+    For automation purposes, a [=platform collector=] must have the ability to
+    connect to [=virtual pressure sources=] and use their simulated [=pressure
+    source sample/data=] as [=pressure states=] rather than raw platform data
+    that must be transformed into an [=adjusted pressure state=].
   </p>
   <p>
     As collecting telemetry data often means polling hardware counters, it is not a free operation and thus,
@@ -670,13 +677,43 @@ of system resources such as the CPU.
                   [=platform collector/associated pressure source=] is null.
                 </li>
                 <li>
-                  Let |pressureSource| be an [=implementation-defined=]
-                  [=pressure source=] that provides telemetry data about
-                  |source|, or null if none exists.
+                  Let |virtualPressureSource:virtual pressure source or null|
+                  be the result of invoking [=get a virtual pressure source=]
+                  with |source| and |relevantGlobal|.
                 </li>
                 <li>
-                  Set |newCollector|'s [=platform collector/associated pressure
-                  source=] to |pressureSource|.
+                  If |virtualPressureSource| is not null:
+                  <ol>
+                    <li>
+                      If |virtualPressureSource|'s [=virtual pressure
+                      source/can provide samples=] is true:
+                      <ol>
+                        <li>
+                          Set |newCollector|'s [=platform collector/associated
+                          pressure source=] to |virtualPressureSource|.
+                        </li>
+                        <li>
+                          [=set/Append=] |newCollector| to
+                          |virtualPressureSource|'s [=virtual pressure
+                          source/connected platform collectors=].
+                        </li>
+                      </ol>
+                    </li>
+                  </ol>
+                </li>
+                <li>
+                  Otherwise:
+                  <ol>
+                    <li>
+                      Let |realPressureSource| be an [=implementation-defined=]
+                      [=pressure source=] that provides telemetry data about
+                      |source|, or null if none exists.
+                    </li>
+                    <li>
+                      Set |newCollector|'s [=platform collector/associated
+                      pressure source=] to |realPressureSource|.
+                    </li>
+                  </ol>
                 </li>
                 <li>
                   If |newCollector|'s [=platform collector/associated
@@ -1203,6 +1240,59 @@ of system resources such as the CPU.
         </li>
       </ol>
     </p>
+    <p>
+      To <dfn>get a virtual pressure source</dfn>, given a [=source type=]
+      |source| and |relevantGlobal|, perform the following steps. They return a
+      [=virtual pressure source=] or null.
+      <ol class="algorithm">
+        <li>Let |topLevelTraversable| be null.</li>
+        <li>
+          If |relevantGlobal| is a {{Window}} object:
+          <ol>
+            <li>
+              Set |topLevelTraversable| to |relevantGlobal|'s [=Window/navigable=]'s [=top-level traversable=].
+            </li>
+          </ol>
+        </li>
+        <li>
+          If |relevantGlobal| is a {{DedicatedWorkerGlobalScope}} object:
+          <ol>
+            <li>
+              Let |owningDocuments| be |relevantGlobal|'s [=owning document set=].
+            </li>
+            <li>
+              If |owningDocuments| is [=set/empty=], return null.
+            </li>
+            <li>
+              [=Assert=]: |owningDocuments|'s [=set/size=] is 1.
+            </li>
+            <li>
+              Set |topLevelTraversable| to |owningDocuments|[0]'s [=node navigable=]'s [=top-level traversable=].
+            </li>
+          </ol>
+        </li>
+        <li>
+          If |topLevelTraversable| is null, return null.
+        </li>
+        <li>
+          Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+        </li>
+        <li>
+          Let |virtualPressureSource| be null.
+        </li>
+        <li>
+          If |topLevelVirtualPressureSourceMapping| [=map/contains=] |source|:
+          <ol>
+            <li>
+              Set |virtualPressureSource| to |topLevelVirtualPressureSourceMapping|[|source|].
+            </li>
+          </ol>
+        </li>
+        <li>
+          Return |virtualPressureSource|.
+        </li>
+      </ol>
+    </p>
   </section>
   <section>
     <h3>Data Collection and Delivery</h3>
@@ -1265,7 +1355,18 @@ of system resources such as the CPU.
         Set |platformCollector|'s [=platform collector/activated=] to false.
       </li>
       <li>
-        Perform any [=implementation-defined=] steps to signal to
+        If |platformCollector|'s [=platform collector/associated pressure
+        source=] is a [=virtual pressure source=]:
+        <ol>
+          <li>
+            [=set/Remove=] |platformCollector| from its [=platform
+            collector/associated pressure source=]'s [=virtual pressure
+            source/connected platform collectors=].
+          </li>
+        </ol>
+      </li>
+      <li>
+        Otherwise, perform any [=implementation-defined=] steps to signal to
         |platformCollector|'s [=platform collector/associated pressure source=]
         to stop retrieving telemetry data.
       </li>
@@ -1288,17 +1389,33 @@ of system resources such as the CPU.
           If |sample| is null, abort these steps.
         </li>
         <li>
-          Let |state| be an [=adjusted pressure state=] calculated from
-          |source| and |sample|'s [=pressure source sample/data=].
-          <aside class="note">
-            <p>
-              The mapping between |sample|'s [=pressure source sample/data=]
-              and [=pressure states=] is [=implementation-defined=] and may use
-              many different metrics. For instance, for CPU, it might consider
-              processor frequency and utilization, as well as thermal
-              conditions.
-            </p>
-          </aside>
+          Let |state:PressureState| be null.
+        </li>
+        <li>
+          If |pressureSource| is a [=virtual pressure source=]:
+          <ol>
+            <li>
+              Set |state| to |sample|'s [=pressure source sample/data=].
+            </li>
+          </ol>
+        </li>
+        <li>
+          Otherwise:
+          <ol>
+            <li>
+              Set |state| to an [=adjusted pressure state=] calculated from
+              |source| and |sample|'s [=pressure source sample/data=].
+              <aside class="note">
+                <p>
+                  The mapping between |sample|'s [=pressure source
+                  sample/data=] and [=pressure states=] is
+                  [=implementation-defined=] and may use many different
+                  metrics. For instance, for CPU, it might consider processor
+                  frequency and utilization, as well as thermal conditions.
+                </p>
+              </aside>
+            </li>
+          </ol>
         </li>
         <li>
           [=Assert=]: |state| is not null.
@@ -1824,6 +1941,374 @@ of system resources such as the CPU.
     </ul>
 </section>
 
+<section>
+  <h2>
+    Automation
+  </h2>
+  <p>
+    The Compute Pressure API poses a challenge to test authors, as fully
+    exercising interface requires physical hardware devices that respond in
+    predictable ways.
+  </p>
+  <p>
+    To address this challenge this document defines a [[!WEBDRIVER2]] [=extension
+    commands=] that allows defining and controlling virtual pressure sources that behave
+    like real ones and which can have particular properties and whose readings can be
+    entirely defined by users.
+  </p>
+  <h2>
+    Virtual Pressure Source
+  </h2>
+  <p>
+    A <dfn>virtual pressure source</dfn> is a [=pressure source=] that
+    simulates the behavior of a real one in controlled ways. It reports
+    pressure changes to zero or more [=platform collectors=] connected to it.
+  </p>
+  <p>
+    Contrary to a real [=pressure source=], however, it reports [=pressure
+    state=] values directly instead of [=implementation-defined=] values that
+    must be processed into [=pressure states=] by a [=platform collector=]. In
+    other words, a [=virtual pressure source=]'s [=pressure source sample=]'s
+    [=pressure source sample/data=] is a {{PressureState}}.
+  </p>
+  <p>
+    In addition to the data associated with all [=pressure sources=] (such as
+    [=pressure source sample=]), each [=virtual pressure source=] has:
+    <ul>
+      <li>
+        a <dfn data-dfn-for="virtual pressure source">can provide samples
+        </dfn> boolean.
+      </li>
+      <li>
+        a <dfn data-dfn-for="virtual pressure source">connected platform
+        collectors</dfn> [=set=] of [=platform collectors=].
+      </li>
+    </ul>
+  </p>
+  <p>
+    Each [=top-level traversable=] has a <dfn>virtual pressure source mapping</dfn>, which is an [=ordered map=] of
+    [=source types=] to [=virtual pressure source=].
+  </p>
+  <aside class="note">
+    <p>
+      As currently specified, the [[!WEBDRIVER2]] integration and the
+      [=extension commands=] below do <em>not</em> have an effect on shared
+      workers.
+    </p>
+    <p>
+      Developer feedback and use cases for shared worker support are welcome
+      via GitHub issues.
+    </p>
+  </aside>
+  <aside class="note">
+    <p>
+      As currently specified, [=virtual pressure sources=] only have an effect
+      on a {{Window}} or {{DedicatedWorkerGlobalScope}} when its [=platform
+      collector mapping=] does not have an entry for the [=source type=] the
+      [=virtual pressure source=] represents.
+    </p>
+    <p>
+      In other words, creating a virtual pressure source for a [=source type=]
+      for which {{PressureObserver/observe()}} has already been called will not
+      affect any existing instances until either
+      {{PressureObserver/disconnect()}} or {{PressureObserver/unobserve()}} has
+      been called on them. New instances will only make use of the new
+      [=virtual pressure source=] if {{PressureObserver/observe()}} is called
+      after existing observers have been disconnected.
+    </p>
+    <p>
+      Similarly, if a [=virtual pressure source=] is in use by one or more
+      {{PressureObserver}} instances and it is removed, all instances must stop
+      observation before calls to {{PressureObserver/observe()}} attempt to
+      connect to a real [=pressure source=].
+    </p>
+  </aside>
+  <h3>
+    Extension Commands
+  </h3>
+  <h4>
+    Create virtual pressure source
+  </h4>
+  <table class="def">
+    <tr>
+      <th>
+        HTTP Method
+      </th>
+      <th>
+        [=extension command URI Template|URI Template=]
+      </th>
+    </tr>
+    <tr>
+      <td>
+        POST
+      </td>
+      <td>
+        /session/{session id}/pressuresource
+      </td>
+    </tr>
+  </table>
+  <p>
+    This [=extension command=] creates a new [=virtual pressure source=] of a specified
+    [=source type=]. Calls to {{PressureObserver/observe()}} from {{PressureObserver}} instances
+    of the same [=source type=] will cause this [=virtual pressure source=] to be used as their
+    backing [=pressure source=] until [[[#delete-virtual-pressure-source]]] is run.
+  </p>
+  <table class="data">
+    <caption>
+      Properties of the parameters argument used by this algorithm
+    </caption>
+    <tr>
+      <th>
+        Parameter name
+      </th>
+      <th>
+        Value type
+      </th>
+      <th>
+        Required
+      </th>
+    </tr>
+    <tr>
+      <td>
+        type
+      </td>
+      <td>
+        String
+      </td>
+      <td>
+        yes
+      </td>
+    </tr>
+    <tr>
+      <td>
+        supported
+      </td>
+      <td>
+        Boolean
+      </td>
+      <td>
+        no
+      </td>
+    </tr>
+  </table>
+  <p>
+    The [=remote end steps=]  given |session|, |URL variables| and |parameters| are:
+  </p>
+  <ol class="algorithm" data-cite="!WEBDRIVER2">
+    <li>
+      Let |virtualPressureSourceType| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "type" from |parameters|.
+    </li>
+    <li>
+      If the [=user agent=]'s [=supported source types=] does not
+      [=list/contain=] |virtualPressureSourceType|, return [=error=] with
+      [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |topLevelTraversable| be the <a data-cite="!webdriver2/#dfn-current-browsing-context">current browsing
+      context</a>'s [=browsing context/top-level traversable=].
+    </li>
+    <li>
+      Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+    </li>
+    <li>
+      If |topLevelVirtualPressureSourceMapping| contains |virtualPressureSourceType|, return [=error=] with
+      [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |supported| be the result of invoking <a
+      data-cite="!WEBDRIVER2#dfn-getting-the-property-with-default">get a
+      property with default</a>
+      with "supported" and true from |parameters|.
+    </li>
+    <li>
+      Let |virtualPressureSource| be a new [=virtual pressure source=].
+    </li>
+    <li>
+      Set |virtualPressureSource|'s [=virtual pressure source/can provide
+      samples=] to |supported|.
+    </li>
+    <li>
+      Set |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|] to |virtualPressureSource|.
+    </li>
+    <li>
+      Return [=success=] with data null.
+    </li>
+  </ol>
+  <h4>
+    Delete virtual pressure source
+  </h4>
+  <table class="def">
+    <tr>
+      <th>
+        HTTP Method
+      </th>
+      <th>
+        [=extension command URI Template|URI Template=]
+      </th>
+    </tr>
+    <tr>
+      <td>
+        DELETE
+      </td>
+      <td>
+        /session/{session id}/pressuresource/{type}
+      </td>
+    </tr>
+  </table>
+  <p>
+    This [=extension command=] deletes a given [=virtual pressure source=], meaning that,
+    if available, data for the given [=source type=] will be delivered the regular way, by non-virtual means.
+  </p>
+  <p>
+    The [=remote end steps=] given |session|, |URL variables| and |parameters| are:
+  </p>
+  <ol class="algorithm" data-cite="!WEBDRIVER2">
+    <li>
+      Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
+    </li>
+    <li>
+      If the [=user agent=]'s [=supported source types=] does not
+      [=list/contain=] |virtualPressureSourceType|, return [=error=] with
+      [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |topLevelTraversable| be the <a data-cite="!webdriver2/#dfn-current-browsing-context">current browsing
+      context</a>'s [=browsing context/top-level traversable=].
+    </li>
+    <li>
+      Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+    </li>
+    <li>
+      Let |pressureSource| be |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|].
+    </li>
+    <li>
+      [=set/For each=] |platformCollector| of |pressureSource|'s [=virtual
+      pressure source/connected platform collectors=]:
+      <ol>
+        <li>
+          Set |platformCollector|'s [=platform collector/associated pressure
+          source=] to null.
+        </li>
+      </ol>
+    </li>
+    <li>
+      [=map/Remove=] |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|].
+    </li>
+    <li>
+      Return [=success=] with data null.
+    </li>
+  </ol>
+
+  <h4>
+    Update virtual pressure source
+  </h4>
+  <table class="def">
+    <tr>
+      <th>
+        HTTP Method
+      </th>
+      <th>
+        [=extension command URI Template|URI Template=]
+      </th>
+    </tr>
+    <tr>
+      <td>
+        POST
+      </td>
+      <td>
+        /session/{session id}/pressuresource/{type}
+      </td>
+    </tr>
+  </table>
+  <p>
+    This [=extension command=] allows updating the state of a [=virtual pressure source=] by pushing
+    a new [=pressure source sample=].
+  </p>
+  <aside class="note" data-cite="!WEBDRIVER2">
+    Additionally, the [=extension command=] can be used to check whether a source type is created
+    via the [[[#create-virtual-pressure-source]]] [=extension command=] by checking the response.
+    If it has not been created the response will contain the [=error=] with
+    [=error code|WebDriver error code=]
+    <a data-cite="!webdriver2/#dfn-unsupported-operation">unsupported operation</a>.
+  </aside>
+  <table class="data">
+    <caption>
+      Properties of the parameters argument used by this algorithm
+    </caption>
+    <tr>
+      <th>
+        Parameter name
+      </th>
+      <th>
+        Value type
+      </th>
+      <th>
+        Required
+      </th>
+    </tr>
+    <tr>
+      <td>
+        sample
+      </td>
+      <td>
+        {{PressureState}}
+      </td>
+      <td>
+        yes
+      </td>
+    </tr>
+  </table>
+  <p>
+    The [=remote end steps=] given |session|, |URL variables| and |parameters| are:
+  </p>
+  <ol class="algorithm" data-cite="!WEBDRIVER2">
+    <li>
+      Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
+    </li>
+    <li>
+      If the [=user agent=]'s [=supported source types=] does not
+      [=list/contain=] |virtualPressureSourceType|, return [=error=] with
+      [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Let |topLevelTraversable| be the <a data-cite="!webdriver2/#dfn-current-browsing-context">current browsing
+      context</a>'s [=browsing context/top-level traversable=].
+    </li>
+    <li>
+      Let |topLevelVirtualPressureSourceMapping| be the |topLevelTraversable|'s [=virtual pressure source mapping=].
+    </li>
+    <li>
+      If |topLevelVirtualPressureSourceMapping| does not [=map/contain=] |virtualPressureSource|,
+      return [=error=] with [=error code|WebDriver error code=]
+      <a data-cite="!webdriver2/#dfn-unsupported-operation">unsupported operation</a>.
+    </li>
+    <li>
+      Let |virtualPressureSource| be |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|].
+    </li>
+    <li>
+      Let |sample| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "sample" from |parameters|.
+    </li>
+    <li>
+      If |sample| is not of type {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
+    <li>
+      Set |virtualPressureSource|'s [=pressure source/latest sample=] to a new
+      [=pressure source sample=] whose [=pressure source sample/data=] is
+      |sample| and [=pressure source sample/timestamp=] is the [=unsafe shared
+      current time=].
+    </li>
+    <li>
+      In an [=implementation-defined=] way, make |virtualPressureSource|'s
+      [=pressure source/latest sample=] available to |virtualPressureSource|'s
+      [=virtual pressure source/connected platform collectors=].
+    </li>
+    <li>
+      Return [=success=] with data null.
+    </li>
+  </ol>
+</section>
 
 <section id="examples" class="informative">
   <h2>
