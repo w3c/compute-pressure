@@ -1951,7 +1951,7 @@ of system resources such as the CPU.
     predictable ways.
   </p>
   <p>
-    To address this challenge this document defines a [[WEBDRIVER2]] [=extension
+    To address this challenge this document defines a [[!WEBDRIVER2]] [=extension
     commands=] that allows defining and controlling virtual pressure sources that behave
     like real ones and which can have particular properties and whose readings can be
     entirely defined by users.
@@ -1991,7 +1991,7 @@ of system resources such as the CPU.
   </p>
   <aside class="note">
     <p>
-      As currently specified, the [[WEBDRIVER2]] integration and the
+      As currently specified, the [[!WEBDRIVER2]] integration and the
       [=extension commands=] below do <em>not</em> have an effect on shared
       workers.
     </p>
@@ -2094,7 +2094,7 @@ of system resources such as the CPU.
   <p>
     The [=remote end steps=]  given |session|, |URL variables| and |parameters| are:
   </p>
-  <ol class="algorithm" data-cite="WEBDRIVER2">
+  <ol class="algorithm" data-cite="!WEBDRIVER2">
     <li>
       Let |virtualPressureSourceType| be the result of invoking
       <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "type" from |parameters|.
@@ -2105,7 +2105,7 @@ of system resources such as the CPU.
       [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
-      Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
+      Let |topLevelTraversable| be the <a data-cite="!webdriver2/#dfn-current-browsing-context">current browsing
       context</a>'s [=browsing context/top-level traversable=].
     </li>
     <li>
@@ -2163,7 +2163,7 @@ of system resources such as the CPU.
   <p>
     The [=remote end steps=] given |session|, |URL variables| and |parameters| are:
   </p>
-  <ol class="algorithm" data-cite="WEBDRIVER2">
+  <ol class="algorithm" data-cite="!WEBDRIVER2">
     <li>
       Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
     </li>
@@ -2173,7 +2173,7 @@ of system resources such as the CPU.
       [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
-      Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
+      Let |topLevelTraversable| be the <a data-cite="!webdriver2/#dfn-current-browsing-context">current browsing
       context</a>'s [=browsing context/top-level traversable=].
     </li>
     <li>
@@ -2225,12 +2225,12 @@ of system resources such as the CPU.
     This [=extension command=] allows updating the state of a [=virtual pressure source=] by pushing
     a new [=pressure source sample=].
   </p>
-  <aside class="note" data-cite="WEBDRIVER2">
+  <aside class="note" data-cite="!WEBDRIVER2">
     Additionally, the [=extension command=] can be used to check whether a source type is created
     via the [[[#create-virtual-pressure-source]]] [=extension command=] by checking the response.
     If it has not been created the response will contain the [=error=] with
     [=error code|WebDriver error code=]
-    <a data-cite="webdriver2/#dfn-unsupported-operation">unsupported operation</a>.
+    <a data-cite="!webdriver2/#dfn-unsupported-operation">unsupported operation</a>.
   </aside>
   <table class="data">
     <caption>
@@ -2262,7 +2262,7 @@ of system resources such as the CPU.
   <p>
     The [=remote end steps=] given |session|, |URL variables| and |parameters| are:
   </p>
-  <ol class="algorithm" data-cite="WEBDRIVER2">
+  <ol class="algorithm" data-cite="!WEBDRIVER2">
     <li>
       Let |virtualPressureSourceType| be the value of the |URL variables|["type"].
     </li>
@@ -2272,7 +2272,7 @@ of system resources such as the CPU.
       [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
-      Let |topLevelTraversable| be the <a data-cite="webdriver2/#dfn-current-browsing-context">current browsing
+      Let |topLevelTraversable| be the <a data-cite="!webdriver2/#dfn-current-browsing-context">current browsing
       context</a>'s [=browsing context/top-level traversable=].
     </li>
     <li>
@@ -2281,7 +2281,7 @@ of system resources such as the CPU.
     <li>
       If |topLevelVirtualPressureSourceMapping| does not [=map/contain=] |virtualPressureSource|,
       return [=error=] with [=error code|WebDriver error code=]
-      <a data-cite="webdriver2/#dfn-unsupported-operation">unsupported operation</a>.
+      <a data-cite="!webdriver2/#dfn-unsupported-operation">unsupported operation</a>.
     </li>
     <li>
       Let |virtualPressureSource| be |topLevelVirtualPressureSourceMapping|[|virtualPressureSourceType|].
