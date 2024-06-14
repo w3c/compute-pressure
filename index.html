@@ -216,7 +216,7 @@
     </p>
     <p>
       The <dfn>reporting rate</dfn> for a pressure observer is the rate at which it runs
-      the [=data delivery=] steps, and it will never exceed the [=sampling rate=].
+      the [=data collection=] steps, and it will never exceed the [=sampling rate=].
     </p>
     <p>
       The [=sampling rate=] differs from the [=requested sampling rate=] when the
@@ -243,26 +243,69 @@
 
 <section> <h2>Platform primitives</h2>
   <p>
-    The [=platform collector=] refers to a platform interface, with which the [=user agent=] interacts to
-    obtain the telemetry readings required by this specification.
+    A <dfn>pressure source</dfn> is an abstract, [=implementation-defined=]
+    interface to hardware counters or an underlying framework that provides
+    telemetry data about a <dfn>source type</dfn>
+    defined by {{PressureSource}}. A [=pressure source=] can make use of data
+    fusion with data from additional sources if that provides more precise
+    results.
   </p>
   <p>
-    A [=platform collector=] can be defined by the underlying platform (e.g. in a native telemetry
-    framework) or by the [=user agent=], if it has a direct access to hardware counters.
+    The telemetry data provided by a [=pressure source=] is represented in this
+    specification as a <dfn>pressure source sample</dfn>, a [=struct=]
+    consisting of the following [=struct/items=]:
+    <ul>
+      <li>
+        <dfn data-dfn-for="pressure source sample">data</dfn>: [=contributing
+        factors=] obtained from the underlying hardware or operating system.
+      </li>
+      <li>
+        <dfn data-dfn-for="pressure source sample">timestamp</dfn>: the
+        [=unsafe shared current time=] when [=pressure source sample/data=] was
+        obtained.
+        <aside class="note">
+          <p>
+            The purpose of [=pressure source sample/timestamp=] is to use the
+            same [=monotonic clock/unsafe current time=] for a sample across
+            all globals and invocations of the [=data collection=] algorithm
+            which are processing the same [=pressure source sample=].
+          </p>
+        </aside>
+      </li>
+    </ul>
   </p>
   <p>
-    A [=platform collector=] can support telemetry for different <dfn>source types</dfn> of computing
-    devices defined by {{PressureSource}}, or there can be multiple [=platform collectors=].
+    A [=pressure source=] has an associated <dfn
+    data-dfn-for="pressure source">latest sample</dfn>, a [=pressure source
+    sample=] or null. It is initially null.
   </p>
   <p>
-    From the implementation perspective [=platform collector=] can be treated as a software proxy for the
-    corresponding hardware counters. It is possible to have multiple [=platform collector=] simultaneously
-    interacting with the same underlying hardware if the underlying platform supports it.
+    A <dfn>platform collector</dfn> is an abstract interface responsible for
+    obtaining telemetry samples from a [=pressure source=], transforming them
+    into [=pressure states=] and providing them to the [=user agent=].
   </p>
   <p>
-    In simple cases, a [=platform collector=] represents individual hardware counters, but if the provided
-    counter readings are a product of data fusion performed in software, the [=platform collector=]
-    represents the results of the data fusion process. This may happen in user space or in kernel space.
+    A [=platform collector=] has the following associated data:
+  </p>
+  <ul>
+    <li>
+      an <dfn data-dfn-for="platform collector">associated pressure
+      source</dfn>, which is a [=pressure source=] or null.
+    </li>
+    <li>
+      an <dfn data-dfn-for="platform collector">activated</dfn> boolean,
+      initially false.
+    </li>
+  </ul>
+  <p>
+    The format of the telemetry data provided by a [=pressure source=]
+    and stored in its [=pressure source/latest sample=]'s [=pressure source
+    sample/data=] is [=implementation-defined=], and so is the process through
+    which a [=platform collector=] transforms it into a [=pressure state=].
+  </p>
+  <p>
+    For this specification's purposes, [=platform collectors=] are scoped to a
+    [=global object=] via the [=platform collector mapping=].
   </p>
   <p>
     As collecting telemetry data often means polling hardware counters, it is not a free operation and thus,
@@ -361,7 +404,8 @@
         a <dfn>registered observer list</dfn> per supported [=source type=], which is initially empty.
       </li>
       <li>
-        a reference to an underlying <dfn>platform collector</dfn> as detailed in [[[#platform-primitives]]].
+        a <dfn>platform collector mapping</dfn>, an [=ordered map=] of [=source
+        types=] to [=platform collectors=].
       </li>
     </ul>
     A <dfn>registered observer</dfn> consists of an <dfn>observer</dfn> (a {{PressureObserver}} object).
@@ -606,13 +650,57 @@ of system resources such as the CPU.
           Run the following steps [=in parallel=]:
           <ol>
             <li>
-              If |source:PressureSource| is not a [=valid source type=],
-              [=queue a global task=] on the [=PressureObserver task source=]
-              given |relevantGlobal|
-              to reject |promise| {{NotSupportedError}} and abort these steps.
+              Let |platformCollector| be null.
             </li>
             <li>
-              Activate [=data delivery=] of |source| data to |relevantGlobal|.
+              If |relevantGlobal|'s [=platform collector mapping=]
+              [=map/contains=] |source|:
+              <ol>
+                <li>
+                  Set |platformCollector| to |relevantGlobal|'s [=platform
+                  collector mapping=][|source|].
+                </li>
+              </ol>
+            </li>
+            <li>
+              Otherwise:
+              <ol>
+                <li>
+                  Let |newCollector| be a new [=platform collector=] whose
+                  [=platform collector/associated pressure source=] is null.
+                </li>
+                <li>
+                  Let |pressureSource| be an [=implementation-defined=]
+                  [=pressure source=] that provides telemetry data about
+                  |source|, or null if none exists.
+                </li>
+                <li>
+                  Set |newCollector|'s [=platform collector/associated pressure
+                  source=] to |pressureSource|.
+                </li>
+                <li>
+                  If |newCollector|'s [=platform collector/associated
+                  pressure source=] is not null:
+                  <ol>
+                    <li>
+                      Set |platformCollector| to |newCollector|.
+                    </li>
+                    <li>
+                      Set |relevantGlobal|'s [=platform collector
+                      mapping=][|source|] to |platformCollector|.
+                    </li>
+                  </ol>
+                </li>
+              </ol>
+            </li>
+            <li>
+              If |platformCollector| is null, [=queue a global task=] on the
+              [=PressureObserver task source=] given |relevantGlobal| to reject
+              |promise| {{NotSupportedError}} and abort these steps.
+            </li>
+            <li>
+              Invoke [=activate data collection=] with |source| and
+              |relevantGlobal|.
             </li>
             <li>
               [=Queue a global task=] on the [=PressureObserver task source=] given
@@ -623,7 +711,7 @@ of system resources such as the CPU.
                   <ol>
                     <li>
                       If |relevantGlobal|'s [=registered observer list=] for |source| is [=list/empty=],
-                      deactivate [=data delivery=] of |source| data to |relevantGlobal|.
+                      invoke [=deactivate data collection=] with |source| and |relevantGlobal|.
                     </li>
                     <li>
                       Return.
@@ -686,8 +774,12 @@ of system resources such as the CPU.
           If |registeredObserverList| is [=list/empty=]:
           <ol>
             <li>
-              Deactivate [=data delivery=] of |source| data to
+              Invoke [=deactivate data collection=] with |source| and
               |relevantGlobal|.
+            </li>
+            <li>
+              [=map/Remove=] |relevantGlobal|'s [=platform collector
+              mapping=][|source|].
             </li>
           </ol>
         </li>
@@ -730,8 +822,12 @@ of system resources such as the CPU.
               If |registeredObserverList| is [=list/empty=]:
               <ol>
                 <li>
-                  Deactivate [=data delivery=] of |source| data to
+                  Invoke [=deactivate data collection=] with |source| and
                   |relevantGlobal|.
+                </li>
+                <li>
+                  [=map/Remove=] |relevantGlobal|'s [=platform collector
+                  mapping=][|source|].
                 </li>
               </ol>
             </li>
@@ -1109,47 +1205,111 @@ of system resources such as the CPU.
     </p>
   </section>
   <section>
-    <h3>Data delivery</h3>
+    <h3>Data Collection and Delivery</h3>
     <p>
-      [=Data delivery=] from a [=platform collector=] can be activate and deactivated in an
-      [=implementation-defined=] manner per [=source type=] and [=global object=].
+      To <dfn>activate data collection</dfn> given a [=source type=] |source|
+      and |relevantGlobal|, perform the following steps:
     </p>
-    <aside class="note">
-      It is recommended that the [=platform collector=] suspends low-level data polling
-      when there is no active [=data delivery=] to any {{PressureObserver}} [=relevant global object=].
-    </aside>
+    <ol class="algorithm">
+      <li>
+        If |relevantGlobal|'s [=platform collector mapping=] does not
+        [=map/contain=] |source|, abort these steps.
+      </li>
+      <li>
+        Let |platformCollector| be |relevantGlobal|'s [=platform collector
+        mapping=][|source|].
+      </li>
+      <li>
+        If |platformCollector|'s [=platform collector/activated=] is true,
+        abort these steps.
+      </li>
+      <li>
+        Set |platformCollector|'s [=platform collector/activated=] to true.
+      </li>
+      <li>
+        In an [=implementation-defined=] manner, start running the [=data
+        collection=] steps with |relevantGlobal|, |source|, and
+        |platformCollector|.
+        <aside class="note">
+          <p>
+            This step givens implementations leeway to collect telemetry data
+            via polling or by subscribing to platform- or OS-specific
+            notifications.
+          </p>
+        </aside>
+      </li>
+    </ol>
     <p>
-      The <dfn>data delivery</dfn> steps that are run when
-      an [=implementation-defined=] |data| sample of [=source type=] |source:PressureSource| is
-      obtained from [=global object=] |relevantGlobal|'s [=platform collector=],
-      are as follows:
-      <ol>
+      To <dfn>deactivate data collection</dfn> given a [=source type=] |source|
+      and |relevantGlobal|, perform the following steps:
+    </p>
+    <ol class="algorithm">
+      <li>
+        If |relevantGlobal|'s [=platform collector mapping=] does not
+        [=map/contain=] |source|, abort these steps.
+      </li>
+      <li>
+        Let |platformCollector| be |relevantGlobal|'s [=platform collector
+        mapping=][|source|].
+      </li>
+      <li>
+        If |platformCollector|'s [=platform collector/activated=] is false,
+        abort these steps.
+      </li>
+      <li>
+        In an [=implementation-defined=] manner, stop running the [=data
+        collection=] steps with |relevantGlobal|, |source|, and
+        |platformCollector|.
+      </li>
+      <li>
+        Set |platformCollector|'s [=platform collector/activated=] to false.
+      </li>
+      <li>
+        Perform any [=implementation-defined=] steps to signal to
+        |platformCollector|'s [=platform collector/associated pressure source=]
+        to stop retrieving telemetry data.
+      </li>
+    </ol>
+    <p>
+      The <dfn>data collection</dfn> steps given |relevantGlobal|, |source| and
+      |platformCollector| are as follows:
+      <ol class="algorithm">
         <li>
-          Let |source:PressureSource| be the [=source type=] of the |data| sample.
+          Let |pressureSource| be |platformCollector|'s [=platform
+          collector/associated pressure source=].
         </li>
         <li>
-          Let |state:PressureState| be an [=adjusted pressure state=] given |data| and |source|.
-        <aside class="note">
-          The |data| sample and mapping between |data| sample, and [=pressure states=],
-          is [=implementation-defined=] and may use many different metrics. For instance,
-          for CPU, it might consider processor frequency and utilization, as well
-          as thermal conditions.
-        </aside>
+          If |pressureSource| is null, abort these steps.
         </li>
         <li>
-          Let |timestamp| be the [=unsafe shared current time=] corresponding
-          to the moment when |data| was obtained from |relevantGlobal|'s
-          [=platform collector=].
-        <aside class="note">
-          The goal of this step is to ensure that the same [=monotonic
-          clock/unsafe current time=] is used across all globals. The value is
-          then converted into a global-specific, [=coarsened moment=] in the
-          step below.
-        </aside>
+          Let |sample| be |pressureSource|'s [=pressure source/latest sample=].
         </li>
         <li>
-          Let |timeValue| be the [=relative high resolution time=] based on |timestamp| and
-          |relevantGlobal|.
+          If |sample| is null, abort these steps.
+        </li>
+        <li>
+          Let |state| be an [=adjusted pressure state=] calculated from
+          |source| and |sample|'s [=pressure source sample/data=].
+          <aside class="note">
+            <p>
+              The mapping between |sample|'s [=pressure source sample/data=]
+              and [=pressure states=] is [=implementation-defined=] and may use
+              many different metrics. For instance, for CPU, it might consider
+              processor frequency and utilization, as well as thermal
+              conditions.
+            </p>
+          </aside>
+        </li>
+        <li>
+          [=Assert=]: |state| is not null.
+        </li>
+        <li>
+          Let |rawTimestamp| be |sample|'s [=pressure source
+          sample/timestamp=].
+        </li>
+        <li>
+          Let |timeValue| be the [=relative high resolution time=] based on
+          |rawTimestamp| and |relevantGlobal|.
         </li>
         <li>
           [=list/For each=] |observer:PressureObserver| in |relevantGlobal|'s
@@ -1313,7 +1473,12 @@ of system resources such as the CPU.
         [=registered observer list=] [=ordered map=]:
         <ol>
           <li>
-            Deactivate [=data delivery=] of |source| to |relevantGlobal|.
+            Invoke [=deactivate data collection=] with |source| and
+            |relevantGlobal|.
+          </li>
+          <li>
+            [=map/Remove=] |relevantGlobal|'s [=platform collector
+            mapping=][|source|].
           </li>
         </ol>
       </li>
@@ -1358,7 +1523,12 @@ of system resources such as the CPU.
         [=registered observer list=] [=ordered map=]:
         <ol>
           <li>
-            Deactivate [=data delivery=] of |source| to |relevantGlobal|.
+            Invoke [=deactivate data collection=] with |source| and
+            |relevantGlobal|.
+          </li>
+          <li>
+            [=map/Remove=] |relevantGlobal|'s [=platform collector
+            mapping=][|source|].
           </li>
         </ol>
       </li>
