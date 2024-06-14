@@ -657,8 +657,20 @@ of system resources such as the CPU.
           Run the following steps [=in parallel=]:
           <ol>
             <li>
-              If |relevantGlobal|'s [=platform collector mapping=] does not
-              [=map/contain=] |source|:
+              Let |platformCollector| be null.
+            </li>
+            <li>
+              If |relevantGlobal|'s [=platform collector mapping=]
+              [=map/contains=] |source|:
+              <ol>
+                <li>
+                  Set |platformCollector| to |relevantGlobal|'s [=platform
+                  collector mapping=][|source|].
+                </li>
+              </ol>
+            </li>
+            <li>
+              Otherwise:
               <ol>
                 <li>
                   Let |newCollector| be a new [=platform collector=] whose
@@ -704,18 +716,22 @@ of system resources such as the CPU.
                   </ol>
                 </li>
                 <li>
-                  Set |relevantGlobal|'s [=platform collector
-                  mapping=][|source|] to |newCollector|.
+                  If |newCollector|'s [=platform collector/associated
+                  pressure source=] is not null:
+                  <ol>
+                    <li>
+                      Set |platformCollector| to |newCollector|.
+                    </li>
+                    <li>
+                      Set |relevantGlobal|'s [=platform collector
+                      mapping=][|source|] to |platformCollector|.
+                    </li>
+                  </ol>
                 </li>
               </ol>
             </li>
             <li>
-              Let |platformCollector| be |relevantGlobal|'s [=platform collector
-              mapping=][|source|].
-            </li>
-            <li>
-              If |platformCollector|'s [=platform collector/associated pressure
-              source=] is null, [=queue a global task=] on the
+              If |platformCollector| is null, [=queue a global task=] on the
               [=PressureObserver task source=] given |relevantGlobal| to reject
               |promise| {{NotSupportedError}} and abort these steps.
             </li>
