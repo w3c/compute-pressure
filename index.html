@@ -940,6 +940,7 @@ of system resources such as the CPU.
     interface PressureRecord {
       readonly attribute PressureSource source;
       readonly attribute PressureState state;
+      readonly attribute double? ownContributionEstimate;
       readonly attribute DOMHighResTimeStamp time;
       [Default] object toJSON();
     };
@@ -953,6 +954,19 @@ of system resources such as the CPU.
     </li>
     <li>
       a <dfn>[[\State]]</dfn> value of type {{PressureState}}, which represents the current [=pressure state=].
+    </li>
+    <li>
+      <p>
+        an <dfn>[[\OwnContributionEstimate]]</dfn> value of type double?, which represents an estimated percentage
+        (value between 0 and 1) of the current web site contribution to the global pressure for the current source.
+        If the [=user agent=] cannot provide an estimate, the value will be null.
+      </p>
+      <p>
+        For CPU pressure, this will include the pressure of the CPU core responsible for loading and running the
+        web site, as well as any other associated CPU cores, in the case more than one are used. This can be the
+        case with web workers and shared processes e.g., a compositor or networking process, which some
+        [=user agents=] may use.
+      </p>
     </li>
     <li>
       a <dfn>[[\Time]]</dfn> value of type {{DOMHighResTimeStamp}},
@@ -971,6 +985,12 @@ of system resources such as the CPU.
     <h3>The <dfn>state</dfn> attribute</h3>
     <p>
       The {{PressureRecord/state}} [=getter steps=] are to return its {{PressureRecord/[[State]]}} internal slot.
+    </p>
+  </section>
+  <section>
+    <h3>The <dfn>ownContributionEstimate</dfn> attribute</h3>
+    <p>
+      The {{PressureRecord/ownContributionEstimate}} [=getter steps=] are to return its {{PressureRecord/[[OwnContributionEstimate]]}} internal slot.
     </p>
   </section>
   <section>
@@ -1222,7 +1242,7 @@ of system resources such as the CPU.
         </li>
       </ol>
       The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
-      |state:PressureState|, are as follows:
+      |state:PressureState|. |ownContributionEstimate:double?|, are as follows:
       <ol>
         <li>
           If |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|] does not [=map/exist=], return true.
@@ -1232,6 +1252,9 @@ of system resources such as the CPU.
         </li>
         <li>
           If |record|.{{PressureRecord/[[State]]}} is not equal to |state|, return true.
+        </li>
+        <li>
+          If |record|.{{PressureRecord/[[OwnContributionEstimate]]}} is not equal to |ownContributionEstimate|, return true.
         </li>
         <li>
           Return false.
@@ -1401,6 +1424,9 @@ of system resources such as the CPU.
           Let |state:PressureState| be null.
         </li>
         <li>
+          Let |ownContributionEstimate| be null.
+        </li>
+        <li>
           If |pressureSource| is a [=virtual pressure source=]:
           <ol>
             <li>
@@ -1426,6 +1452,12 @@ of system resources such as the CPU.
                   frequency and utilization, as well as thermal conditions.
                 </p>
               </aside>
+            </li>
+            <li>
+              If the [=user agent=] can calculate an |estimation| of the current site's
+              contribution to the overall pressure in an [=implementation-defined=] manner,
+              given |sample|'s [=pressure source sample/data=], then set |ownContributionEstimate|
+              to that |estimation|. The |estimation| should be in the range [0...1].
             </li>
           </ol>
         </li>
@@ -1453,13 +1485,14 @@ of system resources such as the CPU.
               returns false, [=iteration/continue=].
             </li>
             <li>
-              If running [=has change in data=] with |observer|, |source| and |state|
+              If running [=has change in data=] with |observer|, |source|, |state| and |ownContributionEstimate|
               returns false, [=iteration/continue=].
             </li>
             <li>
               Let |record:PressureRecord| be a new {{PressureRecord}} object with its
               {{PressureRecord/[[Source]]}} set to |source|,
-              {{PressureRecord/[[State]]}} set to |state|
+              {{PressureRecord/[[State]]}} set to |state|,
+              {{PressureRecord/[[OwnContributionEstimate]]}} set to |ownContributionEstimate|
               and {{PressureRecord/[[Time]]}} set to |timeValue|.
             </li>
             <li>
