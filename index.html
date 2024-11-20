@@ -75,7 +75,24 @@
   ul li::marker {
     font-family: "Segoe UI Emoji", "Noto Color Emoji";
   }
+  .experimental {
+    display: none;
+  }
 </style>
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const params = new URLSearchParams(location.search);
+    const q = parseInt(params.get("experimental"));
+
+    document.querySelectorAll('.experimental').forEach(el => {
+      if (q) {
+        el.setAttribute("class", el.getAttribute("klazz"));
+      } else {
+        el.remove();
+      }
+    })
+  });
+</script>
 <section id="abstract">
   <p>
     The <cite>Compute Pressure API</cite> provides a way for websites to react to changes
@@ -940,9 +957,13 @@ of system resources such as the CPU.
     interface PressureRecord {
       readonly attribute PressureSource source;
       readonly attribute PressureState state;
-      readonly attribute double? ownContributionEstimate;
       readonly attribute DOMHighResTimeStamp time;
       [Default] object toJSON();
+    };
+  </pre>
+  <pre class="experimental" klazz="idl">
+    partial interface PressureRecord {
+      readonly attribute double? ownContributionEstimate;
     };
   </pre>
   <p>
@@ -955,7 +976,7 @@ of system resources such as the CPU.
     <li>
       a <dfn>[[\State]]</dfn> value of type {{PressureState}}, which represents the current [=pressure state=].
     </li>
-    <li>
+    <li class="experimental">
       <p>
         an <dfn>[[\OwnContributionEstimate]]</dfn> value of type double?, which represents an estimated percentage
         (value between 0 and 1) of the current web site contribution to the global pressure for the current source.
@@ -987,7 +1008,7 @@ of system resources such as the CPU.
       The {{PressureRecord/state}} [=getter steps=] are to return its {{PressureRecord/[[State]]}} internal slot.
     </p>
   </section>
-  <section>
+  <section class="experimental">
     <h3>The <dfn>ownContributionEstimate</dfn> attribute</h3>
     <p>
       The {{PressureRecord/ownContributionEstimate}} [=getter steps=] are to return its {{PressureRecord/[[OwnContributionEstimate]]}} internal slot.
@@ -1242,7 +1263,7 @@ of system resources such as the CPU.
         </li>
       </ol>
       The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
-      |state:PressureState|. |ownContributionEstimate:double?|, are as follows:
+      |state:PressureState|, <span class="experimental">|ownContributionEstimate:double?|,</span> are as follows:
       <ol>
         <li>
           If |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|] does not [=map/exist=], return true.
@@ -1253,7 +1274,7 @@ of system resources such as the CPU.
         <li>
           If |record|.{{PressureRecord/[[State]]}} is not equal to |state|, return true.
         </li>
-        <li>
+        <li class="experimental">
           If |record|.{{PressureRecord/[[OwnContributionEstimate]]}} is not equal to |ownContributionEstimate|, return true.
         </li>
         <li>
@@ -1423,7 +1444,7 @@ of system resources such as the CPU.
         <li>
           Let |state:PressureState| be null.
         </li>
-        <li>
+        <li class="experimental">
           Let |ownContributionEstimate| be null.
         </li>
         <li>
@@ -1453,7 +1474,7 @@ of system resources such as the CPU.
                 </p>
               </aside>
             </li>
-            <li>
+            <li class="experimental">
               If the [=user agent=] can calculate an |estimation| of the current site's
               contribution to the overall pressure in an [=implementation-defined=] manner,
               given |sample|'s [=pressure source sample/data=], then set |ownContributionEstimate|
@@ -1485,14 +1506,17 @@ of system resources such as the CPU.
               returns false, [=iteration/continue=].
             </li>
             <li>
-              If running [=has change in data=] with |observer|, |source|, |state| and |ownContributionEstimate|
+              If running [=has change in data=] with |observer|, |source|, |state| 
+              <span class="experimental"> and |ownContributionEstimate|</span>
               returns false, [=iteration/continue=].
             </li>
             <li>
               Let |record:PressureRecord| be a new {{PressureRecord}} object with its
               {{PressureRecord/[[Source]]}} set to |source|,
               {{PressureRecord/[[State]]}} set to |state|,
-              {{PressureRecord/[[OwnContributionEstimate]]}} set to |ownContributionEstimate|
+              <span class="experimental">
+                {{PressureRecord/[[OwnContributionEstimate]]}} set to |ownContributionEstimate|
+              </span>
               and {{PressureRecord/[[Time]]}} set to |timeValue|.
             </li>
             <li>
