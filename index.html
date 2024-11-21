@@ -3,6 +3,26 @@
 <title>Compute Pressure Level 1</title>
 <script src="https://www.w3.org/Tools/respec/respec-w3c" class="remove" defer></script>
 <script class="remove">
+  function experimentalPreProcess(config, document, utils) {
+    const params = new URLSearchParams(location.search);
+    const q = parseInt(params.get("experimental"));
+
+    document.querySelectorAll('.experimental').forEach(el => {
+      if (q) {
+        el.classList.remove("experimental");
+      } else {
+        el.remove();
+      }
+    })
+    document.querySelectorAll('.non-experimental').forEach(el => {
+      if (q) {
+        el.remove();
+      } else {
+        el.classList.add("hidden");
+      }
+    })
+  }
+
   // All config options at https://respec.org/docs/
   const respecConfig = {
     shortName: "compute-pressure",
@@ -52,7 +72,8 @@
       specs: [
         "permissions-policy", "hr-time", "picture-in-picture", "mediacapture-streams"
       ]
-    }
+    },
+    preProcess: [experimentalPreProcess]
   };
 </script>
 <style>
@@ -75,24 +96,10 @@
   ul li::marker {
     font-family: "Segoe UI Emoji", "Noto Color Emoji";
   }
-  .experimental {
+  .experimental, .hidden {
     display: none;
   }
 </style>
-<script>
-  document.addEventListener("DOMContentLoaded", async () => {
-    const params = new URLSearchParams(location.search);
-    const q = parseInt(params.get("experimental"));
-
-    document.querySelectorAll('.experimental').forEach(el => {
-      if (q) {
-        el.setAttribute("class", el.getAttribute("klazz"));
-      } else {
-        el.remove();
-      }
-    })
-  });
-</script>
 <section id="abstract">
   <p>
     The <cite>Compute Pressure API</cite> provides a way for websites to react to changes
@@ -183,18 +190,22 @@
     <h3>Pressure sources</h3>
     <p>
       The specification currently defines the <dfn>valid source types</dfn> as
-      <em>global system thermals</em> and the <em>central [=processing unit=]</em>, also known as the CPU.
+      <span class="experimental"><em>global system thermals</em> and </span>
+      the <em>central [=processing unit=]</em>, also known as the CPU.
       Future levels of this specification MAY introduce additional [=source types=].
     </p>
-    <pre class="idl">
-      enum PressureSource { "thermals", "cpu" };
+    <pre class="non-experimental idl">
+      enum PressureSource { "cpu" };
+    </pre>
+    <pre class="experimental idl">
+      enum PressureSource { "cpu", "thermals" };
     </pre>
     <p>
       The <dfn>PressureSource</dfn> enum represents the [=valid source types=]:
     </p>
     <p>
       <ul class="pressure-source">
-        <li>
+        <li class="experimental">
           {{PressureSource/"thermals"}} represents the global thermal state of the system.
           <aside class="issue" data-number="294">
             <p>
