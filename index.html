@@ -265,8 +265,8 @@
       supported or accepted by the underlying platform and [=user agent=]<sup>†</sup>.
     </p>
     <p>
-      <sup>†</sup>It is recommended that the [=user agent=] limits the [=reporting rate=]
-      as outlined in [[[#rate-limiting-change-notifications]]].
+      <sup>†</sup>The specification additionally obfuscates the rate as outlined
+      in [[[#rate-obfuscation]]].
     </p>
     <p>
       In case the user didn't request a [=sampling rate=], the [=sampling rate=]
@@ -1751,7 +1751,7 @@ of system resources such as the CPU.
       or very precise values can be accessed at the same time by sites not sharing
       origin.
 
-      This attack is mitigated by [[[#data-minimization]]], [[[#rate-limiting-change-notifications]]],
+      This attack is mitigated by [[[#data-minimization]]], [[[#rate-obfuscation]]],
       and [[[#same-origin-restriction]]].
     </p>
     <h4>Cross-site covert channel</h4>
@@ -1766,8 +1766,8 @@ of system resources such as the CPU.
       This process is repeated as long as the scripts run on both the sites A and B.
     </p>
     <p>
-      This attack is mitigated by [[[#rate-limiting-change-notifications]]], [[[#rate-obfuscation]]] and
-      [[[#break-calibration]]]. Implementers are advised to consider all these mitigations for long-running scripts.
+      This attack is mitigated by [[[#rate-obfuscation]]] and [[[#break-calibration]]].
+      Implementers are advised to consider all these mitigations for long-running scripts.
     </p>
     <div class="note">
       The longer the scripts run the more information can be transmitted using the proposed cross-site covert channel.
@@ -1841,37 +1841,7 @@ of system resources such as the CPU.
     </p>
     <p>
       The specific application of data minimization principles in the context of this specification
-      are discussed in [[[#rate-limiting-change-notifications]]] and [[[#same-origin-restriction]]].
-      <section>
-        <h4>Rate-limiting change notifications</h4>
-        <p>
-          By rate-limiting the delivery of the pressure state information we remove the
-          attacker's ability to observe the precise time when a value transitions between two states.
-        </p>
-        <p>
-          More precisely, once the pressure observer is activated, it will be
-          called once with initial values, and then is called when the values change.
-          The subsequent calls will be rate-limited. When the callback is
-          called, the most recent value is reported.
-        </p>
-        <p>
-          The specification will recommend a rate limit of at most one call per second
-          for the active window, and one call per 10 seconds for all other windows. We
-          will also recommend that the call timings are jittered across origins.
-        </p>
-        <p>
-          These measures benefit the user's privacy, by reducing the risk of
-          identifying a device across multiple origins. The rate-limiting also benefits
-          the user's security, by making it difficult to use this API for timing attacks.
-          Last, rate-limiting change callbacks places an upper bound on the performance
-          overhead of this API.
-        </p>
-        <p>
-          Rate limiting can be implemented in the user agent, but it might also be
-          possible to simply change the polling/sampling rate of the underlying hardware
-          counters, if not accessed via a higher level framework.
-        </p>
-      </section>
+      are discussed in [[[#rate-obfuscation]]] and [[[#same-origin-restriction]]].
       <section>
         <h4>Rate obfuscation</h4>
         <p>
