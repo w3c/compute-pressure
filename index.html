@@ -657,12 +657,9 @@ of system resources such as the CPU.
               feature=] token "compute-pressure", return [=a promise rejected with=] {{NotAllowedError}}.
             </li>
           </ol>
-          <aside class="issue">
-            <a href="https://github.com/w3c/compute-pressure/issues/110">
-            Permission policy does not support workers directly yet #110</a>, so they cannot be set per
-            individual worker, so for now we consult the policy for all owning documents. For shared
-            workers this means that all owning documents have to have the policy enabled, which should
-            be easy to coordinate as shared workers require same origin.
+          <aside class="note">
+            Workers have their own [=WorkerGlobalScope/policy container=] which can be set via HTTP
+            headers. See the example in [[[#policy-control]]].
           </aside>
         </li>
         </li>
