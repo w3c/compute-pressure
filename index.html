@@ -298,8 +298,11 @@
     <ul>
       <li>
         <dfn data-dfn-for="pressure source sample">data</dfn>: [=contributing
-        factors=] obtained from the underlying hardware or operating system or,
-        in the case of a [=virtual pressure source=], a {{PressureState}}.
+        factors=] obtained from the underlying hardware and operating system or,
+        in the case of a [=virtual pressure source=], a {{PressureState}}
+        <span class="experimental">
+          and a {{double?}} representing the {{PressureRecord/ownContributionEstimate}}
+        </span>.
       </li>
       <li>
         <dfn data-dfn-for="pressure source sample">timestamp</dfn>: the
@@ -555,8 +558,12 @@
 
 <section> <h2>Contributing Factors</h2>
   <p>
-    <dfn>Contributing factors</dfn> represent the underlying hardware metrics contributing to the current [=pressure state=]
-    and can be [=implementation-defined=].
+    <dfn>Contributing factors</dfn> represent the underlying hardware and operation system metrics contributing to the
+    current [=pressure state=] and can be [=implementation-defined=].
+    <span class="experimental">
+      These may include information about how the metrics relate to operation system processes, allowing an
+      implementation to estimate the site's contribution to the overall pressure.
+    </span>
   </p>
   <p>
     The <dfn>adjusted pressure state</dfn> is a [=pressure state=] determined by an [=implementation-defined=]
@@ -1459,7 +1466,10 @@ of system resources such as the CPU.
           If |pressureSource| is a [=virtual pressure source=]:
           <ol>
             <li>
-              Set |state| to |sample|'s [=pressure source sample/data=].
+              Set |state| to the {{PressureState}} stored in |sample|'s [=pressure source sample/data=].
+            </li>
+            <li class="experimental">
+              Set |ownContributionEstimate| to the {{double?}} stored in |sample|'s [=pressure source sample/data=].
             </li>
           </ol>
         </li>
@@ -2305,6 +2315,17 @@ of system resources such as the CPU.
         yes
       </td>
     </tr>
+    <tr class="experimental">
+      <td>
+        ownContributionEstimate
+      </td>
+      <td>
+        {{double}}
+      </td>
+      <td>
+        no
+      </td>
+    </tr>
   </table>
   <p>
     The [=remote end steps=] given |session|, |URL variables| and |parameters| are:
@@ -2340,10 +2361,23 @@ of system resources such as the CPU.
     <li>
       If |sample| is not of type {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
+    <li class="experimental">
+      Let |ownContributionEstimate| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property with default</a> with arguments "ownContributionEstimate" and null from |parameters|.
+    </li>
+    <li class="experimental">
+      If |ownContributionEstimate| is not of type {{double?}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
     <li>
       Set |virtualPressureSource|'s [=pressure source/latest sample=] to a new
       [=pressure source sample=] whose [=pressure source sample/data=] is
-      |sample| and [=pressure source sample/timestamp=] is the [=unsafe shared
+      <span class="experimental">
+        a tuple of |sample| and |ownContributionEstimate|,
+      </span>
+      <span class="non-experimental">
+        |sample|
+      </span>
+      and [=pressure source sample/timestamp=] is the [=unsafe shared
       current time=].
     </li>
     <li>
