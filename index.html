@@ -2314,7 +2314,7 @@ of system resources such as the CPU.
         estimate
       </td>
       <td>
-        {{PressureRecord/ownContributionEstimate}}
+        {{Number}}
       </td>
       <td>
         yes
@@ -2360,7 +2360,8 @@ of system resources such as the CPU.
       <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "estimate" from |parameters|.
     </li>
     <li class="experimental">
-      If |estimate| is not of type {{PressureRecord/ownContributionEstimate}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+      If |estimate| is not of type {{Number}}, or its value is **NaN**,
+      return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
     <li>
       Set |virtualPressureSource|'s [=pressure source/latest sample=] to a new
