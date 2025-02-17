@@ -299,8 +299,9 @@
       <li>
         <dfn data-dfn-for="pressure source sample">data</dfn>: [=contributing
         factors=] obtained from the underlying hardware or operating system or,
-        in the case of a [=virtual pressure source=], a {{PressureState}}.
-      </li>
+        in the case of a [=virtual pressure source=], a {{PressureState}} 
+        <span class="experimental">and an {{PressureRecord/ownContributionEstimate}} value</span>.
+    </li>
       <li>
         <dfn data-dfn-for="pressure source sample">timestamp</dfn>: the
         [=unsafe shared current time=] when [=pressure source sample/data=] was
@@ -2018,6 +2019,9 @@ of system resources such as the CPU.
     other words, a [=virtual pressure source=]'s [=pressure source sample=]'s
     [=pressure source sample/data=] is a {{PressureState}}.
   </p>
+  <p class="experimental">
+  [=virtual pressure source=] also reports {{PressureRecord/ownContributionEstimate}}.
+  </p>
   <p>
     In addition to the data associated with all [=pressure sources=] (such as
     [=pressure source sample=]), each [=virtual pressure source=] has:
@@ -2270,7 +2274,7 @@ of system resources such as the CPU.
   </table>
   <p>
     This [=extension command=] allows updating the state of a [=virtual pressure source=] by pushing
-    a new [=pressure source sample=].
+    a new [=pressure source sample=]<span class="experimental"> and {{PressureRecord/ownContributionEstimate}}</span>.
   </p>
   <aside class="note" data-cite="!WEBDRIVER2">
     Additionally, the [=extension command=] can be used to check whether a source type is created
@@ -2300,6 +2304,17 @@ of system resources such as the CPU.
       </td>
       <td>
         {{PressureState}}
+      </td>
+      <td>
+        yes
+      </td>
+    </tr>
+    <tr class="experimental">
+      <td>
+        estimate
+      </td>
+      <td>
+        {{PressureRecord/ownContributionEstimate}}
       </td>
       <td>
         yes
@@ -2340,6 +2355,13 @@ of system resources such as the CPU.
     <li>
       If |sample| is not of type {{PressureState}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
     </li>
+    <li class="experimental">
+      Let |estimate| be the result of invoking
+      <a data-cite="!WEBDRIVER2#dfn-getting-properties">get a property</a> "estimate" from |parameters|.
+    </li>
+    <li class="experimental">
+      If |estimate| is not of type {{PressureRecord/ownContributionEstimate}}, return [=error=] with [=error code|WebDriver error code=] [=invalid argument=].
+    </li>
     <li>
       Set |virtualPressureSource|'s [=pressure source/latest sample=] to a new
       [=pressure source sample=] whose [=pressure source sample/data=] is
@@ -2348,7 +2370,7 @@ of system resources such as the CPU.
     </li>
     <li>
       In an [=implementation-defined=] way, make |virtualPressureSource|'s
-      [=pressure source/latest sample=] available to |virtualPressureSource|'s
+      [=pressure source/latest sample=] <span class="experimental"> and |estimate|</span> available to |virtualPressureSource|'s
       [=virtual pressure source/connected platform collectors=].
     </li>
     <li>
