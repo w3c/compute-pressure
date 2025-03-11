@@ -1054,12 +1054,14 @@ of system resources such as the CPU.
     <h3>The <dfn>sampleInterval</dfn> member</h3>
     <p>
       The {{PressureObserverOptions/sampleInterval}} member represents the [=requested sampling
-      interval=] expressed in milliseconds.
+      interval=] expressed in milliseconds. In the case the value it set to 0, the system will
+      only call the {{PressureUpdateCallback}} in the case there is a change to the {{PressureState}}.
     </p>
     <aside class="note">
       <p>
         A [=user agent=] might not be able to respect the requested sampling interval. For more information
-        consult [[[#sampling-and-reporting-rate]]].
+        consult [[[#sampling-and-reporting-rate]]], but the {{PressureUpdateCallback}} will not be called more
+        often that the sample interval set.
       </p>
     </aside>
   </section>
@@ -1277,9 +1279,12 @@ of system resources such as the CPU.
           If |timeDeltaMilliseconds| &ge; |sampleInterval|, return true, otherwise return false.
         </li>
       </ol>
-      The <dfn>has change in data</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
+      The <dfn>should dispatch</dfn> steps given the argument |observer:PressureObserver|, |source:PressureSource|,
       |state:PressureState|, <span class="experimental">|ownContributionEstimate:double?|,</span> are as follows:
       <ol>
+        <li>
+          If |observer|.{{PressureObserver/[[SampleIntervalMap]]}}[|source|] > 0, return true.
+        </li>
         <li>
           If |observer|.{{PressureObserver/[[LastRecordMap]]}}[|source|] does not [=map/exist=], return true.
         </li>
@@ -1524,7 +1529,7 @@ of system resources such as the CPU.
               returns false, [=iteration/continue=].
             </li>
             <li>
-              If running [=has change in data=] with |observer|, |source|, |state| 
+              If running [=should dispatch=] with |observer|, |source|, |state|
               <span class="experimental"> and |ownContributionEstimate|</span>
               returns false, [=iteration/continue=].
             </li>
