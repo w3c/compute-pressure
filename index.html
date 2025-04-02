@@ -560,6 +560,21 @@
       </li>
     </ul>
   </p>
+  <aside class="note">
+    <p>
+      The [=pressure state=] should be seen as hints. While it is possible to define algorithms like&#8212;utilization above 90% being
+      considered a serious state on many CPUs&#8212;this approach could unintentionally penalize CPUs where such thresholds may not apply.
+    </p>
+    <p>
+      To address this, the API avoids prescribing specific algorithms to accommodate diverse CPU architectures and methodologies
+      for handling pressure states, guided by feedback from our SoC engineers and implementation experience.
+    </p>
+    <p>
+      Additionally, this design enables CPU vendors to contribute to browser engines, ensuring that the states align as closely
+      as possible with their specific SoCs.
+      By maintaining a higher-level approach, the API supports adaptability across devices and browsers as technology evolves.
+    </p>
+  </aside>
 </section>
 
 <section> <h2>Contributing Factors</h2>
@@ -2548,6 +2563,7 @@ of system resources such as the CPU.
     Many thanks for valuable feedback and advice from
     Anssi Kostiainen,
     Asaf Yaffe,
+    Benjamin VanderSloot,
     Chen Xing,
     Evan Shrubsole,
     Florian Scholz,
