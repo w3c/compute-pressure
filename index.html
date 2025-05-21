@@ -1680,8 +1680,8 @@ of system resources such as the CPU.
             [=list/Empty=] |observer|.{{PressureObserver/[[QueuedRecords]]}}.
           </li>
           <li>
-            If |records| is not [=list/empty=], then invoke |observer|.{{PressureObserver/[[Callback]]}}
-            with |records| and |observer|. If this throws an exception, catch it, and [=report the exception=].
+            If |records| is not [=list/empty=], then [=invoke=] |observer|.{{PressureObserver/[[Callback]]}}
+            with « |records|, |observer| » and "`report`".
           </li>
         </ol>
       </li>
