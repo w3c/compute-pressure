@@ -895,7 +895,7 @@ of system resources such as the CPU.
       The {{PressureObserver/disconnect()}} method steps are:
       <ol class="algorithm">
         <li>
-          [=list/Empty=] |observer|.{{PressureObserver/[[QueuedRecords]]}}.
+          [=list/Empty=] [=this=].{{PressureObserver/[[QueuedRecords]]}}.
         </li>
         <li>
           [=map/Clear=] |this|.{{PressureObserver/[[SampleIntervalMap]]}}.
@@ -958,10 +958,10 @@ of system resources such as the CPU.
       The {{PressureObserver/takeRecords()}} method steps are:
       <ol class="algorithm">
         <li>
-          Let |records| be a [=list/clone=] of |observer|.{{PressureObserver/[[QueuedRecords]]}}.
+          Let |records| be a [=list/clone=] of [=this=].{{PressureObserver/[[QueuedRecords]]}}.
         </li>
         <li>
-          [=list/Empty=] |observer|.{{PressureObserver/[[QueuedRecords]]}}.
+          [=list/Empty=] [=this=].{{PressureObserver/[[QueuedRecords]]}}.
         </li>
         <li>
           Return |records|.
