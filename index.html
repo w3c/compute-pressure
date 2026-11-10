@@ -2543,9 +2543,8 @@ of system resources such as the CPU.
     Additionally it will clear all pending records collected since the last callback was invoked.
   </p>
   <pre class="example js" title="how to tell the observer to stop watching for any state changes">
-    const observer = new PressureObserver(records => { // do something with records. });
+    const observer = new PressureObserver(records => { /* do something with records. */ });
     observer.observe("cpu");
-    observer.observe("gpu");
 
     // some time later...
 
