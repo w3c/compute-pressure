@@ -1627,8 +1627,9 @@ of system resources such as the CPU.
     </p>
     <ol class="algorithm">
       <li>
-        If [=list/size=] of |observer|.{{PressureObserver/[[QueuedRecords]]}} is greater than
-        [=max queued records=], then [=list/remove=] the first [=list/item=].
+        If [=list/size=] of |observer|.{{PressureObserver/[[QueuedRecords]]}} is greater than or equal to
+        [=max queued records=], then [=list/remove=] the first [=list/item=] from
+        |observer|.{{PressureObserver/[[QueuedRecords]]}}.
       <li>
         [=list/Append=] |record| to |observer|.{{PressureObserver/[[QueuedRecords]]}}.
       </li>
