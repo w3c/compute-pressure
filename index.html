@@ -2473,8 +2473,10 @@ of system resources such as the CPU.
 
       for (const record of records) {
         if (record.state == "critical") {
-          let streamsCount = getStreamsCount();
-          setStreamsCount(streamsCount--);
+          const streamsCount = getStreamsCount();
+          if (streamsCount > 0) {
+            setStreamsCount(streamsCount - 1);
+          }
         }
       }
     }
