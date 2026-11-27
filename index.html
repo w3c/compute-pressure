@@ -310,7 +310,7 @@
         factors=] obtained from the underlying hardware and operating system or,
         in the case of a [=virtual pressure source=], a {{PressureState}}
         <span class="experimental">
-          and a {{double?}} representing the {{PressureRecord/ownContributionEstimate}}
+          and a {{double?}} representing the [=own contribution estimate=]
         </span>.
       </li>
       <li>
@@ -1774,6 +1774,50 @@ of system resources such as the CPU.
   <h2>
     Security and privacy considerations
   </h2>
+  <section>
+    <h3>Own contribution estimate</h3>
+    <p>
+      The <dfn>own contribution estimate</dfn> provides a percentage-based indication of how much the current
+      site contributes to the global system pressure. This insight helps developers determine whether
+      a critical or serious pressure state originates primarily from their own application or from
+      external sources.
+    </p>
+    <p>
+      <em>If the majority of the pressure comes from external sources</em>, the site may choose to simplify
+      its features to maintain a smooth experience. It may also prompt users to close other
+      applications to reduce overall system pressure.
+    </p>
+    <p>
+      <em>If the pressure is largely self-inflicted</em>, it indicates that the site's code paths may
+      be too resource-intensive for the device. In such cases, developers might experiment with
+      alternative code paths—for example, offloading calculations from the CPU (via Wasm or
+      JavaScript) to WebGPU—in an effort to enhance performance.
+    </p>
+    <p>
+      We determined that the cost of exposing this additional estimate is negligible. In scenarios
+      where the site contributes most of the pressure (e.g., under a critical pressure state),
+      the key takeaway is that the rest of the system is stable—so there is limited new insight to extract.
+      Conversely, if the site's contribution is minimal, the site gains little beyond what the global
+      pressure state already reveals.
+    </p>
+    <p>
+      That said, since global pressure states are abstracted into four broad categories, having visibility
+      into one's own contribution offers a more granular view of system behavior. This can be especially
+      valuable. For example, developers might:
+      <ul>
+        <li>
+          Prompt users to close background applications when external pressure is high.
+        </li>
+        <li>
+          Identify when it's time to optimize internal processes if their own contribution is the bottleneck.
+        </li>
+        <li>
+          Do A/B testing in live deployments with different code paths to determine what results in the
+          lowest pressure on device types.
+        </li>
+      </ul>
+    </p>
+  </section>
 
   <section>
     <h3>Types of privacy and security threats</h3>
@@ -1888,6 +1932,11 @@ of system resources such as the CPU.
           changes is exceeded. Similarly, it is also recommended for the implementation to
           observe any abnormal activity such as a high number of pressure state changes
           spanning across multiple states, and set this flag similarly.
+        </p>
+        <p>
+          The platforms exposing the [=own contribution estimate=] will fire events more frequently
+          as the estimate may change independent of the global pressure state, but as these are not
+          separate events they are also subject to the rate obfuscation.
         </p>
         <p>
           If this flag is set, the implementation is recommended to give the pressure observer
